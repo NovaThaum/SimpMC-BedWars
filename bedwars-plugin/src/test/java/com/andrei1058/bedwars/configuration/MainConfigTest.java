@@ -75,6 +75,22 @@ class MainConfigTest {
     }
 
     @Test
+    void seasonalMigrationPreservesOldDisableChoiceUnlessNewSettingWasExplicitlySet() {
+        YamlConfiguration migrated = new YamlConfiguration();
+        migrated.set(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN, false);
+
+        MainConfig.migrateSeasonalEffects(migrated, 36);
+
+        assertFalse(migrated.getBoolean("seasonal-effects.enabled"));
+
+        YamlConfiguration customized = new YamlConfiguration();
+        customized.set(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN, false);
+        customized.set("seasonal-effects.enabled", true);
+        MainConfig.migrateSeasonalEffects(customized, 36);
+        assertTrue(customized.getBoolean("seasonal-effects.enabled"));
+    }
+
+    @Test
     void expandsOnlyTheUnchangedArenaSelectorLayout() {
         YamlConfiguration defaults = new YamlConfiguration();
         defaults.set(ConfigPath.GENERAL_CONFIGURATION_ARENA_SELECTOR_SETTINGS_SIZE, 27);

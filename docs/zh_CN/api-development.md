@@ -8,7 +8,7 @@ Maven：
 <dependency>
     <groupId>com.simpmc.bedwars</groupId>
     <artifactId>simpmc-bedwars-api</artifactId>
-    <version>7.6.4</version>
+    <version>7.7.0</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -233,6 +233,8 @@ api.getArenaUtil().applyLobbyState(player);
 - `PlayerBedBreakEvent` / `PlayerKillEvent`
 - `ShopBuyEvent` / `UpgradeBuyEvent`（商店事件的 `getPurchaseCount()` 可区分普通单次购买与 Shift+右键批量购买）
 - `ArenaEnableEvent` / `ArenaDisableEvent`
+
+附属插件可监听上述 Bukkit 事件自行添加定时视觉效果。服务器时间应使用 `ZoneId.systemDefault()`；击杀监听 `PlayerKillEvent`，破床监听 `PlayerBedBreakEvent`，胜利监听 `GameEndEvent`。粒子或音效只应发到事件竞技场中的相关玩家，不要创建实体或修改方块来模拟纯视觉效果。
 
 示例：
 

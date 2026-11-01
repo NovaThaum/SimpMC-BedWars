@@ -46,7 +46,7 @@ import java.util.*;
 
 public class MainConfig extends ConfigManager {
 
-    static final int CONFIG_VERSION = 36;
+    static final int CONFIG_VERSION = 37;
     private static final int LOBBY_LEAVE_BROKEN_FROM_VERSION = 15;
     private static final int LOBBY_LEAVE_RESTORED_IN_VERSION = 18;
     private static final String LOBBY_LEAVE_PATH = ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_PATH + ".leave";
@@ -76,6 +76,18 @@ public class MainConfig extends ConfigManager {
         yml.addDefault("storeLink", "https://www.spigotmc.org/resources/authors/39904/");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_BUNGEE_LOBBY_SERVER, "hub");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN, true);
+        yml.addDefault("seasonal-effects.enabled", true);
+        yml.addDefault("seasonal-effects.windows.new-year.start", "12-31 23:55");
+        yml.addDefault("seasonal-effects.windows.new-year.end", "01-01 00:15");
+        yml.addDefault("seasonal-effects.windows.new-year.effect", "firework");
+        yml.addDefault("seasonal-effects.windows.new-year.triggers", List.of("kill", "bed-break", "victory"));
+        yml.addDefault("seasonal-effects.windows.new-year.enabled", true);
+        yml.addDefault("seasonal-effects.windows.halloween.enabled", true);
+        yml.addDefault("seasonal-effects.windows.halloween.start", "10-22 00:00");
+        yml.addDefault("seasonal-effects.windows.halloween.end", "11-02 00:00");
+        yml.addDefault("seasonal-effects.windows.halloween.effect", "cobweb");
+        yml.addDefault("seasonal-effects.windows.halloween.triggers", List.of("kill", "bed-break", "victory"));
+        yml.addDefault("seasonal-effects.windows.halloween.halloween-shop", true);
         yml.addDefault(ConfigPath.GENERAL_CHAT_GLOBAL, yml.get("globalChat", false));
         yml.addDefault(ConfigPath.GENERAL_CHAT_FORMATTING, yml.get("formatChat", true));
         yml.addDefault("debug", false);
@@ -270,6 +282,7 @@ public class MainConfig extends ConfigManager {
                 plugin.getDataFolder(), storedConfigVersion);
         updateToLatestVersion(CONFIG_VERSION, config -> {
             boolean restoredLobbyItem = migrateLegacyConfig(config, legacyLobbyItemHistory);
+            migrateSeasonalEffects(config, storedConfigVersion);
             migrateRestartCountdownDefault(config, storedConfigVersion);
             removeRetiredLeaveAbandonSetting(config);
             if (restoredLobbyItem) {
@@ -352,8 +365,21 @@ public class MainConfig extends ConfigManager {
         BedWars.setLobbyWorld(getLobbyWorldName());
     }
 
+    static void migrateSeasonalEffects(YamlConfiguration config, int storedConfigVersion) {
+        if (storedConfigVersion >= 37 || config.contains("seasonal-effects.enabled", true)) return;
+        if (config.isSet(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN)
+                && !config.getBoolean(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN)) {
+            config.set("seasonal-effects.enabled", false);
+        }
+    }
+
     private void addConfigurationComments() {
         setComments("serverType", "服务器运行模式：MULTIARENA、SHARED 或 BUNGEE。", "MULTIARENA/BUNGEE 会把实例内全部世界固定为正午和晴天；SHARED 只处理竞技场、设置世界和配置大厅。", "修改后需要完整重启服务器。");
+        setComments("seasonal-effects",
+                "按服务器 JVM 本地时区运行的定时对局效果。开始时刻包含，结束时刻不包含，支持跨年窗口。",
+                "每个窗口用 start/end、enabled、effect 和 triggers 配置；效果支持 firework、cobweb，触发项支持 kill、bed-break、victory。",
+                "效果只作用于竞技场对局。新增窗口只需复制 windows 下的活动配置节。",
+                "旧 enable-halloween-feature=false 会迁移为总开关关闭；保留旧字段供旧版本兼容。");
         setComments(ConfigPath.GENERAL_CONFIGURATION_BUNGEE_LOBBY_SERVER,
                 "BungeeCord/Velocity 代理 [servers] 中的主大厅服务器名称，不是 IP、端口或 MotD。",
                 "名称必须与代理配置一致；Velocity 还需在 velocity.toml 的 [advanced] 中启用 bungee-plugin-message-channel。",

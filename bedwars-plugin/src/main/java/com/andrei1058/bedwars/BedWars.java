@@ -53,7 +53,7 @@ import com.andrei1058.bedwars.commands.shout.ShoutCommand;
 import com.andrei1058.bedwars.configuration.*;
 import com.andrei1058.bedwars.database.Database;
 import com.andrei1058.bedwars.database.SQLite;
-import com.andrei1058.bedwars.halloween.HalloweenSpecial;
+import com.andrei1058.bedwars.seasonal.SeasonalEffects;
 import com.andrei1058.bedwars.language.*;
 import com.andrei1058.bedwars.levels.internal.InternalLevel;
 import com.andrei1058.bedwars.levels.internal.LevelListeners;
@@ -513,11 +513,10 @@ public class BedWars extends JavaPlugin {
             this.getLogger().warning("Paper scoreboard sidebar support could not be initialized; continuing without built-in sidebars.");
         }
 
-        // Halloween Special
-        HalloweenSpecial.init();
-
         // TNT Spoil Feature
         SpoilPlayerTNTFeature.init();
+
+        SeasonalEffects.init(this);
 
     }
 

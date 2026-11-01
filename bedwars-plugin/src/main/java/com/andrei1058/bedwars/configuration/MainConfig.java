@@ -48,15 +48,31 @@ public class MainConfig extends ConfigManager {
         double oldFireballHorizontal = yml.getDouble(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL, Double.NaN);
         boolean hadTntEnemyDamage = yml.contains(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS);
         double oldTntEnemyDamage = yml.getDouble(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS, Double.NaN);
+        boolean hadSeasonalEffects = yml.contains("seasonal-effects.enabled");
+        boolean oldHalloweenEnabled = yml.contains(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN)
+                ? yml.getBoolean(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN) : true;
 
         yml.options().header(plugin.getDescription().getName() + " by andrei1058. https://www.spigotmc.org/members/39904/\n" +
-                "Documentation here: https://gitlab.com/andrei1058/BedWars1058/wikis/home\n");
+                "Documentation here: https://gitlab.com/andrei1058/BedWars1058/wikis/home\n" +
+                "seasonal-effects 按服务器时区运行对局效果；窗口格式 MM-dd HH:mm，开始包含、结束不包含，支持跨年。效果支持 firework/cobweb，触发支持 kill/bed-break/victory。旧 enable-halloween-feature=false 会迁移为总开关关闭。\n");
         yml.addDefault("serverType", "MULTIARENA");
         yml.addDefault("language", "en");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES, Collections.singletonList("your language iso here"));
         yml.addDefault("storeLink", "https://www.spigotmc.org/resources/authors/39904/");
         yml.addDefault("lobbyServer", "hub");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN, true);
+        yml.addDefault("seasonal-effects.enabled", true);
+        yml.addDefault("seasonal-effects.windows.new-year.enabled", true);
+        yml.addDefault("seasonal-effects.windows.new-year.start", "12-31 23:55");
+        yml.addDefault("seasonal-effects.windows.new-year.end", "01-01 00:15");
+        yml.addDefault("seasonal-effects.windows.new-year.effect", "firework");
+        yml.addDefault("seasonal-effects.windows.new-year.triggers", Arrays.asList("kill", "bed-break", "victory"));
+        yml.addDefault("seasonal-effects.windows.halloween.enabled", true);
+        yml.addDefault("seasonal-effects.windows.halloween.start", "10-22 00:00");
+        yml.addDefault("seasonal-effects.windows.halloween.end", "11-02 00:00");
+        yml.addDefault("seasonal-effects.windows.halloween.effect", "cobweb");
+        yml.addDefault("seasonal-effects.windows.halloween.triggers", Arrays.asList("kill", "bed-break", "victory"));
+        yml.addDefault("seasonal-effects.windows.halloween.halloween-shop", true);
         yml.addDefault(ConfigPath.GENERAL_CHAT_GLOBAL, yml.get("globalChat", false));
         yml.addDefault(ConfigPath.GENERAL_CHAT_FORMATTING, yml.get("formatChat", true));
         yml.addDefault("debug", false);
@@ -224,6 +240,9 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.GENERAL_GAME_END_SB_TOP_STATISTIC, DefaultStatistics.KILLS.toString());
         yml.addDefault(ConfigPath.GENERAL_GAME_END_SB_TOP_HIDE_MISSING, true);
         yml.options().copyDefaults(true);
+        if (!hadSeasonalEffects && !oldHalloweenEnabled) {
+            yml.set("seasonal-effects.enabled", false);
+        }
         if (hadFireballHorizontal && Double.compare(oldFireballHorizontal, 1.0D) == 0) {
             yml.set(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL, 1.35D);
         }

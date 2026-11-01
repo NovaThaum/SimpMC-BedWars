@@ -50,7 +50,7 @@ import com.andrei1058.bedwars.commands.shout.ShoutCommand;
 import com.andrei1058.bedwars.configuration.*;
 import com.andrei1058.bedwars.database.Database;
 import com.andrei1058.bedwars.database.SQLite;
-import com.andrei1058.bedwars.halloween.HalloweenSpecial;
+import com.andrei1058.bedwars.seasonal.SeasonalEffects;
 import com.andrei1058.bedwars.language.*;
 import com.andrei1058.bedwars.levels.internal.InternalLevel;
 import com.andrei1058.bedwars.levels.internal.LevelListeners;
@@ -492,8 +492,7 @@ public class BedWars extends JavaPlugin {
             this.getLogger().warning("SidebarLib by andrei1058 does not support your server version; continuing without built-in sidebars.");
         }
 
-        // Halloween Special
-        HalloweenSpecial.init();
+        SeasonalEffects.init(this);
 
         // TNT Spoil Feature
         SpoilPlayerTNTFeature.init();

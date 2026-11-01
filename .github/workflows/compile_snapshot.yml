@@ -11,10 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '25'
           distribution: 'temurin'
           cache: maven
 
@@ -35,5 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: SimpMC-BW1.8.8-plugin
-          path: bedwars-plugin/target/SimpMC-BW1.8.8-*.jar
+          path: |
+            bedwars-plugin/target/SimpMC-BW1.8.8-*.jar
+            !bedwars-plugin/target/original-*.jar
           if-no-files-found: error

@@ -23,11 +23,15 @@ package com.andrei1058.bedwars.arena.despawnables;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
+import com.andrei1058.bedwars.api.arena.team.ITeam;
+import com.andrei1058.bedwars.api.entity.Despawnable;
 import com.andrei1058.bedwars.arena.Arena;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.Location;
+import org.bukkit.potion.PotionEffectType;
 
 public class TargetListener implements Listener {
 
@@ -37,7 +41,19 @@ public class TargetListener implements Listener {
         IArena arena = Arena.getArenaByIdentifier(e.getEntity().getWorld().getName());
         Player p = (Player) e.getTarget();
         if (arena == null) return;
+        Despawnable despawnable = BedWars.nms.getDespawnablesList().get(e.getEntity().getUniqueId());
+        if (despawnable != null) {
+            ITeam ownerTeam = despawnable.getTeam();
+            IArena ownerArena = ownerTeam == null ? null : ownerTeam.getArena();
+            Player target = findTarget(ownerArena, ownerTeam, e.getEntity().getLocation());
+            if (e.getTarget() != target) e.setTarget(target);
+            return;
+        }
         if (!arena.isPlayer(p)) {
+            e.setCancelled(true);
+            return;
+        }
+        if (p.hasPotionEffect(PotionEffectType.INVISIBILITY)) {
             e.setCancelled(true);
             return;
         }
@@ -50,5 +66,22 @@ public class TargetListener implements Listener {
                 e.setCancelled(true);
             }
         }
+    }
+
+    private Player findTarget(IArena arena, ITeam ownerTeam, Location source) {
+        if (arena == null || ownerTeam == null || arena.getStatus() != GameState.playing) return null;
+        Player nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (Player candidate : arena.getPlayers()) {
+            if (candidate.isDead() || !arena.isPlayer(candidate) || arena.isSpectator(candidate)
+                    || arena.isReSpawning(candidate) || candidate.hasPotionEffect(PotionEffectType.INVISIBILITY)
+                    || candidate.getWorld() != source.getWorld() || arena.getTeam(candidate) == ownerTeam) continue;
+            double distance = candidate.getLocation().distanceSquared(source);
+            if (distance < nearestDistance) {
+                nearest = candidate;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
     }
 }

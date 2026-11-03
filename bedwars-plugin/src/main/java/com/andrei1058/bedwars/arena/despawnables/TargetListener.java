@@ -32,6 +32,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.potion.PotionEffectType;
 
 public class TargetListener implements Listener {
 
@@ -42,7 +43,8 @@ public class TargetListener implements Listener {
             ITeam ownerTeam = despawnable.getTeam();
             IArena arena = ownerTeam == null ? null : ownerTeam.getArena();
             Player target = arena == null ? null : DespawnableTargeting.resolveTarget(
-                    arena, ownerTeam, e.getTarget(), e.getEntity().getLocation(), arena.getPlayers());
+                    arena, ownerTeam, e.getTarget(), e.getEntity().getLocation(), arena.getPlayers(),
+                    player -> player.hasPotionEffect(PotionEffectType.INVISIBILITY));
             if (e.getTarget() != target) {
                 e.setTarget(target);
             }

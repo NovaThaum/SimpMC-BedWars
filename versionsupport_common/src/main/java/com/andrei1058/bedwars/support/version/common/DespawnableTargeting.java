@@ -7,8 +7,8 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-
 import java.util.Collection;
+import java.util.function.Predicate;
 
 /** Internal target policy shared by the Bukkit event and version-support fallback. */
 public final class DespawnableTargeting {
@@ -17,21 +17,21 @@ public final class DespawnableTargeting {
     }
 
     public static Player resolveTarget(IArena arena, ITeam ownerTeam, LivingEntity proposedTarget,
-                                       Location source, Collection<Player> candidates) {
-        if (proposedTarget instanceof Player player && isEligibleTarget(arena, ownerTeam, player, source)) {
+                                       Location source, Collection<Player> candidates, Predicate<Player> invisible) {
+        if (proposedTarget instanceof Player player && isEligibleTarget(arena, ownerTeam, player, source, invisible)) {
             return player;
         }
-        return findNearestTarget(arena, ownerTeam, source, candidates);
+        return findNearestTarget(arena, ownerTeam, source, candidates, invisible);
     }
 
     public static Player findNearestTarget(IArena arena, ITeam ownerTeam, Location source,
-                                           Collection<Player> candidates) {
+                                           Collection<Player> candidates, Predicate<Player> invisible) {
         if (arena == null || ownerTeam == null || source == null || candidates == null) return null;
 
         Player nearest = null;
         double nearestDistance = Double.MAX_VALUE;
         for (Player candidate : candidates) {
-            if (!isEligibleTarget(arena, ownerTeam, candidate, source)) continue;
+            if (!isEligibleTarget(arena, ownerTeam, candidate, source, invisible)) continue;
 
             double distance = candidate.getLocation().distanceSquared(source);
             if (distance < nearestDistance) {
@@ -42,7 +42,8 @@ public final class DespawnableTargeting {
         return nearest;
     }
 
-    public static boolean isEligibleTarget(IArena arena, ITeam ownerTeam, Player candidate, Location source) {
+    public static boolean isEligibleTarget(IArena arena, ITeam ownerTeam, Player candidate, Location source,
+                                           Predicate<Player> invisible) {
         if (arena == null || ownerTeam == null || candidate == null || source == null) return false;
         if (arena.getStatus() != GameState.playing || candidate.isDead() || !arena.isPlayer(candidate)) return false;
 
@@ -50,6 +51,7 @@ public final class DespawnableTargeting {
         if (sourceWorld == null || !sourceWorld.equals(candidate.getWorld())) return false;
 
         if (arena.isReSpawning(candidate.getUniqueId()) || arena.isSpectator(candidate.getUniqueId())) return false;
+        if (invisible != null && invisible.test(candidate)) return false;
         ITeam candidateTeam = arena.getTeam(candidate);
         return candidateTeam != null && candidateTeam != ownerTeam;
     }

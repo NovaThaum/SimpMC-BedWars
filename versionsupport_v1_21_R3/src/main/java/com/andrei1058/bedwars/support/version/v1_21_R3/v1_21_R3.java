@@ -796,7 +796,8 @@ public class v1_21_R3 extends VersionSupport {
 
         IArena arena = team.getArena();
         Player target = DespawnableTargeting.resolveTarget(
-                arena, team, mob.getTarget(), entity.getLocation(), arena.getPlayers());
+                arena, team, mob.getTarget(), entity.getLocation(), arena.getPlayers(),
+                player -> player.hasPotionEffect(PotionEffectType.INVISIBILITY));
         if (mob.getTarget() != target) {
             mob.setTarget(target);
         }

@@ -34,7 +34,7 @@ class TargetListenerTest {
                 Map.of(teammate, red, closeEnemy, blue, farEnemy, blue));
 
         Player resolved = DespawnableTargeting.resolveTarget(
-                arena, red, teammate, new Location(world, 0, 64, 0), players);
+                arena, red, teammate, new Location(world, 0, 64, 0), players, player -> false);
 
         assertSame(closeEnemy, resolved);
     }
@@ -51,7 +51,7 @@ class TargetListenerTest {
                 Map.of(currentEnemy, blue, closerEnemy, blue));
 
         Player resolved = DespawnableTargeting.resolveTarget(
-                arena, red, currentEnemy, new Location(world, 0, 64, 0), players);
+                arena, red, currentEnemy, new Location(world, 0, 64, 0), players, player -> false);
 
         assertSame(currentEnemy, resolved);
     }
@@ -73,9 +73,27 @@ class TargetListenerTest {
                         spectatorEnemy, blue, crossWorldEnemy, blue));
 
         Player resolved = DespawnableTargeting.findNearestTarget(
-                arena, red, new Location(world, 0, 64, 0), players);
+                arena, red, new Location(world, 0, 64, 0), players, player -> false);
 
         assertNull(resolved);
+    }
+
+    @Test
+    void excludesInvisiblePlayersFromDreamDefenderTargets() {
+        World world = world("arena");
+        ITeam red = team("red");
+        ITeam blue = team("blue");
+        Player invisibleEnemy = player("invisible", world, 2, false, true);
+        Player visibleEnemy = player("visible", world, 5, false);
+        List<Player> players = List.of(invisibleEnemy, visibleEnemy);
+        IArena arena = arena(GameState.playing, players, Set.of(), Set.of(),
+                Map.of(invisibleEnemy, blue, visibleEnemy, blue));
+
+        Player resolved = DespawnableTargeting.findNearestTarget(
+                arena, red, new Location(world, 0, 64, 0), players,
+                player -> player.getName().equals("invisible"));
+
+        assertSame(visibleEnemy, resolved);
     }
 
     @Test
@@ -87,7 +105,7 @@ class TargetListenerTest {
         IArena arena = arena(GameState.restarting, List.of(enemy), Set.of(), Set.of(), Map.of(enemy, blue));
 
         Player resolved = DespawnableTargeting.resolveTarget(
-                arena, red, enemy, new Location(world, 0, 64, 0), List.of(enemy));
+                arena, red, enemy, new Location(world, 0, 64, 0), List.of(enemy), player -> false);
 
         assertNull(resolved);
     }
@@ -132,6 +150,10 @@ class TargetListenerTest {
     }
 
     private static Player player(String name, World world, double x, boolean dead) {
+        return player(name, world, x, dead, false);
+    }
+
+    private static Player player(String name, World world, double x, boolean dead, boolean invisible) {
         UUID id = UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8));
         Location location = new Location(world, x, 64, 0);
         return (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[]{Player.class},
@@ -140,6 +162,7 @@ class TargetListenerTest {
                     case "getWorld" -> world;
                     case "getLocation" -> location.clone();
                     case "isDead" -> dead;
+                    case "hasPotionEffect" -> invisible;
                     case "getName", "toString" -> name;
                     case "equals" -> proxy == args[0];
                     case "hashCode" -> System.identityHashCode(proxy);

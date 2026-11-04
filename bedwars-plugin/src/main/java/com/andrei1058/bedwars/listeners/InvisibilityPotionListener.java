@@ -27,7 +27,10 @@ import com.andrei1058.bedwars.arena.InvisibilityManager;
 import com.andrei1058.bedwars.sidebar.SidebarService;
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -37,9 +40,12 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -52,7 +58,9 @@ import static com.andrei1058.bedwars.BedWars.plugin;
  */
 public class InvisibilityPotionListener implements Listener {
 
+    private static final Color INVISIBILITY_PARTICLE_COLOR = Color.fromRGB(127, 127, 127);
     private final Set<UUID> pendingEquipmentRefresh = new HashSet<>();
+    private final Map<UUID, BukkitTask> invisibilityParticleTasks = new HashMap<>();
 
     @EventHandler
     public void onPotion(@NotNull PlayerInvisibilityPotionEvent e) {
@@ -77,11 +85,28 @@ public class InvisibilityPotionListener implements Listener {
         if (!(event.getEntity() instanceof Player player)) return;
         PotionEffect effect = event.getNewEffect();
         boolean invisibility = effect != null && PotionEffectType.INVISIBILITY.equals(effect.getType());
-        if (!isDrunkInvisibility(event.getCause(), event.getAction(), event.isOverride(), invisibility)) return;
-
         IArena arena = Arena.getArenaByPlayer(player);
-        if (arena == null) return;
-        InvisibilityManager.activate(arena, player, durationSeconds(effect.getDuration()));
+        if (isDrunkInvisibility(event.getCause(), event.getAction(), event.isOverride(), invisibility)
+                && arena != null) {
+            InvisibilityManager.activate(arena, player, durationSeconds(effect.getDuration()));
+        }
+        if (!shouldUseLowFrequencyParticles(PotionEffectType.INVISIBILITY.equals(event.getModifiedType()), arena != null)) return;
+
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!player.isOnline() || Arena.getArenaByPlayer(player) != arena) return;
+            PotionEffect active = player.getPotionEffect(PotionEffectType.INVISIBILITY);
+            if (active == null) {
+                stopInvisibilityParticles(player.getUniqueId());
+                return;
+            }
+            // Vanilla still applies the effect, but its own particle flag is suppressed so
+            // that only the low-frequency particle below is visible for invisibility.
+            if (active.hasParticles()) {
+                player.removePotionEffect(PotionEffectType.INVISIBILITY);
+                player.addPotionEffect(withoutParticles(active), true);
+            }
+            startInvisibilityParticles(player, arena);
+        });
     }
 
     @EventHandler
@@ -96,6 +121,44 @@ public class InvisibilityPotionListener implements Listener {
                 InvisibilityManager.synchronizePlayerEquipment(arena, player);
             }
         });
+    }
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        stopInvisibilityParticles(event.getPlayer().getUniqueId());
+    }
+
+    private void startInvisibilityParticles(Player invisible, IArena arena) {
+        UUID playerId = invisible.getUniqueId();
+        if (invisibilityParticleTasks.containsKey(playerId)) return;
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!invisible.isOnline() || Arena.getArenaByPlayer(invisible) != arena
+                    || !invisible.hasPotionEffect(PotionEffectType.INVISIBILITY)) {
+                stopInvisibilityParticles(playerId);
+                return;
+            }
+            Location location = invisible.getLocation().add(0, 1, 0);
+            for (Player viewer : arena.getWorld().getPlayers()) {
+                if (viewer.getLocation().distanceSquared(location) > 256.0D) continue;
+                viewer.spawnParticle(Particle.ENTITY_EFFECT, location, 1,
+                        0.18, 0.3, 0.18, 0, INVISIBILITY_PARTICLE_COLOR);
+            }
+        }, 1L, 20L);
+        invisibilityParticleTasks.put(playerId, task);
+    }
+
+    private void stopInvisibilityParticles(UUID playerId) {
+        BukkitTask task = invisibilityParticleTasks.remove(playerId);
+        if (task != null) task.cancel();
+    }
+
+    static PotionEffect withoutParticles(PotionEffect effect) {
+        return new PotionEffect(effect.getType(), effect.getDuration(), effect.getAmplifier(),
+                effect.isAmbient(), false, effect.hasIcon());
+    }
+
+    static boolean shouldUseLowFrequencyParticles(boolean invisibilityEffect, boolean inArena) {
+        return invisibilityEffect && inArena;
     }
 
     static boolean isDrunkInvisibility(EntityPotionEffectEvent.Cause cause,

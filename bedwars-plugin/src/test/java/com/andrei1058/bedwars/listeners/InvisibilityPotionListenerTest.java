@@ -49,4 +49,11 @@ class InvisibilityPotionListenerTest {
         assertEquals(2, InvisibilityPotionListener.durationSeconds(21));
         assertEquals(30, InvisibilityPotionListener.durationSeconds(600));
     }
+
+    @Test
+    void limitsLowFrequencyParticlesToInvisibilityEffectsInArenas() {
+        assertTrue(InvisibilityPotionListener.shouldUseLowFrequencyParticles(true, true));
+        assertFalse(InvisibilityPotionListener.shouldUseLowFrequencyParticles(false, true));
+        assertFalse(InvisibilityPotionListener.shouldUseLowFrequencyParticles(true, false));
+    }
 }

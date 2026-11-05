@@ -67,13 +67,18 @@ public class InvisibilityPotionListener implements Listener {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 for (PotionEffect pe : e.getPlayer().getActivePotionEffects()) {
                     if (pe.getType().toString().contains("INVISIBILITY")) {
+                        // 1.8 has no hasParticles flag. Ambient potion effects use the
+                        // vanilla sparse particle cadence while preserving the effect.
+                        PotionEffect tracked = ambientInvisibility(pe);
+                        e.getPlayer().removePotionEffect(pe.getType());
+                        e.getPlayer().addPotionEffect(tracked, true);
                         // if is already invisible
                         if (a.getShowTime().containsKey(e.getPlayer())) {
                             ITeam t = a.getTeam(e.getPlayer());
                             // increase invisibility timer
                             // keep trace of invisible players to send hide armor packet when required
                             // because potions do not hide armors
-                            a.getShowTime().replace(e.getPlayer(), pe.getDuration() / 20);
+                            a.getShowTime().replace(e.getPlayer(), tracked.getDuration() / 20);
                             // call custom event
                             Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.ADDED, t, e.getPlayer(), t.getArena()));
                         } else {
@@ -81,7 +86,7 @@ public class InvisibilityPotionListener implements Listener {
                             ITeam t = a.getTeam(e.getPlayer());
                             // keep trace of invisible players to send hide armor packet when required
                             // because potions do not hide armors
-                            a.getShowTime().put(e.getPlayer(), pe.getDuration() / 20);
+                            a.getShowTime().put(e.getPlayer(), tracked.getDuration() / 20);
                             //
                             for (Player p1 : e.getPlayer().getWorld().getPlayers()) {
                                 if (a.isSpectator(p1)) {
@@ -100,5 +105,9 @@ public class InvisibilityPotionListener implements Listener {
                 }
             }, 5L);
         }
+    }
+
+    static PotionEffect ambientInvisibility(PotionEffect effect) {
+        return new PotionEffect(effect.getType(), effect.getDuration(), effect.getAmplifier(), true);
     }
 }

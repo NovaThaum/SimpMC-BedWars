@@ -15,9 +15,8 @@ class ConfigMigratorTest {
         Files.writeString(source, "config-version: 37\nlobbyServer: proxy-hub\ngui:\n  material: PLAYER_HEAD\nsounds:\n  step: BLOCK_WOOL_STEP\npaper-only: true\n");
         Files.writeString(template, "lobbyServer: hub\ngui:\n  material: SKULL_ITEM\nsounds:\n  step: STEP_STONE\nlegacy-only: 9\n");
         ConfigMigrator.main(new String[]{sourceDir.toString(), templateDir.toString()});
-        Path output = templateDir.resolve("migration-output");
-        String migrated = Files.readString(output.resolve("config.yml"));
-        String report = Files.readString(output.resolve("migration-report.txt"));
+        String migrated = Files.readString(templateDir.resolve("config.yml"));
+        String report = Files.readString(templateDir.resolve("migration-report.txt"));
         assertTrue(migrated.contains("lobbyServer: proxy-hub"));
         assertTrue(migrated.contains("material: SKULL_ITEM"));
         assertTrue(migrated.contains("step: STEP_WOOL"));
@@ -25,7 +24,7 @@ class ConfigMigratorTest {
         assertFalse(migrated.contains("config-version"));
         assertFalse(migrated.contains("paper-only"));
         assertTrue(report.contains("PLAYER_HEAD -> SKULL_ITEM"));
-        assertTrue(report.contains("config-version (由目标版自行管理)"));
+        assertTrue(report.contains("config-version 已忽略，由目标插件管理"));
         assertEquals("config-version: 37\nlobbyServer: proxy-hub\ngui:\n  material: PLAYER_HEAD\nsounds:\n  step: BLOCK_WOOL_STEP\npaper-only: true\n", Files.readString(source));
     }
 
@@ -34,7 +33,7 @@ class ConfigMigratorTest {
         Files.createDirectories(sourceDir.resolve("Arenas")); Files.createDirectories(targetDir);
         Files.writeString(sourceDir.resolve("Arenas/new.yml"), "config-version: 24\nminPlayers: 2\nminInTeam: 1\ngame-rules:\n  - doWeatherCycle:false\n");
         ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
-        Path output = targetDir.resolve("migration-output/Arenas/new.yml");
+        Path output = targetDir.resolve("Arenas/new.yml");
         String migrated = Files.readString(output);
         assertTrue(migrated.contains("minPlayers: 2"));
         assertFalse(migrated.contains("minInTeam"));

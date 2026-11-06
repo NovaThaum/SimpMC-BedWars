@@ -26,48 +26,51 @@ public final class ConfigMigrator {
         Path modernDir = Path.of(args[0]).toAbsolutePath().normalize();
         Path legacyDir = Path.of(args[1]).toAbsolutePath().normalize();
         if (!Files.isDirectory(modernDir) || !Files.isDirectory(legacyDir)) throw new IllegalArgumentException("两个参数都必须是已存在的插件配置目录");
-        if (modernDir.equals(legacyDir) || modernDir.startsWith(legacyDir) || legacyDir.startsWith(modernDir))
-            throw new IllegalArgumentException("1.21 与 1.8 插件目录必须分开，避免源文件被当作目标模板");
-        Path outDir = legacyDir.resolve("migration-output");
-        Files.createDirectories(outDir);
+        if (modernDir.equals(legacyDir) || modernDir.startsWith(legacyDir))
+            throw new IllegalArgumentException("1.21 源目录不能等于或位于 1.8 插件目录内");
+        Path reportFile = legacyDir.resolve("migration-report.txt");
         DumperOptions options = new DumperOptions(); options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); options.setIndent(2); options.setPrettyFlow(true);
         Yaml yaml = new Yaml(options);
         List<String> report = new ArrayList<>();
         try (var files = Files.walk(modernDir)) {
             for (Path modern : files.filter(Files::isRegularFile).filter(ConfigMigrator::isYaml).toList()) {
                 Path relative = modernDir.relativize(modern);
-                if (relative.startsWith("migration-output")) continue;
+                if (relative.getNameCount() == 1 && relative.getFileName().toString().equals("migration-report.txt")) continue;
                 Path legacy = legacyDir.resolve(relative);
-                List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>();
+                List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>(), notes = new ArrayList<>();
                 Map<String,Object> source = map(yaml.load(Files.readString(modern)));
                 Map<String,Object> target;
                 boolean newArena = relative.getNameCount() > 1 && "Arenas".equalsIgnoreCase(relative.getName(0).toString()) && !Files.isRegularFile(legacy);
                 if (newArena) {
                     target = new LinkedHashMap<>(source);
-                    normalizeArena(target, skipped, warnings);
-                    migrated.add("<新竞技场整文件>");
+                    normalizeArena(target, notes, warnings);
+                    migrated.addAll(leafPaths(target, ""));
                 } else if (Files.isRegularFile(legacy)) {
                     target = map(yaml.load(Files.readString(legacy)));
-                    merge(source, target, "", migrated, skipped, warnings);
+                    Map<String,Object> transferableSource = new LinkedHashMap<>(source);
+                    if (transferableSource.remove("config-version") != null) notes.add("config-version 已忽略，由目标插件管理");
+                    merge(transferableSource, target, "", migrated, skipped, warnings);
                 } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
-                if (!newArena && source.containsKey("config-version")) skipped.add("config-version (由目标版自行管理)");
-                Path output = outDir.resolve(relative);
+                Path output = legacyDir.resolve(relative).normalize();
+                if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
                 Files.createDirectories(output.getParent());
                 Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
-                report.add(relative + ": 已迁移 " + migrated.size() + " 项，未迁移 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
+                report.add(relative + ": 已迁移 " + migrated.size() + " 项，目标不支持/已忽略 " + notes.size() + " 项，未迁移 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
                 report.addAll(warnings.stream().map(w -> "  映射: " + w).toList());
+                report.addAll(notes.stream().map(n -> "  已忽略: " + n).toList());
                 report.addAll(skipped.stream().map(s -> "  未迁移: " + s).toList());
             }
         }
-        String text = "来源: " + modernDir + "\n目标模板: " + legacyDir + "\n输出: " + outDir + "\n\n" + String.join("\n", report) + "\n";
-        Files.writeString(outDir.resolve("migration-report.txt"), text, StandardCharsets.UTF_8);
+        String text = "来源: " + modernDir + "\n目标插件目录: " + legacyDir + "\n输出: 直接更新目标目录中的对应配置文件\n\n" + String.join("\n", report) + "\n";
+        Files.writeString(reportFile, text, StandardCharsets.UTF_8);
         System.out.println(text);
     }
 
     private static boolean isYaml(Path path) { String name = path.getFileName().toString().toLowerCase(Locale.ROOT); return name.endsWith(".yml") || name.endsWith(".yaml"); }
 
-    private static void normalizeArena(Map<String,Object> arena, List<String> skipped, List<String> warnings) {
+    private static void normalizeArena(Map<String,Object> arena, List<String> notes, List<String> warnings) {
         arena.remove("config-version");
+        notes.add("config-version 已忽略，由 1.8 竞技场加载器管理");
         arena.remove("minInTeam");
         Object group = arena.get("arena-group");
         if (!arena.containsKey("group") && group != null) { arena.put("group", group); arena.remove("arena-group"); warnings.add("竞技场: arena-group -> group"); }
@@ -78,7 +81,16 @@ public final class ConfigMigrator {
             if (!hasDaylight) converted.add("doDaylightCycle:false");
             arena.put("game-rules", converted);
         }
-        skipped.add("config-version (由 1.8 竞技场加载器管理)");
+    }
+
+    private static List<String> leafPaths(Map<String,Object> values, String prefix) {
+        List<String> paths = new ArrayList<>();
+        for (var entry : values.entrySet()) {
+            String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            if (entry.getValue() instanceof Map<?,?> nested) paths.addAll(leafPaths(map(nested), path));
+            else paths.add(path);
+        }
+        return paths;
     }
 
     @SuppressWarnings("unchecked") private static Map<String,Object> map(Object value) { return value instanceof Map<?,?> m ? (Map<String,Object>) m : new LinkedHashMap<>(); }

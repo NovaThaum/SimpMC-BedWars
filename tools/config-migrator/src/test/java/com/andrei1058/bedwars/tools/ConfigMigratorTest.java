@@ -9,11 +9,14 @@ class ConfigMigratorTest {
     @TempDir Path temp;
 
     @Test void mergesOnlyKnownTargetPathsAndReportsLegacyConversions() throws Exception {
-        Path source = temp.resolve("modern.yml"), template = temp.resolve("legacy.yml"), output = temp.resolve("out");
+        Path sourceDir = temp.resolve("modern"), templateDir = temp.resolve("legacy");
+        Files.createDirectories(sourceDir); Files.createDirectories(templateDir);
+        Path source = sourceDir.resolve("config.yml"), template = templateDir.resolve("config.yml");
         Files.writeString(source, "config-version: 37\nlobbyServer: proxy-hub\ngui:\n  material: PLAYER_HEAD\nsounds:\n  step: BLOCK_WOOL_STEP\npaper-only: true\n");
         Files.writeString(template, "lobbyServer: hub\ngui:\n  material: SKULL_ITEM\nsounds:\n  step: STEP_STONE\nlegacy-only: 9\n");
-        ConfigMigrator.main(new String[]{source.toString(), template.toString(), output.toString()});
-        String migrated = Files.readString(output.resolve("legacy.yml"));
+        ConfigMigrator.main(new String[]{sourceDir.toString(), templateDir.toString()});
+        Path output = templateDir.resolve("migration-output");
+        String migrated = Files.readString(output.resolve("config.yml"));
         String report = Files.readString(output.resolve("migration-report.txt"));
         assertTrue(migrated.contains("lobbyServer: proxy-hub"));
         assertTrue(migrated.contains("material: SKULL_ITEM"));

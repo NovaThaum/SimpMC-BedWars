@@ -22,25 +22,42 @@ public final class ConfigMigrator {
             Map.entry("ENTITY_PLAYER_BIG_FALL", "FALL_BIG"), Map.entry("ENTITY_PLAYER_SMALL_FALL", "FALL_SMALL"));
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 3) { System.err.println("用法: java -jar bedwars-config-migrator.jar <1.21配置> <1.8模板> <输出目录>"); System.exit(2); }
-        Path modern = Path.of(args[0]), legacy = Path.of(args[1]), outDir = Path.of(args[2]);
+        if (args.length != 2) { System.err.println("用法: java -jar bedwars-config-migrator.jar <1.21插件数据目录> <1.8插件数据目录>"); System.exit(2); }
+        Path modernDir = Path.of(args[0]).toAbsolutePath().normalize();
+        Path legacyDir = Path.of(args[1]).toAbsolutePath().normalize();
+        if (!Files.isDirectory(modernDir) || !Files.isDirectory(legacyDir)) throw new IllegalArgumentException("两个参数都必须是已存在的插件配置目录");
+        if (modernDir.equals(legacyDir) || modernDir.startsWith(legacyDir) || legacyDir.startsWith(modernDir))
+            throw new IllegalArgumentException("1.21 与 1.8 插件目录必须分开，避免源文件被当作目标模板");
+        Path outDir = legacyDir.resolve("migration-output");
         Files.createDirectories(outDir);
         DumperOptions options = new DumperOptions(); options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); options.setIndent(2); options.setPrettyFlow(true);
         Yaml yaml = new Yaml(options);
-        Map<String, Object> source = map(yaml.load(Files.readString(modern)));
-        Map<String, Object> target = map(yaml.load(Files.readString(legacy)));
-        List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>();
-        merge(source, target, "", migrated, skipped, warnings);
-        if (source.containsKey("config-version")) skipped.add("config-version (由目标版自行管理)");
-        Path output = outDir.resolve(legacy.getFileName());
-        Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
-        String report = "来源: " + modern.toAbsolutePath() + "\n目标模板: " + legacy.toAbsolutePath() + "\n输出: " + output.toAbsolutePath() +
-                "\n\n已迁移路径 (" + migrated.size() + "):\n- " + String.join("\n- ", migrated) +
-                "\n\n未迁移路径 (" + skipped.size() + "):\n- " + String.join("\n- ", skipped) +
-                "\n\n警告:\n- " + String.join("\n- ", warnings) + "\n";
-        Files.writeString(outDir.resolve("migration-report.txt"), report, StandardCharsets.UTF_8);
-        System.out.println(report);
+        List<String> report = new ArrayList<>();
+        try (var files = Files.walk(modernDir)) {
+            for (Path modern : files.filter(Files::isRegularFile).filter(ConfigMigrator::isYaml).toList()) {
+                Path relative = modernDir.relativize(modern);
+                if (relative.startsWith("migration-output")) continue;
+                Path legacy = legacyDir.resolve(relative);
+                if (!Files.isRegularFile(legacy)) { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
+                List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>();
+                Map<String,Object> source = map(yaml.load(Files.readString(modern)));
+                Map<String,Object> target = map(yaml.load(Files.readString(legacy)));
+                merge(source, target, "", migrated, skipped, warnings);
+                if (source.containsKey("config-version")) skipped.add("config-version (由目标版自行管理)");
+                Path output = outDir.resolve(relative);
+                Files.createDirectories(output.getParent());
+                Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
+                report.add(relative + ": 已迁移 " + migrated.size() + " 项，未迁移 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
+                report.addAll(warnings.stream().map(w -> "  映射: " + w).toList());
+                report.addAll(skipped.stream().map(s -> "  未迁移: " + s).toList());
+            }
+        }
+        String text = "来源: " + modernDir + "\n目标模板: " + legacyDir + "\n输出: " + outDir + "\n\n" + String.join("\n", report) + "\n";
+        Files.writeString(outDir.resolve("migration-report.txt"), text, StandardCharsets.UTF_8);
+        System.out.println(text);
     }
+
+    private static boolean isYaml(Path path) { String name = path.getFileName().toString().toLowerCase(Locale.ROOT); return name.endsWith(".yml") || name.endsWith(".yaml"); }
 
     @SuppressWarnings("unchecked") private static Map<String,Object> map(Object value) { return value instanceof Map<?,?> m ? (Map<String,Object>) m : new LinkedHashMap<>(); }
     private static void merge(Map<String,Object> source, Map<String,Object> target, String prefix, List<String> migrated, List<String> skipped, List<String> warnings) {

@@ -38,12 +38,19 @@ public final class ConfigMigrator {
                 Path relative = modernDir.relativize(modern);
                 if (relative.startsWith("migration-output")) continue;
                 Path legacy = legacyDir.resolve(relative);
-                if (!Files.isRegularFile(legacy)) { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
                 List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>();
                 Map<String,Object> source = map(yaml.load(Files.readString(modern)));
-                Map<String,Object> target = map(yaml.load(Files.readString(legacy)));
-                merge(source, target, "", migrated, skipped, warnings);
-                if (source.containsKey("config-version")) skipped.add("config-version (由目标版自行管理)");
+                Map<String,Object> target;
+                boolean newArena = relative.getNameCount() > 1 && "Arenas".equalsIgnoreCase(relative.getName(0).toString()) && !Files.isRegularFile(legacy);
+                if (newArena) {
+                    target = new LinkedHashMap<>(source);
+                    normalizeArena(target, skipped, warnings);
+                    migrated.add("<新竞技场整文件>");
+                } else if (Files.isRegularFile(legacy)) {
+                    target = map(yaml.load(Files.readString(legacy)));
+                    merge(source, target, "", migrated, skipped, warnings);
+                } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
+                if (!newArena && source.containsKey("config-version")) skipped.add("config-version (由目标版自行管理)");
                 Path output = outDir.resolve(relative);
                 Files.createDirectories(output.getParent());
                 Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
@@ -58,6 +65,21 @@ public final class ConfigMigrator {
     }
 
     private static boolean isYaml(Path path) { String name = path.getFileName().toString().toLowerCase(Locale.ROOT); return name.endsWith(".yml") || name.endsWith(".yaml"); }
+
+    private static void normalizeArena(Map<String,Object> arena, List<String> skipped, List<String> warnings) {
+        arena.remove("config-version");
+        arena.remove("minInTeam");
+        Object group = arena.get("arena-group");
+        if (!arena.containsKey("group") && group != null) { arena.put("group", group); arena.remove("arena-group"); warnings.add("竞技场: arena-group -> group"); }
+        Object rules = arena.get("game-rules");
+        if (rules instanceof List<?> list) {
+            List<Object> converted = new ArrayList<>(list);
+            boolean hasDaylight = converted.stream().anyMatch(v -> String.valueOf(v).startsWith("doDaylightCycle:"));
+            if (!hasDaylight) converted.add("doDaylightCycle:false");
+            arena.put("game-rules", converted);
+        }
+        skipped.add("config-version (由 1.8 竞技场加载器管理)");
+    }
 
     @SuppressWarnings("unchecked") private static Map<String,Object> map(Object value) { return value instanceof Map<?,?> m ? (Map<String,Object>) m : new LinkedHashMap<>(); }
     private static void merge(Map<String,Object> source, Map<String,Object> target, String prefix, List<String> migrated, List<String> skipped, List<String> warnings) {

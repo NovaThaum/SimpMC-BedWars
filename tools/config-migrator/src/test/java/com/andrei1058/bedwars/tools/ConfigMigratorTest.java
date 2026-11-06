@@ -28,4 +28,17 @@ class ConfigMigratorTest {
         assertTrue(report.contains("config-version (由目标版自行管理)"));
         assertEquals("config-version: 37\nlobbyServer: proxy-hub\ngui:\n  material: PLAYER_HEAD\nsounds:\n  step: BLOCK_WOOL_STEP\npaper-only: true\n", Files.readString(source));
     }
+
+    @Test void createsMissingArenaFromModernFile() throws Exception {
+        Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
+        Files.createDirectories(sourceDir.resolve("Arenas")); Files.createDirectories(targetDir);
+        Files.writeString(sourceDir.resolve("Arenas/new.yml"), "config-version: 24\nminPlayers: 2\nminInTeam: 1\ngame-rules:\n  - doWeatherCycle:false\n");
+        ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
+        Path output = targetDir.resolve("migration-output/Arenas/new.yml");
+        String migrated = Files.readString(output);
+        assertTrue(migrated.contains("minPlayers: 2"));
+        assertFalse(migrated.contains("minInTeam"));
+        assertFalse(migrated.contains("config-version"));
+        assertTrue(migrated.contains("doDaylightCycle:false"));
+    }
 }

@@ -28,6 +28,24 @@ class ConfigMigratorTest {
         assertEquals("config-version: 37\nlobbyServer: proxy-hub\ngui:\n  material: PLAYER_HEAD\nsounds:\n  step: BLOCK_WOOL_STEP\npaper-only: true\n", Files.readString(source));
     }
 
+    @Test void addsMissingLanguageScalarsAndSkipsCache() throws Exception {
+        Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
+        Files.createDirectories(sourceDir.resolve("Languages")); Files.createDirectories(sourceDir.resolve("Cache"));
+        Files.createDirectories(targetDir.resolve("Languages")); Files.createDirectories(targetDir.resolve("Cache"));
+        Files.writeString(sourceDir.resolve("Languages/messages_en.yml"), "existing: modern\nnew-key: migrated\nrejoin:\n  waiting: new text\n");
+        Files.writeString(targetDir.resolve("Languages/messages_en.yml"), "existing: custom\nrejoin: legacy custom text\n");
+        Files.writeString(sourceDir.resolve("Cache/map.zip.yml"), "should: skip\n");
+        ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
+        String migrated = Files.readString(targetDir.resolve("Languages/messages_en.yml"));
+        String report = Files.readString(targetDir.resolve("migration-report.txt"));
+        assertTrue(migrated.contains("existing: custom"));
+        assertTrue(migrated.contains("new-key: migrated"));
+        assertTrue(migrated.contains("rejoin: legacy custom text"));
+        assertTrue(report.contains("保留目标值"));
+        assertFalse(Files.exists(targetDir.resolve("Cache/map.zip.yml")));
+        assertTrue(report.contains("Cache") && report.contains("map.zip.yml"));
+    }
+
     @Test void createsMissingArenaFromModernFile() throws Exception {
         Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
         Files.createDirectories(sourceDir.resolve("Arenas")); Files.createDirectories(targetDir);

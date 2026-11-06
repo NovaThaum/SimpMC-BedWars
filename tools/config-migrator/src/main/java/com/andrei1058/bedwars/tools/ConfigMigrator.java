@@ -35,6 +35,10 @@ public final class ConfigMigrator {
         try (var files = Files.walk(modernDir)) {
             for (Path modern : files.filter(Files::isRegularFile).filter(ConfigMigrator::isYaml).toList()) {
                 Path relative = modernDir.relativize(modern);
+                if (relative.getNameCount() > 0 && "Cache".equalsIgnoreCase(relative.getName(0).toString())) {
+                    report.add(relative + ": 主动跳过，Cache 由 1.8.8 插件重新获取地图缓存");
+                    continue;
+                }
                 if (relative.getNameCount() == 1 && relative.getFileName().toString().equals("migration-report.txt")) continue;
                 Path legacy = legacyDir.resolve(relative);
                 List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>(), notes = new ArrayList<>();
@@ -49,7 +53,8 @@ public final class ConfigMigrator {
                     target = map(yaml.load(Files.readString(legacy)));
                     Map<String,Object> transferableSource = new LinkedHashMap<>(source);
                     if (transferableSource.remove("config-version") != null) notes.add("config-version 已忽略，由目标插件管理");
-                    merge(transferableSource, target, "", migrated, skipped, warnings);
+                    boolean languageFile = relative.getNameCount() > 0 && "Languages".equalsIgnoreCase(relative.getName(0).toString());
+                    merge(transferableSource, target, "", migrated, skipped, warnings, notes, languageFile);
                 } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
                 Path output = legacyDir.resolve(relative).normalize();
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
@@ -58,7 +63,7 @@ public final class ConfigMigrator {
                 report.add(relative + ": 已迁移 " + migrated.size() + " 项，目标不支持/已忽略 " + notes.size() + " 项，未迁移 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
                 report.addAll(warnings.stream().map(w -> "  映射: " + w).toList());
                 report.addAll(notes.stream().map(n -> "  已忽略: " + n).toList());
-                report.addAll(skipped.stream().map(s -> "  未迁移: " + s).toList());
+                report.addAll(skipped.stream().map(s -> "  旧版不支持/结构冲突: " + s).toList());
             }
         }
         String text = "来源: " + modernDir + "\n目标插件目录: " + legacyDir + "\n输出: 直接更新目标目录中的对应配置文件\n\n" + String.join("\n", report) + "\n";
@@ -94,14 +99,31 @@ public final class ConfigMigrator {
     }
 
     @SuppressWarnings("unchecked") private static Map<String,Object> map(Object value) { return value instanceof Map<?,?> m ? (Map<String,Object>) m : new LinkedHashMap<>(); }
-    private static void merge(Map<String,Object> source, Map<String,Object> target, String prefix, List<String> migrated, List<String> skipped, List<String> warnings) {
+    private static void merge(Map<String,Object> source, Map<String,Object> target, String prefix, List<String> migrated, List<String> skipped, List<String> warnings, List<String> notes, boolean addMissingScalars) {
         for (var entry : source.entrySet()) {
             String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
             Object value = entry.getValue(), existing = target.get(entry.getKey());
             if (value instanceof Map<?,?> sm) {
-                if (existing instanceof Map<?,?> tm) merge(map(sm), map(tm), path, migrated, skipped, warnings); else skipped.add(path + " (目标不是配置节)");
+                if (existing instanceof Map<?,?> tm) merge(map(sm), map(tm), path, migrated, skipped, warnings, notes, addMissingScalars);
+                else if (!target.containsKey(entry.getKey()) && addMissingScalars) {
+                    Map<String,Object> added = new LinkedHashMap<>();
+                    merge(map(sm), added, path, migrated, skipped, warnings, notes, true);
+                    target.put(entry.getKey(), added);
+                } else skipped.add(path + " (源为配置节，目标为标量，保留目标值)");
             } else if (target.containsKey(entry.getKey())) {
-                Object converted = convert(value, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
+                if (existing instanceof Map<?,?>) {
+                    if (addMissingScalars) skipped.add(path + " (源为标量，目标为配置节，保留目标节)");
+                    else skipped.add(path + " (源和目标类型不兼容)");
+                } else {
+                    if (addMissingScalars) {
+                        notes.add(path + " (保留 1.8.8 已有值)");
+                    } else {
+                        Object converted = convert(value, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
+                    }
+                }
+            } else if (addMissingScalars) {
+                target.put(entry.getKey(), convert(value, path, warnings));
+                migrated.add(path + " (新增语言键)");
             } else skipped.add(path);
         }
     }

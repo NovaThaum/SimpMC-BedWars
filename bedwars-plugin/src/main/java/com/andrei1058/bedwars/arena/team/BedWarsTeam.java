@@ -148,7 +148,7 @@ public class BedWarsTeam implements ITeam {
         TeleportManager.teleportC(p, spawn, PlayerTeleportEvent.TeleportCause.PLUGIN);
         p.setGameMode(GameMode.SURVIVAL);
         p.setCanPickupItems(true);
-        nms.setCollide(p, getArena(), true);
+        nms.setCollide(p, getArena(), false);
         sendDefaultInventory(p, true);
         Bukkit.getPluginManager().callEvent(new PlayerFirstSpawnEvent(p, getArena(), this));
     }

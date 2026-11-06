@@ -494,9 +494,9 @@ public class Arena implements IArena {
 
             p.closeInventory();
             players.add(p);
-            // Spigot 1.8 has no scoreboard collision rule. Clear any stale
-            // no-collision state while the arena is still waiting/starting.
-            nms.setCollide(p, this, true);
+            // 1.8 has no team collision rule. Keep all managed arena players
+            // non-collidable, including the waiting and starting phases.
+            nms.setCollide(p, this, false);
             p.setFlying(false);
             p.setAllowFlight(false);
             p.setHealth(20);
@@ -1605,16 +1605,11 @@ public class Arena implements IArena {
         }
     }
 
-    /**
-     * 1.8.8 does not expose the modern scoreboard collision rule. Keep player
-     * entities non-collidable for the playing phase and restore the normal
-     * state outside the game. The legacy arrow bridge temporarily exposes
-     * valid enemy targets while an arrow is being processed.
-     */
+    /** Keep every participant non-collidable while managed by an arena. */
     private void updatePlayingCollision(boolean playing) {
         for (Player player : new ArrayList<>(players)) {
             if (player != null) {
-                nms.setCollide(player, this, !playing);
+                nms.setCollide(player, this, false);
             }
         }
     }

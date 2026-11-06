@@ -48,6 +48,7 @@ public final class ConfigMigrator {
                 if (newArena) {
                     target = new LinkedHashMap<>(source);
                     normalizeArena(target, notes, warnings);
+                    normalizeValues(target, "", warnings);
                     migrated.addAll(leafPaths(target, ""));
                 } else if (Files.isRegularFile(legacy)) {
                     target = map(yaml.load(Files.readString(legacy)));
@@ -129,11 +130,45 @@ public final class ConfigMigrator {
     }
     private static Object convert(Object value, String path, List<String> warnings) {
         if (!(value instanceof String s)) return value;
+        String location = legacyLocation(s);
+        if (location != null) return location;
+        if (keyEndsWithColor(path)) {
+            String color = s.equalsIgnoreCase("cyan") ? "AQUA" : s.toUpperCase(Locale.ROOT);
+            if (!color.equals(s)) warnings.add(path + ": " + s + " -> " + color);
+            return color;
+        }
         String key = path.toLowerCase(Locale.ROOT);
         Map<String,String> table = key.contains("sound") ? SOUNDS
                 : (key.contains("material") || key.endsWith(".item") ? MATERIALS : Collections.emptyMap());
         String converted = table.getOrDefault(s, s);
         if (!converted.equals(s)) warnings.add(path + ": " + s + " -> " + converted);
         return converted;
+    }
+
+    private static String legacyLocation(String value) {
+        String clean = value.trim().replace("[", "").replace("]", "");
+        String[] parts = clean.split(",");
+        if (parts.length != 3) return null;
+        try {
+            Double.parseDouble(parts[0].trim());
+            Double.parseDouble(parts[1].trim());
+            Double.parseDouble(parts[2].trim());
+            return clean + ",0,0";
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static boolean keyEndsWithColor(String path) {
+        String key = path.toLowerCase(Locale.ROOT);
+        return key.endsWith(".color") || key.endsWith("color") || key.endsWith("team-color");
+    }
+
+    private static void normalizeValues(Map<String,Object> values, String prefix, List<String> warnings) {
+        for (Map.Entry<String,Object> entry : values.entrySet()) {
+            String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            if (entry.getValue() instanceof Map<?,?> nested) normalizeValues(map(nested), path, warnings);
+            else if (entry.getValue() instanceof String string) entry.setValue(convert(string, path, warnings));
+        }
     }
 }

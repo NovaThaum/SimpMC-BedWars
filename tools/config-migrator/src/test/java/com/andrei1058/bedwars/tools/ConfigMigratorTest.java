@@ -58,4 +58,14 @@ class ConfigMigratorTest {
         assertFalse(migrated.contains("config-version"));
         assertTrue(migrated.contains("doDaylightCycle:false"));
     }
+
+    @Test void convertsModernLocationsAndTeamColorNames() throws Exception {
+        Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
+        Files.createDirectories(sourceDir.resolve("Arenas")); Files.createDirectories(targetDir);
+        Files.writeString(sourceDir.resolve("Arenas/arena.yml"), "team-color: Cyan\nspawn: '[1,2,3]'\n");
+        ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
+        String migrated = Files.readString(targetDir.resolve("Arenas/arena.yml"));
+        assertTrue(migrated.contains("team-color: AQUA"));
+        assertTrue(migrated.contains("spawn: 1,2,3,0,0"));
+    }
 }

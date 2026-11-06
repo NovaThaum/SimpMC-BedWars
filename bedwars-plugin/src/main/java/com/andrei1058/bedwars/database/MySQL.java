@@ -113,6 +113,17 @@ public class MySQL implements Database {
         return true;
     }
 
+    public Connection openConnection() throws SQLException {
+        if (dataSource == null || dataSource.isClosed()) {
+            throw new SQLException("MySQL connection pool is not available");
+        }
+        return dataSource.getConnection();
+    }
+
+    public String storageIdentity() {
+        return "mysql:" + host + ":" + port + "/" + database;
+    }
+
     @Override
     public boolean hasStats(UUID uuid) {
         String sql = "SELECT uuid FROM global_stats WHERE uuid = ?;";

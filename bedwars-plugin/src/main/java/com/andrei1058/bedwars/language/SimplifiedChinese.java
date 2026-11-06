@@ -42,6 +42,10 @@ public class SimplifiedChinese extends Language {
         yml.options().copyDefaults(true);
         yml.addDefault(Messages.PREFIX, "");
         yml.addDefault("name", "简体中文");
+        yml.addDefault("match-history.disabled", "{prefix}&c对局历史统计未启用。请检查数据库连接与配置。");
+        yml.addDefault("match-history.empty", "{prefix}&7没有对局记录。");
+        yml.addDefault("match-history.not-found", "{prefix}&c未找到该对局。");
+        yml.addDefault("match-history.usage", "{prefix}&e用法：/bw match <编号|UUID>，/bw history <玩家UUID> list [页]，/bw history all [页]，/bw record [玩家UUID]");
 
         // this must stay here
         // move message to new path

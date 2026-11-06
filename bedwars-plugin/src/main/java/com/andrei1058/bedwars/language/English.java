@@ -42,6 +42,10 @@ public class English extends Language {
         yml.options().copyDefaults(true);
         yml.addDefault(Messages.PREFIX, "");
         yml.addDefault("name", "English");
+        yml.addDefault("match-history.disabled", "{prefix}&cMatch history is disabled. Check the database configuration.");
+        yml.addDefault("match-history.empty", "{prefix}&7There are no match records.");
+        yml.addDefault("match-history.not-found", "{prefix}&cThe match was not found.");
+        yml.addDefault("match-history.usage", "{prefix}&eUsage: /bw match <number|UUID>, /bw history <player UUID> list [page], /bw history all [page], /bw record [player UUID]");
 
         // this must stay here
         // move message to new path

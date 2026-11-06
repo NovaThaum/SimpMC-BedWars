@@ -32,6 +32,7 @@ import com.andrei1058.bedwars.api.server.RestoreAdapter;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import com.andrei1058.bedwars.api.sidebar.ISidebarService;
+import com.andrei1058.bedwars.api.stats.MatchHistory;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -43,6 +44,9 @@ import java.util.UUID;
 
 @SuppressWarnings("unused")
 public interface BedWars {
+
+    /** 异步读取已持久化的对局历史；数据库错误通过返回的 future 传递。 */
+    MatchHistory getMatchHistory();
 
     /**
      * Get stats utils.

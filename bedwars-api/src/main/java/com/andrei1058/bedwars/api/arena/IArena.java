@@ -123,6 +123,11 @@ public interface IArena {
      */
     List<Player> getPlayers();
 
+    /** 返回当前参赛玩家的独立快照，供异步边界或生命周期记录使用。 */
+    default List<Player> getPlayersSnapshot() {
+        return new java.util.ArrayList<>(getPlayers());
+    }
+
     /**
      * Get maximum allowed players amount.
      */

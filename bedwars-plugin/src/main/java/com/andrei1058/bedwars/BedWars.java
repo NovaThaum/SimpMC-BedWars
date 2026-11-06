@@ -70,6 +70,9 @@ import com.andrei1058.bedwars.money.internal.MoneyListeners;
 import com.andrei1058.bedwars.shop.ShopManager;
 import com.andrei1058.bedwars.sidebar.*;
 import com.andrei1058.bedwars.stats.StatsManager;
+import com.andrei1058.bedwars.stats.match.MatchStatsRecorder;
+import com.andrei1058.bedwars.stats.match.MatchStatsDatabase;
+import com.andrei1058.bedwars.stats.match.MatchHistoryService;
 import com.andrei1058.bedwars.support.citizens.CitizensListener;
 import com.andrei1058.bedwars.support.citizens.JoinNPC;
 import com.andrei1058.bedwars.support.papi.PAPISupport;
@@ -120,7 +123,7 @@ public class BedWars extends JavaPlugin {
     private static Chat chat = new NoChat();
     protected static Level level;
     private static Economy economy;
-    private static final String version = Bukkit.getServer().getClass().getName().split("\\.")[3];
+    private static final String version = detectServerVersion();
     private static String lobbyWorld = "";
     private static boolean shuttingDown = false;
 
@@ -128,6 +131,20 @@ public class BedWars extends JavaPlugin {
 
     //remote database
     private static Database remoteDatabase;
+    private MatchStatsRecorder matchStatsRecorder;
+    private MatchHistoryService matchHistory;
+
+    private static String detectServerVersion() {
+        try {
+            if (Bukkit.getServer() == null) {
+                return "unknown";
+            }
+            String[] parts = Bukkit.getServer().getClass().getName().split("\\.");
+            return parts.length > 3 ? parts[3] : "unknown";
+        } catch (RuntimeException ignored) {
+            return "unknown";
+        }
+    }
 
     private boolean serverSoftwareSupport = true;
 
@@ -374,6 +391,23 @@ public class BedWars extends JavaPlugin {
             remoteDatabase.init();
         }
 
+        if (config.getYml().getBoolean(ConfigPath.MATCH_STATISTICS_ENABLED, true)) {
+            MatchStatsDatabase matchDatabase = null;
+            if (remoteDatabase instanceof com.andrei1058.bedwars.database.MySQL) {
+                matchDatabase = MatchStatsDatabase.mysql((com.andrei1058.bedwars.database.MySQL) remoteDatabase);
+            } else if (!config.getBoolean("database.enable")) {
+                matchDatabase = MatchStatsDatabase.sqlite(getDataFolder().toPath().resolve("Cache/matches.db"));
+            }
+            if (matchDatabase != null) {
+                matchStatsRecorder = new MatchStatsRecorder(this, matchDatabase);
+                registerEvents(matchStatsRecorder);
+                matchStatsRecorder.start();
+                matchHistory = new MatchHistoryService(matchDatabase, matchStatsRecorder);
+            } else {
+                getLogger().warning("对局历史未启用：已配置的 MySQL 不可用。");
+            }
+        }
+
         /* Citizens support */
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (this.getServer().getPluginManager().getPlugin("Citizens") != null) {
@@ -518,6 +552,14 @@ public class BedWars extends JavaPlugin {
     public void onDisable() {
         shuttingDown = true;
         if (!serverSoftwareSupport) return;
+        if (matchStatsRecorder != null) {
+            matchStatsRecorder.close();
+            matchStatsRecorder = null;
+        }
+        if (matchHistory != null) {
+            matchHistory.close();
+            matchHistory = null;
+        }
         if (getServerType() == ServerType.BUNGEE) {
             ArenaSocket.disable();
         }
@@ -529,6 +571,10 @@ public class BedWars extends JavaPlugin {
             }
         }
 
+    }
+
+    public MatchHistoryService getMatchHistory() {
+        return matchHistory;
     }
 
     private void loadArenasAndSigns() {

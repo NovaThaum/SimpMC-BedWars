@@ -32,6 +32,7 @@ import com.andrei1058.bedwars.api.server.RestoreAdapter;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import com.andrei1058.bedwars.api.sidebar.ISidebarService;
+import com.andrei1058.bedwars.api.stats.MatchHistory;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.commands.bedwars.MainCommand;
@@ -52,6 +53,11 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class API implements com.andrei1058.bedwars.api.BedWars {
+
+    @Override
+    public MatchHistory getMatchHistory() {
+        return BedWars.plugin.getMatchHistory();
+    }
 
     private static RestoreAdapter restoreAdapter;
     private final AFKUtil afkSystem = new AFKUtil() {

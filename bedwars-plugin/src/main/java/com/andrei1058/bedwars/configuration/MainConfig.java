@@ -76,6 +76,12 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.GENERAL_CHAT_GLOBAL, yml.get("globalChat", false));
         yml.addDefault(ConfigPath.GENERAL_CHAT_FORMATTING, yml.get("formatChat", true));
         yml.addDefault("debug", false);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_ENABLED, true);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_TIMEZONE, "Asia/Shanghai");
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_REPORT_INTERVAL_SECONDS, 300);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_FINISH_GRACE_TICKS, 40);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_QUEUE_CAPACITY, 10000);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_RETRY_DELAY_SECONDS, 5);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_MARK_LEAVE_AS_ABANDON, false);
         // parties category
         yml.addDefault(ConfigPath.GENERAL_ENABLE_PARTY_CMD, true);

@@ -23,6 +23,17 @@ package com.andrei1058.bedwars.api.configuration;
 @SuppressWarnings("WeakerAccess")
 public class ConfigPath {
 
+    public static final String MATCH_STATISTICS_ENABLED = "match-statistics.enabled";
+    public static final String MATCH_STATISTICS_TIMEZONE = "match-statistics.timezone";
+    public static final String MATCH_STATISTICS_REPORT_INTERVAL_SECONDS = "match-statistics.report-interval-seconds";
+    public static final String MATCH_STATISTICS_FINISH_GRACE_TICKS = "match-statistics.finish-grace-ticks";
+    public static final String MATCH_STATISTICS_VIOLATIONS_ENABLED = "match-statistics.violations.enabled";
+    public static final String MATCH_STATISTICS_VIOLATIONS_MATCH_LEAVE_THRESHOLD = "match-statistics.violations.match-leave-threshold";
+    public static final String MATCH_STATISTICS_VIOLATIONS_CROSS_TEAM_ITEM_TRANSFER = "match-statistics.violations.cross-team-item-transfer";
+    public static final String MATCH_STATISTICS_VIOLATIONS_WARNING_THRESHOLDS = "match-statistics.violations.warning-thresholds";
+    public static final String MATCH_STATISTICS_QUEUE_CAPACITY = "match-statistics.queue-capacity";
+    public static final String MATCH_STATISTICS_RETRY_DELAY_SECONDS = "match-statistics.retry-delay-seconds";
+
     public static final String GAME_END_PATH = "game-end";
     @GameMainOverridable
     public static final String GENERAL_GAME_END_SHOW_ELIMINATED = GAME_END_PATH+".show-eliminated";

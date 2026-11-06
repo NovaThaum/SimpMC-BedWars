@@ -72,6 +72,9 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
             new CmdGUI(this, "gui");
         }
         new CmdStats(this, "stats");
+        new CmdMatchQuery(this, "match");
+        new CmdMatchQuery(this, "history");
+        new CmdMatchQuery(this, "record");
         new CmdStart(this, "forceStart");
         new CmdStart(this, "start");
         if (BedWars.getServerType() != ServerType.BUNGEE) {

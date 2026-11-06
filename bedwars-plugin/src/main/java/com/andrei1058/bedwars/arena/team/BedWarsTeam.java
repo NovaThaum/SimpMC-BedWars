@@ -181,12 +181,14 @@ public class BedWarsTeam implements ITeam {
      * Rejoin a team
      */
     public void reJoin(@NotNull Player p) {
-        reJoin(p, BedWars.config.getInt(ConfigPath.GENERAL_CONFIGURATION_RE_SPAWN_COUNTDOWN));
+        addPlayers(p);
+        // A reconnect restores the player immediately. It must not create a
+        // second death-respawn session or replay the respawn countdown.
+        arena.getRespawnSessions().remove(p);
     }
 
     public void reJoin(@NotNull Player p, int respawnTime) {
-        addPlayers(p);
-        arena.startReSpawnSession(p, respawnTime);
+        reJoin(p);
     }
 
     /**

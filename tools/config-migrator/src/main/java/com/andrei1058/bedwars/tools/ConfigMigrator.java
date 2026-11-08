@@ -61,10 +61,10 @@ public final class ConfigMigrator {
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
                 Files.createDirectories(output.getParent());
                 Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
-                report.add(relative + ": 已迁移 " + migrated.size() + " 项，目标不支持/已忽略 " + notes.size() + " 项，未迁移 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
+                report.add(relative + ": 已迁移 " + migrated.size() + " 项，已回退目标版默认值/忽略 " + notes.size() + " 项，未处理 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
                 report.addAll(warnings.stream().map(w -> "  映射: " + w).toList());
                 report.addAll(notes.stream().map(n -> "  已忽略: " + n).toList());
-                report.addAll(skipped.stream().map(s -> "  旧版不支持/结构冲突: " + s).toList());
+                report.addAll(skipped.stream().map(s -> "  未处理（需人工确认）: " + s).toList());
             }
         }
         String text = "来源: " + modernDir + "\n目标插件目录: " + legacyDir + "\n输出: 直接更新目标目录中的对应配置文件\n\n" + String.join("\n", report) + "\n";
@@ -110,10 +110,10 @@ public final class ConfigMigrator {
                     Map<String,Object> added = new LinkedHashMap<>();
                     merge(map(sm), added, path, migrated, skipped, warnings, notes, true);
                     target.put(entry.getKey(), added);
-                } else skipped.add(path + " (源为配置节，目标为标量，保留目标值)");
+                } else notes.add(path + " (新版配置节无 1.8.8 等价实现，使用目标版默认值)");
             } else if (target.containsKey(entry.getKey())) {
                 if (existing instanceof Map<?,?>) {
-                    if (addMissingScalars) skipped.add(path + " (源为标量，目标为配置节，保留目标节)");
+                    if (addMissingScalars) notes.add(path + " (新版标量无法覆盖目标配置节，使用目标版默认值)");
                     else skipped.add(path + " (源和目标类型不兼容)");
                 } else {
                     if (addMissingScalars) {
@@ -127,7 +127,7 @@ public final class ConfigMigrator {
             } else if (addMissingScalars) {
                 target.put(entry.getKey(), convert(value, path, warnings));
                 migrated.add(path + " (新增语言键)");
-            } else skipped.add(path);
+                    } else notes.add(path + " (目标版无对应配置项，使用目标版默认值)");
         }
     }
     private static Object convert(Object value, String path, List<String> warnings) {

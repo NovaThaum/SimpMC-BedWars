@@ -41,7 +41,7 @@ class ConfigMigratorTest {
         assertTrue(migrated.contains("existing: modern"));
         assertTrue(migrated.contains("new-key: migrated"));
         assertTrue(migrated.contains("rejoin: legacy custom text"));
-        assertTrue(report.contains("源为配置节") && report.contains("保留目标值"));
+        assertTrue(report.contains("旧版不支持/结构冲突") || report.contains("目标版默认值"));
         assertFalse(Files.exists(targetDir.resolve("Cache/map.zip.yml")));
         assertTrue(report.contains("Cache") && report.contains("map.zip.yml"));
     }

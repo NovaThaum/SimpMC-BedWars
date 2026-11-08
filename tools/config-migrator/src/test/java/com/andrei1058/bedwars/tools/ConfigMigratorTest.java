@@ -38,10 +38,10 @@ class ConfigMigratorTest {
         ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
         String migrated = Files.readString(targetDir.resolve("Languages/messages_en.yml"));
         String report = Files.readString(targetDir.resolve("migration-report.txt"));
-        assertTrue(migrated.contains("existing: custom"));
+        assertTrue(migrated.contains("existing: modern"));
         assertTrue(migrated.contains("new-key: migrated"));
         assertTrue(migrated.contains("rejoin: legacy custom text"));
-        assertTrue(report.contains("保留目标值"));
+        assertTrue(report.contains("源为配置节") && report.contains("保留目标值"));
         assertFalse(Files.exists(targetDir.resolve("Cache/map.zip.yml")));
         assertTrue(report.contains("Cache") && report.contains("map.zip.yml"));
     }

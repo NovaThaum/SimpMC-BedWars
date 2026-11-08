@@ -117,7 +117,9 @@ public final class ConfigMigrator {
                     else skipped.add(path + " (源和目标类型不兼容)");
                 } else {
                     if (addMissingScalars) {
-                        notes.add(path + " (保留 1.8.8 已有值)");
+                        Object converted = convert(value, path, warnings);
+                        target.put(entry.getKey(), converted);
+                        migrated.add(path + " (使用 1.21.11 值)");
                     } else {
                         Object converted = convert(value, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
                     }

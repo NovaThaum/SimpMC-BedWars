@@ -54,8 +54,28 @@ public final class ConfigMigrator {
                     target = map(yaml.load(Files.readString(legacy)));
                     Map<String,Object> transferableSource = new LinkedHashMap<>(source);
                     if (transferableSource.remove("config-version") != null) notes.add("config-version 已忽略，由目标插件管理");
+                    boolean mainConfig = relative.getNameCount() == 1 && "config.yml".equalsIgnoreCase(relative.getFileName().toString());
+                    if (mainConfig) {
+                        transferableSource.remove("lobbyLoc");
+                        transferableSource.remove("arenaGroups");
+                    }
+                    Map<String,Object> supportedSwordTiers = new LinkedHashMap<>();
+                    if (relative.getNameCount() == 1 && "upgrades2.yml".equalsIgnoreCase(relative.getFileName().toString())) {
+                        Map<String,Object> swords = map(transferableSource.get("upgrade-swords"));
+                        for (int tier = 2; tier <= 4; tier++) {
+                            String key = "tier-" + tier;
+                            if (swords.containsKey(key)) supportedSwordTiers.put(key, swords.remove(key));
+                        }
+                    }
                     boolean languageFile = relative.getNameCount() > 0 && "Languages".equalsIgnoreCase(relative.getName(0).toString());
+                    normalizeLegacyItems(transferableSource, "", warnings);
+                    normalizeLegacyItems(supportedSwordTiers, "upgrade-swords", warnings);
+                    mergeDerivedLegacyItemData(transferableSource, target, "", migrated);
+                    mergeDerivedLegacyItemData(supportedSwordTiers, target.get("upgrade-swords") instanceof Map<?,?>
+                            ? map(target.get("upgrade-swords")) : new LinkedHashMap<>(), "upgrade-swords", migrated);
                     merge(transferableSource, target, "", migrated, skipped, warnings, notes, languageFile);
+                    migrateLegacyConfigKeys(source, target, migrated, warnings, relative);
+                    mergeSupportedSwordTiers(supportedSwordTiers, target, migrated, skipped, warnings, notes);
                 } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
                 Path output = legacyDir.resolve(relative).normalize();
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
@@ -63,7 +83,7 @@ public final class ConfigMigrator {
                 Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
                 report.add(relative + ": 已迁移 " + migrated.size() + " 项，已回退目标版默认值/忽略 " + notes.size() + " 项，未处理 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
                 report.addAll(warnings.stream().map(w -> "  映射: " + w).toList());
-                report.addAll(notes.stream().map(n -> "  已忽略: " + n).toList());
+                report.addAll(notes.stream().map(n -> "  已回退/说明: " + n).toList());
                 report.addAll(skipped.stream().map(s -> "  未处理（需人工确认）: " + s).toList());
             }
         }
@@ -98,6 +118,20 @@ public final class ConfigMigrator {
         }
         return paths;
     }
+
+    private static void mergeSupportedSwordTiers(Map<String,Object> tiers, Map<String,Object> target,
+                                                  List<String> migrated, List<String> skipped,
+                                                  List<String> warnings, List<String> notes) {
+        if (tiers.isEmpty()) return;
+        Map<String,Object> targetSwords = map(target.get("upgrade-swords"));
+        if (targetSwords.isEmpty()) {
+            notes.add("upgrade-swords (目标配置缺少兼容的升级节，保留目标版默认值)");
+            return;
+        }
+        merge(tiers, targetSwords, "upgrade-swords", migrated, skipped, warnings, notes, true);
+        target.put("upgrade-swords", targetSwords);
+    }
+
 
     @SuppressWarnings("unchecked") private static Map<String,Object> map(Object value) { return value instanceof Map<?,?> m ? (Map<String,Object>) m : new LinkedHashMap<>(); }
     private static void merge(Map<String,Object> source, Map<String,Object> target, String prefix, List<String> migrated, List<String> skipped, List<String> warnings, List<String> notes, boolean addMissingScalars) {
@@ -145,6 +179,76 @@ public final class ConfigMigrator {
         String converted = table.getOrDefault(s, s);
         if (!converted.equals(s)) warnings.add(path + ": " + s + " -> " + converted);
         return converted;
+    }
+
+    private static void migrateLegacyConfigKeys(Map<String,Object> source, Map<String,Object> target,
+                                                List<String> migrated, List<String> warnings, Path relative) {
+        if (relative.getNameCount() != 1 || !"config.yml".equalsIgnoreCase(relative.getFileName().toString())) return;
+        Object lobby = source.get("lobbyLoc");
+        if (lobby instanceof String value) {
+            String converted = convert(value, "lobbyLoc", warnings).toString();
+            target.put("lobbyLoc", converted);
+            migrated.add("lobbyLoc");
+        }
+        Object groups = source.get("arenaGroups");
+        if (groups instanceof List<?> list) {
+            target.put("arenaGroups", new ArrayList<>(list));
+            migrated.add("arenaGroups");
+        }
+    }
+
+    private static void normalizeLegacyItems(Map<String,Object> values, String prefix, List<String> warnings) {
+        for (Map.Entry<String,Object> entry : new ArrayList<>(values.entrySet())) {
+            String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            if (entry.getValue() instanceof Map<?,?> nested) {
+                normalizeLegacyItems(map(nested), path, warnings);
+                continue;
+            }
+            if (!entry.getKey().equalsIgnoreCase("material") || !(entry.getValue() instanceof String material)) continue;
+            String legacy = MATERIALS.get(material.toUpperCase(Locale.ROOT));
+            if (legacy == null) continue;
+            entry.setValue(legacy);
+            warnings.add(path + ": " + material + " -> " + legacy);
+            Map<String,Object> parent = values;
+            int data = legacyData(material);
+            if (data >= 0) {
+                parent.put("data", data);
+                warnings.add(path + ".data: 自动映射为 " + data);
+            }
+        }
+    }
+
+    private static void mergeDerivedLegacyItemData(Map<String,Object> source, Map<String,Object> target,
+                                                   String prefix, List<String> migrated) {
+        for (Map.Entry<String,Object> entry : source.entrySet()) {
+            String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            if (!(entry.getValue() instanceof Map<?,?> sourceMap)) continue;
+            Map<String,Object> sourceSection = map(sourceMap);
+            Object targetValue = target.get(entry.getKey());
+            if (!(targetValue instanceof Map<?,?> targetMap)) continue;
+            Map<String,Object> targetSection = map(targetMap);
+            Object material = sourceSection.get("material");
+            if (material instanceof String name && MATERIALS.getOrDefault(name.toUpperCase(Locale.ROOT), name)
+                    .equalsIgnoreCase(String.valueOf(targetSection.get("material")))
+                    && sourceSection.get("data") instanceof Number data && !targetSection.containsKey("data")) {
+                targetSection.put("data", data);
+                migrated.add(path + ".data");
+            }
+            mergeDerivedLegacyItemData(sourceSection, targetSection, path, migrated);
+        }
+    }
+
+    private static int legacyData(String material) {
+        return switch (material.toUpperCase(Locale.ROOT)) {
+            case "LIME_CONCRETE" -> 5;
+            case "YELLOW_CONCRETE" -> 4;
+            case "RED_CONCRETE", "RED_BED" -> 14;
+            case "BLUE_BED" -> 11;
+            case "GREEN_BED" -> 13;
+            case "YELLOW_BED" -> 4;
+            case "PLAYER_HEAD" -> 3;
+            default -> -1;
+        };
     }
 
     private static String legacyLocation(String value) {

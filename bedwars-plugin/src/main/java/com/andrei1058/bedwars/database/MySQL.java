@@ -102,12 +102,20 @@ public class MySQL implements Database {
         // Recover if connection gets interrupted
         hikariConfig.addDataSourceProperty("socketTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(30)));
 
-        dataSource = new HikariDataSource(hikariConfig);
+        try {
+            dataSource = new HikariDataSource(hikariConfig);
+        } catch (RuntimeException exception) {
+            BedWars.plugin.getLogger().severe("MySQL connection pool initialization failed: " + exception.getMessage());
+            dataSource = null;
+            return false;
+        }
 
         try {
             dataSource.getConnection();
         } catch (SQLException e) {
             e.printStackTrace();
+            dataSource.close();
+            dataSource = null;
             return false;
         }
         return true;

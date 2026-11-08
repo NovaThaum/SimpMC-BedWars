@@ -54,15 +54,19 @@ public class InternalAdapter extends RestoreAdapter {
 
     @Override
     public void onEnable(IArena a) {
+        if (!getOwner().isEnabled()) return;
         Bukkit.getScheduler().runTask(getOwner(), () -> {
+            if (!getOwner().isEnabled()) return;
             if (Bukkit.getWorld(a.getWorldName()) != null) {
                 Bukkit.getScheduler().runTask(getOwner(), () -> {
+                    if (!getOwner().isEnabled()) return;
                     World w = Bukkit.getWorld(a.getWorldName());
                     a.init(w);
                 });
                 return;
             }
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                if (!getOwner().isEnabled()) return;
                 File bf = new File(backupFolder, a.getArenaName() + ".zip"), af = new File(Bukkit.getWorldContainer(), a.getArenaName());
                 if (bf.exists()) {
                     FileUtil.delete(af);
@@ -81,6 +85,7 @@ public class InternalAdapter extends RestoreAdapter {
                 deleteWorldTrash(a.getWorldName());
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (!getOwner().isEnabled()) return;
                     WorldCreator wc = new WorldCreator(a.getWorldName());
                     wc.generateStructures(false);
                     wc.generator(new VoidChunkGenerator());

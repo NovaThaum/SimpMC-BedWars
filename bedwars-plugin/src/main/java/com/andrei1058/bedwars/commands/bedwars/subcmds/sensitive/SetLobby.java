@@ -61,6 +61,7 @@ public class SetLobby extends SubCommand {
         p.sendMessage("§6 ▪ §7Lobby location set!");
         config.reload();
         BedWars.setLobbyWorld(p.getLocation().getWorld().getName());
+        com.andrei1058.bedwars.listeners.BedWarsWorldEnvironment.apply(p.getWorld());
         return true;
     }
 

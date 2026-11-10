@@ -51,6 +51,7 @@ public class HungerWeatherSpawn implements Listener {
     @EventHandler
     public void onFoodChange(FoodLevelChangeEvent e) {
         if(e.isCancelled()) return;
+        if (!(e.getEntity() instanceof Player)) return;
         Player player = (Player) e.getEntity();
         IArena arena = Arena.getArenaByPlayer(player);
 
@@ -59,7 +60,7 @@ public class HungerWeatherSpawn implements Listener {
 
         // Cancel hunger in MULTIARENA lobby
         if(arena == null) {
-            e.setCancelled(true);
+            if (BedWarsWorldEnvironment.isLobbyWorld(player.getWorld())) e.setCancelled(true);
             return;
         }
 
@@ -84,11 +85,7 @@ public class HungerWeatherSpawn implements Listener {
     @EventHandler
     public void onWeatherChange(WeatherChangeEvent e) {
         if (e.toWeatherState()) {
-            if (getServerType() == ServerType.SHARED) {
-                if (Arena.getArenaByIdentifier(e.getWorld().getName()) != null) {
-                    e.setCancelled(true);
-                }
-            } else {
+            if (BedWarsWorldEnvironment.isManagedWorld(e.getWorld())) {
                 e.setCancelled(true);
             }
         }

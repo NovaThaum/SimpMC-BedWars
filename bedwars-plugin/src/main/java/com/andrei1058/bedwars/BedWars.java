@@ -288,7 +288,7 @@ public class BedWars extends JavaPlugin {
         registerEvents(com.andrei1058.bedwars.arena.team.PreGameSquadManager.getInstance());
         registerEvents(com.andrei1058.bedwars.arena.team.PreGameSquadGUI.getInstance());
         registerEvents(new com.andrei1058.bedwars.shop.listeners.RecallScrollListener());
-        registerEvents(new com.andrei1058.bedwars.listeners.BedWarsWorldEnvironment(), new com.andrei1058.bedwars.listeners.LobbyProtection());
+        registerEvents(new com.andrei1058.bedwars.listeners.BedWarsWorldEnvironment(), new com.andrei1058.bedwars.listeners.LobbyProtection(), new com.andrei1058.bedwars.listeners.LobbyWorldProtection(), new com.andrei1058.bedwars.listeners.ArenaWorldProtection());
         registerEvents(
                 new EnderPearlLanded(), new QuitAndTeleportListener(), new BreakPlace(), new DamageDeathMove(), new InvisibleMovementEffects(),
                 new Inventory(), new Interact(), new RefreshGUI(), new HungerWeatherSpawn(), new CmdProcess(),
@@ -333,6 +333,10 @@ public class BedWars extends JavaPlugin {
 
         /* Load join signs. */
         loadArenasAndSigns();
+
+        for (World world : Bukkit.getWorlds()) {
+            com.andrei1058.bedwars.listeners.BedWarsWorldEnvironment.apply(world);
+        }
 
         statsManager = new StatsManager();
 

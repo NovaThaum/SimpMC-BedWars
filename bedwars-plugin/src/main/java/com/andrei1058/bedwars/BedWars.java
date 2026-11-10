@@ -284,6 +284,9 @@ public class BedWars extends JavaPlugin {
 
         // Register events
         SelfRescuePlatform selfRescuePlatform = new SelfRescuePlatform();
+        registerEvents(com.andrei1058.bedwars.arena.team.PreGameSquadManager.getInstance());
+        registerEvents(new com.andrei1058.bedwars.shop.listeners.RecallScrollListener());
+        registerEvents(new com.andrei1058.bedwars.listeners.BedWarsWorldEnvironment(), new com.andrei1058.bedwars.listeners.LobbyProtection());
         registerEvents(
                 new EnderPearlLanded(), new QuitAndTeleportListener(), new BreakPlace(), new DamageDeathMove(), new InvisibleMovementEffects(),
                 new Inventory(), new Interact(), new RefreshGUI(), new HungerWeatherSpawn(), new CmdProcess(),

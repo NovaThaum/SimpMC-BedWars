@@ -133,6 +133,9 @@ public interface IArena {
      */
     int getMaxPlayers();
 
+    /** Minimum total player count required to start this arena. */
+    default int getMinPlayers() { return 2; }
+
     /**
      * Get arena group.
      */

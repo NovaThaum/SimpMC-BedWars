@@ -296,6 +296,7 @@ public class Arena implements IArena {
         debug("Initialized arena " + getArenaName() + " with map " + world.getName());
         this.world = world;
         this.worldName = world.getName();
+        GameRules.enforceArenaEnvironment(world);
         getConfig().setName(worldName);
         world.getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER)
                 .filter(e -> e.getType() != EntityType.PAINTING).filter(e -> e.getType() != EntityType.ITEM_FRAME)
@@ -515,23 +516,9 @@ public class Arena implements IArena {
 
             /* check if you can start the arena */
             boolean isStatusChange = false;
-            if (status == GameState.waiting) {
-                int teams = 0, teammates = 0;
-                for (Player on : getPlayers()) {
-                    if (getParty().isOwner(on)) {
-                        teams++;
-                    }
-                    if (getParty().hasParty(on)) {
-                        teammates++;
-                    }
-                }
-                if (minPlayers <= players.size() && teams > 0 && players.size() != teammates / teams) {
-                    changeStatus(GameState.starting);
-                    isStatusChange = true;
-                } else if (players.size() >= minPlayers && teams == 0) {
-                    changeStatus(GameState.starting);
-                    isStatusChange = true;
-                }
+            if (status == GameState.waiting && com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this)) {
+                changeStatus(GameState.starting);
+                isStatusChange = true;
             }
 
             //half full arena time shorten
@@ -810,13 +797,7 @@ public class Arena implements IArena {
 
         if (p.getPassenger() != null && p.getPassenger().getType() == EntityType.ARMOR_STAND) p.getPassenger().remove();
 
-        boolean teamuri = false;
-        for (Player on : getPlayers()) {
-            if (getParty().hasParty(on)) {
-                teamuri = true;
-            }
-        }
-        if (status == GameState.starting && (maxInTeam > players.size() && teamuri || players.size() < minPlayers && !teamuri)) {
+        if (status == GameState.starting && !com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this)) {
             changeStatus(GameState.waiting);
             for (Player on : players) {
                 on.sendMessage(getMsg(on, Messages.ARENA_START_COUNTDOWN_STOPPED_INSUFF_PLAYERS_CHAT));
@@ -969,13 +950,7 @@ public class Arena implements IArena {
                     getParty().disband(p);
 
                     // prevent arena from staring with a single player
-                    teamuri = false;
-                    for (Player on : getPlayers()) {
-                        if (getParty().hasParty(on)) {
-                            teamuri = true;
-                        }
-                    }
-                    if (status == GameState.starting && (maxInTeam > players.size() && teamuri || players.size() < minPlayers && !teamuri)) {
+                    if (status == GameState.starting && !com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this)) {
                         changeStatus(GameState.waiting);
                         for (Player on : players) {
                             on.sendMessage(getMsg(on, Messages.ARENA_START_COUNTDOWN_STOPPED_INSUFF_PLAYERS_CHAT));
@@ -1346,6 +1321,12 @@ public class Arena implements IArena {
     @Override
     public int getMaxPlayers() {
         return maxPlayers;
+    }
+
+    /** Whole-arena player threshold required before the countdown may start. */
+    @Override
+    public int getMinPlayers() {
+        return minPlayers;
     }
 
     /**

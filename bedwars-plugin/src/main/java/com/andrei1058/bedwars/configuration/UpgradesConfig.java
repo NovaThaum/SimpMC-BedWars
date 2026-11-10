@@ -63,12 +63,12 @@ public class UpgradesConfig extends ConfigManager {
             yml.addDefault("upgrade-armor.tier-2.receive", Collections.singletonList("enchant-item: PROTECTION_ENVIRONMENTAL,2,armor"));
 
             yml.addDefault("upgrade-armor.tier-3.currency", "diamond");
-            yml.addDefault("upgrade-armor.tier-3.cost", 8);
+            yml.addDefault("upgrade-armor.tier-3.cost", 10);
             addDefaultDisplayItem("upgrade-armor.tier-3", "IRON_CHESTPLATE", 0, 3, false);
             yml.addDefault("upgrade-armor.tier-3.receive", Collections.singletonList("enchant-item: PROTECTION_ENVIRONMENTAL,3,armor"));
 
             yml.addDefault("upgrade-armor.tier-4.currency", "diamond");
-            yml.addDefault("upgrade-armor.tier-4.cost", 16);
+            yml.addDefault("upgrade-armor.tier-4.cost", 24);
             addDefaultDisplayItem("upgrade-armor.tier-4", "IRON_CHESTPLATE", 0, 4, false);
             yml.addDefault("upgrade-armor.tier-4.receive", Collections.singletonList("enchant-item: PROTECTION_ENVIRONMENTAL,4,armor"));
 
@@ -150,6 +150,20 @@ public class UpgradesConfig extends ConfigManager {
             yml.addDefault("separator-back.on-click.console", Arrays.asList(""));
             addDefaultDisplayItem("separator-back", "ARROW", 0, 1, false);
         }
+        // Modern BW1058 defaults expose four sword tiers. addDefault preserves
+        // administrator values while filling only missing entries.
+        addSwordTierDefaults(yml, 2, 8);
+        addSwordTierDefaults(yml, 3, 16);
+        addSwordTierDefaults(yml, 4, 32);
+        if (yml.getInt("price-schema", 0) < 1
+                && yml.getInt("upgrade-armor.tier-1.cost") == 2
+                && yml.getInt("upgrade-armor.tier-2.cost") == 4
+                && yml.getInt("upgrade-armor.tier-3.cost") == 8
+                && yml.getInt("upgrade-armor.tier-4.cost") == 16) {
+            yml.set("upgrade-armor.tier-3.cost", 10);
+            yml.set("upgrade-armor.tier-4.cost", 24);
+        }
+        yml.set("price-schema", 1);
         yml.options().copyDefaults(true);
         save();
     }
@@ -159,6 +173,14 @@ public class UpgradesConfig extends ConfigManager {
         getYml().addDefault(path + ".display-item.data", data);
         getYml().addDefault(path + ".display-item.amount", amount);
         getYml().addDefault(path + ".display-item.enchanted", enchanted);
+    }
+
+    private void addSwordTierDefaults(YamlConfiguration yml, int tier, int cost) {
+        String path = "upgrade-swords.tier-" + tier;
+        yml.addDefault(path + ".cost", cost);
+        yml.addDefault(path + ".currency", "diamond");
+        addDefaultDisplayItem(path, "IRON_SWORD", 0, tier, false);
+        yml.addDefault(path + ".receive", Collections.singletonList("enchant-item: DAMAGE_ALL," + tier + ",sword"));
     }
 
     //private YamlConfiguration yml;

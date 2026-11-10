@@ -93,11 +93,7 @@ public class GameStartingTask implements Runnable, StartingTask {
     public void run() {
         if (countdown == 0) {
 
-            if (BedWars.config.getBoolean(ConfigPath.GENERAL_CONFIGURATION_EXPERIMENTAL_TEAM_ASSIGNER)) {
-                getArena().getTeamAssigner().assignTeams(getArena());
-            } else {
-                LegacyTeamAssigner.assignTeams(getArena());
-            }
+            getArena().getTeamAssigner().assignTeams(getArena());
             if (getArena() instanceof Arena) {
                 ((Arena) getArena()).captureTeamSizesAtGameStart();
             }

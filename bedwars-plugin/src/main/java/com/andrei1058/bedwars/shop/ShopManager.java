@@ -359,6 +359,15 @@ public class ShopManager extends ConfigManager {
             addBuyItem(ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "tower", "tier1", "tower", BedWars.getForCurrentVersion("CHEST", "CHEST", "CHEST"),
                     0, 1, "", "", "", false);
 
+            adCategoryContentTier(ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "recall-scroll", 32, "tier1",
+                    "PAPER", 0, 1, true, 3, "diamond", false, false);
+            addBuyItem(ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "recall-scroll", "tier1", "scroll", "PAPER",
+                    0, 1, "", "", "&b回城卷轴", false);
+            getYml().addDefault(ConfigPath.SHOP_PATH_CATEGORY_UTILITY + ConfigPath.SHOP_CATEGORY_CONTENT_PATH
+                    + ".recall-scroll." + ConfigPath.SHOP_CATEGORY_CONTENT_CONTENT_TIERS + ".tier1."
+                    + ConfigPath.SHOP_CONTENT_BUY_ITEMS_PATH + ".scroll.custom-data",
+                    com.andrei1058.bedwars.shop.listeners.RecallScrollListener.ITEM_DATA);
+
         }
 
         if (getYml().get(ConfigPath.SHOP_PATH_CATEGORY_UTILITY) != null) {

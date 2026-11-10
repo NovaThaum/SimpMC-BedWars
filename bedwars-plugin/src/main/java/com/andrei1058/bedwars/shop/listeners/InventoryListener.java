@@ -82,6 +82,10 @@ public class InventoryListener implements Listener {
             }
             for (QuickBuyElement element : cache.getElements()) {
                 if (element.getSlot() == e.getSlot()) {
+                    if (e.getClick() == ClickType.SHIFT_RIGHT) {
+                        element.getCategoryContent().executeBulk(p, shopCache, element.getSlot());
+                        return;
+                    }
                     if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                         cache.setElement(element.getSlot(), null);
                         p.closeInventory();
@@ -105,6 +109,10 @@ public class InventoryListener implements Listener {
                 if (sc.getSlot() != shopCache.getSelectedCategory()) continue;
                 for (CategoryContent cc : sc.getCategoryContentList()) {
                     if (cc.getSlot() == e.getSlot()) {
+                        if (e.getClick() == ClickType.SHIFT_RIGHT) {
+                            cc.executeBulk(p, shopCache, cc.getSlot());
+                            return;
+                        }
                         if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                             if (cache.hasCategoryContent(cc)) return;
                             new QuickBuyAdd(p, cc);

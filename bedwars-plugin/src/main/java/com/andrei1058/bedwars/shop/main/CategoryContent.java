@@ -136,6 +136,15 @@ public class CategoryContent implements ICategoryContent {
     }
 
     public void execute(Player player, ShopCache shopCache, int slot) {
+        execute(player, shopCache, slot, false);
+    }
+
+    /** Buy as many units as possible for a shift-right quick purchase. */
+    public void executeBulk(Player player, ShopCache shopCache, int slot) {
+        execute(player, shopCache, slot, true);
+    }
+
+    private void execute(Player player, ShopCache shopCache, int slot, boolean bulk) {
 
         IContentTier ct;
 
@@ -166,6 +175,8 @@ public class CategoryContent implements ICategoryContent {
             }
         }
 
+        if (ct.getBuyItemsList().isEmpty()) return;
+
         //check money
         int money = calculateMoney(player, ct.getCurrency());
         if (money < ct.getPrice()) {
@@ -175,23 +186,27 @@ public class CategoryContent implements ICategoryContent {
             return;
         }
 
+        int purchases = bulk && supportsBulkPurchase(ct) ? PurchaseBatch.affordablePurchases(money, ct.getPrice()) : 1;
+        if (purchases <= 0) return;
+
         ShopBuyEvent event;
         //call shop buy event
-        Bukkit.getPluginManager().callEvent(event = new ShopBuyEvent(player, Arena.getArenaByPlayer(player), this));
+        Bukkit.getPluginManager().callEvent(event = new ShopBuyEvent(
+                player, Arena.getArenaByPlayer(player), this, purchases));
 
         if (event.isCancelled()){
             return;
         }
 
         //take money
-        takeMoney(player, ct.getCurrency(), ct.getPrice());
+        takeMoney(player, ct.getCurrency(), ct.getPrice() * purchases);
 
         //upgrade if possible
         shopCache.upgradeCachedItem(this, slot);
 
 
         //give items
-        giveItems(player, shopCache, Arena.getArenaByPlayer(player));
+        giveItems(player, shopCache, Arena.getArenaByPlayer(player), purchases);
 
         //play sound
         Sounds.playSound(ConfigPath.SOUNDS_BOUGHT, player);
@@ -214,9 +229,24 @@ public class CategoryContent implements ICategoryContent {
      * Add tier items to player inventory
      */
     public void giveItems(Player player, ShopCache shopCache, IArena arena) {
+        giveItems(player, shopCache, arena, 1);
+    }
+
+    private void giveItems(Player player, ShopCache shopCache, IArena arena, int purchases) {
         for (IBuyItem bi : contentTiers.get(shopCache.getContentTier(getIdentifier()) - 1).getBuyItemsList()) {
-            bi.give(player, arena);
+            if (bi instanceof BuyItem && purchases > 1) ((BuyItem) bi).give(player, arena, purchases, false);
+            else bi.give(player, arena);
         }
+        if (purchases > 1) player.updateInventory();
+    }
+
+    private boolean supportsBulkPurchase(IContentTier tier) {
+        if (permanent || contentTiers.size() != 1 || tier.getCurrency() == Material.AIR || tier.getPrice() <= 0) return false;
+        for (IBuyItem item : tier.getBuyItemsList()) {
+            if (!(item instanceof BuyItem) || item.isAutoEquip() || item.isPermanent()
+                    || item.getItemStack() == null || item.getItemStack().getType() == Material.AIR) return false;
+        }
+        return !tier.getBuyItemsList().isEmpty();
     }
 
     @Override

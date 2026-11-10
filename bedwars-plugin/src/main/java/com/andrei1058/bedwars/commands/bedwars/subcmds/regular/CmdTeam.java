@@ -23,7 +23,11 @@ public final class CmdTeam extends SubCommand {
     @Override public boolean execute(String[] args, CommandSender sender) {
         if (sender instanceof ConsoleCommandSender) return false;
         Player player = (Player) sender;
-        if (args.length == 0 || args[0].equalsIgnoreCase("help")) { help(player); return true; }
+        if (args.length == 0) {
+            com.andrei1058.bedwars.arena.team.PreGameSquadGUI.getInstance().open(player);
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("help")) { help(player); return true; }
         String action = args[0].toLowerCase();
         if (action.equals("leave")) {
             PreGameSquad.Result result = squads.leave(player);

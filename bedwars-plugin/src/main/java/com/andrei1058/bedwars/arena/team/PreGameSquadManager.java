@@ -73,6 +73,23 @@ public final class PreGameSquadManager implements Listener, PreGameSquad {
     }
 
     public boolean isLeader(Player player) { Squad s = members.get(player.getUniqueId()); return s == null || s.leader.equals(player.getUniqueId()); }
+    public Player getLeader(Player player) {
+        Squad squad = members.get(player.getUniqueId());
+        if (squad == null) return player;
+        return Bukkit.getPlayer(squad.leader);
+    }
+    public List<Player> getPendingInviters(Player player) {
+        purge();
+        IArena arena = preGame(player);
+        if (arena == null) return Collections.emptyList();
+        List<Player> pending = new ArrayList<>();
+        for (Map.Entry<Key, Invite> entry : invites.entrySet()) {
+            if (!entry.getKey().target.equals(player.getUniqueId()) || entry.getValue().arena != arena) continue;
+            Player inviter = Bukkit.getPlayer(entry.getKey().inviter);
+            if (inviter != null && preGame(inviter) == arena) pending.add(inviter);
+        }
+        return Collections.unmodifiableList(pending);
+    }
     public List<Player> getMembers(Player player) { Squad s = members.get(player.getUniqueId()); if (s == null) return Collections.singletonList(player); List<Player> out = new ArrayList<>(); for (UUID id : s.ids) { Player p = Bukkit.getPlayer(id); if (p != null && s.arena.isPlayer(p)) out.add(p); } return Collections.unmodifiableList(out); }
     public List<Player> getAvailableTargets(Player player) { IArena a = preGame(player); if (a == null || !isLeader(player)) return Collections.emptyList(); Squad s = members.get(player.getUniqueId()); if (s != null && s.ids.size() >= a.getMaxInTeam()) return Collections.emptyList(); List<Player> out = new ArrayList<>(); for (Player p : a.getPlayers()) if (!p.equals(player) && !members.containsKey(p.getUniqueId())) out.add(p); return out; }
 

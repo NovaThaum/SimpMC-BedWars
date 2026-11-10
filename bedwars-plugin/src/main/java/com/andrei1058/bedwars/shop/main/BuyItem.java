@@ -184,6 +184,11 @@ public class BuyItem implements IBuyItem {
      * Give to a player
      */
     public void give(Player player, IArena arena) {
+        give(player, arena, 1, true);
+    }
+
+    void give(Player player, IArena arena, int purchases, boolean synchronizeInventory) {
+        if (purchases <= 0) return;
 
         ItemStack i = itemStack.clone();
         BedWars.debug("Giving BuyItem: " + getUpgradeIdentifier() + " to: " + player.getName());
@@ -218,7 +223,7 @@ public class BuyItem implements IBuyItem {
                 if (permanent) i = nms.setShopUpgradeIdentifier(i, upgradeIdentifier);
                 player.getInventory().setBoots(i);
             }
-            player.updateInventory();
+            if (synchronizeInventory) player.updateInventory();
             Sounds.playSound("shop-auto-equip", player);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -273,8 +278,8 @@ public class BuyItem implements IBuyItem {
             }
         }
         //
-        dropOverflow(player, player.getInventory().addItem(i));
-        player.updateInventory();
+        dropOverflow(player, player.getInventory().addItem(PurchaseBatch.createStacks(i, purchases)));
+        if (synchronizeInventory) player.updateInventory();
     }
 
     static void dropOverflow(Player player, Map<Integer, ItemStack> leftovers) {

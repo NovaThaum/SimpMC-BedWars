@@ -212,6 +212,7 @@ public class BedWars extends JavaPlugin {
         new SimplifiedChinese();
         new Turkish();
         SelfRescuePlatform.installLanguageFallbacks();
+        com.andrei1058.bedwars.arena.team.PreGameSquadMessages.installLanguageFallbacks();
 
         config = new MainConfig(this, "config");
 
@@ -285,6 +286,7 @@ public class BedWars extends JavaPlugin {
         // Register events
         SelfRescuePlatform selfRescuePlatform = new SelfRescuePlatform();
         registerEvents(com.andrei1058.bedwars.arena.team.PreGameSquadManager.getInstance());
+        registerEvents(com.andrei1058.bedwars.arena.team.PreGameSquadGUI.getInstance());
         registerEvents(new com.andrei1058.bedwars.shop.listeners.RecallScrollListener());
         registerEvents(new com.andrei1058.bedwars.listeners.BedWarsWorldEnvironment(), new com.andrei1058.bedwars.listeners.LobbyProtection());
         registerEvents(

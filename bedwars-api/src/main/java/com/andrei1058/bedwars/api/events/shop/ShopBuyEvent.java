@@ -34,6 +34,7 @@ public class ShopBuyEvent extends Event implements Cancellable {
     private final Player buyer;
     private final IArena arena;
     private final ICategoryContent categoryContent;
+    private final int purchaseAmount;
     private boolean cancelled = false;
 
     /**
@@ -46,15 +47,22 @@ public class ShopBuyEvent extends Event implements Cancellable {
         this.categoryContent = categoryContent;
         this.buyer = buyer;
         this.arena = null;
+        this.purchaseAmount = 1;
     }
 
     /**
      * Triggered when a player buys from the shop
      */
     public ShopBuyEvent(Player buyer, IArena arena, ICategoryContent categoryContent) {
+        this(buyer, arena, categoryContent, 1);
+    }
+
+    /** Triggered when one or more copies are purchased in a single action. */
+    public ShopBuyEvent(Player buyer, IArena arena, ICategoryContent categoryContent, int purchaseAmount) {
         this.categoryContent = categoryContent;
         this.buyer = buyer;
         this.arena = arena;
+        this.purchaseAmount = Math.max(1, purchaseAmount);
     }
 
     public IArena getArena() {
@@ -73,6 +81,11 @@ public class ShopBuyEvent extends Event implements Cancellable {
      */
     public ICategoryContent getCategoryContent() {
         return categoryContent;
+    }
+
+    /** Number of item purchases represented by this event. */
+    public int getPurchaseAmount() {
+        return purchaseAmount;
     }
 
     @Override

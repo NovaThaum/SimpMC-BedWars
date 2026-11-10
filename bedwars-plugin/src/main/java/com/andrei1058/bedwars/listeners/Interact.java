@@ -34,6 +34,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
@@ -51,6 +52,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Openable;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
+
+import java.util.Map;
 
 import static com.andrei1058.bedwars.BedWars.*;
 import static com.andrei1058.bedwars.api.language.Language.getMsg;
@@ -109,6 +112,31 @@ public class Interact implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onTeamChestQuickDeposit(PlayerInteractEvent event) {
+        if (event.getAction() != Action.LEFT_CLICK_BLOCK || !event.getPlayer().isSneaking()) return;
+        Block block = event.getClickedBlock();
+        if (block == null || !isChest(block.getType()) || !(block.getState() instanceof Chest)) return;
+        Player player = event.getPlayer();
+        IArena arena = Arena.getArenaByPlayer(player);
+        if (arena == null || arena.getStatus() != com.andrei1058.bedwars.api.arena.GameState.playing
+                || arena.isSpectator(player) || arena.isReSpawning(player)) return;
+        ITeam team = arena.getTeam(player);
+        if (team == null || findChestOwner(arena, block) != team) return;
+        event.setCancelled(true);
+        ItemStack held = player.getInventory().getItemInHand();
+        if (held == null || held.getType() == Material.AIR || held.getAmount() <= 0) return;
+        if (InventoryListener.shouldCancelMovement(held, ShopCache.getShopCache(player.getUniqueId()))) return;
+        Chest chest = (Chest) block.getState();
+        int offered = held.getAmount();
+        Map<Integer, ItemStack> leftovers = chest.getInventory().addItem(held.clone());
+        int transferred = TeamChestQuickDeposit.transferredAmount(offered, leftovers);
+        if (transferred <= 0) return;
+        if (transferred == offered) player.getInventory().setItemInHand(new ItemStack(Material.AIR));
+        else held.setAmount(offered - transferred);
+        player.updateInventory();
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         if (e == null) return;
@@ -140,19 +168,13 @@ public class Interact implements Listener {
                     }
                     return;
                 }
-                if (b.getType() == Material.CHEST) {
+                if (isChest(b.getType())) {
                     if (a.isSpectator(p) || a.getRespawnSessions().containsKey(p)) {
                         e.setCancelled(true);
                         return;
                     }
                     //make it so only team members can open chests while team is alive, and all when is eliminated
-                    ITeam owner = null;
-                    int isRad = a.getConfig().getInt(ConfigPath.ARENA_ISLAND_RADIUS);
-                    for (ITeam t : a.getTeams()) {
-                        if (t.getSpawn().distance(e.getClickedBlock().getLocation()) <= isRad) {
-                            owner = t;
-                        }
-                    }
+                    ITeam owner = findChestOwner(a, b);
                     if (owner != null) {
                         if (!owner.isMember(p)) {
                             if (!(owner.getMembers().isEmpty() && owner.isBedDestroyed())) {
@@ -301,5 +323,27 @@ public class Interact implements Listener {
                 e.getInventory().setResult(new ItemStack(Material.AIR));
             }
         }
+    }
+
+    private static boolean isChest(Material material) {
+        return material == Material.CHEST || material == Material.TRAPPED_CHEST;
+    }
+
+    private static ITeam findChestOwner(IArena arena, Block block) {
+        double radius = Math.max(0, arena.getConfig().getInt(ConfigPath.ARENA_ISLAND_RADIUS));
+        double radiusSquared = radius * radius;
+        Location chest = block.getLocation();
+        ITeam nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (ITeam team : arena.getTeams()) {
+            Location spawn = team.getSpawn();
+            if (spawn == null || spawn.getWorld() == null || !spawn.getWorld().equals(chest.getWorld())) continue;
+            double distance = spawn.distanceSquared(chest);
+            if (distance <= radiusSquared && distance < nearestDistance) {
+                nearest = team;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
     }
 }

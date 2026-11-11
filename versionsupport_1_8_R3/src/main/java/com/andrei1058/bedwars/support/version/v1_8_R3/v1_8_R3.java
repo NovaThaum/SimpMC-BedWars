@@ -781,4 +781,17 @@ public class v1_8_R3 extends VersionSupport {
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(pwp);
     }
 
+    @Override
+    public void playRecallEffect(Player viewer, Location location) {
+        for (int i = 0; i < 8; i++) {
+            java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+            PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.REDSTONE, false,
+                    (float) (location.getX() + random.nextDouble(-0.45, 0.45)),
+                    (float) (location.getY() + random.nextDouble(-0.8, 0.8)),
+                    (float) (location.getZ() + random.nextDouble(-0.45, 0.45)),
+                    64F / 255F, 160F / 255F, 1F, 1F, 0);
+            ((CraftPlayer) viewer).getHandle().playerConnection.sendPacket(packet);
+        }
+    }
+
 }

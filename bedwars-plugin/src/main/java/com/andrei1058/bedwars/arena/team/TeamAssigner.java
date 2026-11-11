@@ -45,12 +45,60 @@ public class TeamAssigner implements ITeamAssigner {
         return !TeamAllocationPlanner.allocate(groups, arena.getTeams().size(), arena.getMaxInTeam(), new Random()).isEmpty();
     }
 
-    private final LinkedList<Player> skip = new LinkedList<>();
+    public static boolean isAssignmentValid(IArena arena, List<List<Player>> groups, boolean debug) {
+        if (arena.getPlayers().isEmpty() || (!debug && (arena.getPlayers().size() < arena.getMinPlayers()
+                || arena.getTeams().size() < 2)) || arena.getMaxInTeam() < 1) return false;
+        java.util.Set<java.util.UUID> expected = new java.util.HashSet<>();
+        for (Player player : arena.getPlayers()) if (!expected.add(player.getUniqueId())) return false;
+        java.util.Map<java.util.UUID, ITeam> assigned = new java.util.HashMap<>();
+        int active = 0;
+        for (ITeam team : arena.getTeams()) {
+            if (team.getMembers().size() > arena.getMaxInTeam()) return false;
+            if (!team.getMembers().isEmpty()) active++;
+            for (Player player : team.getMembers()) {
+                if (!expected.contains(player.getUniqueId()) || assigned.put(player.getUniqueId(), team) != null) return false;
+            }
+        }
+        if (active < (debug ? 1 : 2) || !assigned.keySet().equals(expected)) return false;
+        // 同时检查分队前快照和插件事件回调中可能改变的实时小队。
+        List<List<Player>> allGroups = new ArrayList<>(groups);
+        allGroups.addAll(PreGameSquadManager.getInstance().getAssignmentGroups(arena));
+        for (List<Player> group : allGroups) {
+            if (group.size() > arena.getMaxInTeam()) continue;
+            ITeam destination = null;
+            for (Player player : group) {
+                ITeam current = assigned.get(player.getUniqueId());
+                if (current == null || destination != null && destination != current) return false;
+                destination = current;
+            }
+        }
+        return true;
+    }
 
-    public void assignTeams(IArena arena) {
+    public static void clearAssignment(IArena arena) {
+        for (ITeam team : arena.getTeams()) {
+            if (team instanceof BedWarsTeam concrete) {
+                for (Player player : new ArrayList<>(team.getMembers())) {
+                    BedWarsTeam.BedHolo holo = concrete.getBedHolo(player);
+                    if (holo != null) holo.destroy();
+                }
+            }
+            team.getMembers().clear();
+            team.getMembersCache().clear();
+        }
+    }
+
+    public void assignTeams(IArena arena) { assignTeams(arena, false); }
+
+    public void assignTeams(IArena arena, boolean debug) {
         List<List<Player>> groups = PreGameSquadManager.getInstance().getAssignmentGroups(arena);
         List<List<Player>> planned = TeamAllocationPlanner.allocate(groups, arena.getTeams().size(),
                 arena.getMaxInTeam(), new Random());
+        if (debug && planned.isEmpty() && !arena.getTeams().isEmpty()
+                && arena.getPlayers().size() <= arena.getMaxInTeam()) {
+            planned = new ArrayList<>();
+            planned.add(new ArrayList<>(arena.getPlayers()));
+        }
         if (planned.isEmpty()) return;
         List<ITeam> teams = new ArrayList<>(arena.getTeams());
         List<List<Player>> approved = new ArrayList<>();
@@ -68,11 +116,12 @@ public class TeamAssigner implements ITeamAssigner {
             if (team.size() > arena.getMaxInTeam()) return;
             if (!team.isEmpty()) activeTeams++;
         }
-        if (activeTeams < 2) return;
+        if (activeTeams < (debug ? 1 : 2)
+                || approved.stream().mapToInt(List::size).sum() != arena.getPlayers().size()) return;
         for (int i = 0; i < teams.size(); i++) for (Player player : approved.get(i)) {
             player.closeInventory();
             teams.get(i).addPlayers(player);
         }
-        PreGameSquadManager.getInstance().clearArena(arena);
+
     }
 }

@@ -49,12 +49,16 @@ import static com.andrei1058.bedwars.api.language.Language.getMsg;
 public class GameStartingTask implements Runnable, StartingTask {
 
     private int countdown;
+    private boolean debugStart;
+    public void enableDebugStart() { debugStart = true; }
+    public boolean isDebugStart() { return debugStart; }
     private final IArena arena;
     private final BukkitTask task;
 
     public GameStartingTask(Arena arena) {
         this.arena = arena;
         countdown = BedWars.config.getInt(ConfigPath.GENERAL_CONFIGURATION_START_COUNTDOWN_REGULAR);
+        if (arena.getMaxPlayers() > 0 && arena.getPlayers().size() >= arena.getMaxPlayers() && countdown > 5) countdown = 5;
         task = Bukkit.getScheduler().runTaskTimer(BedWars.plugin, this, 0, 20L);
     }
 
@@ -96,9 +100,28 @@ public class GameStartingTask implements Runnable, StartingTask {
             getArena().changeStatus(GameState.waiting);
             return;
         }
-        if (countdown == 0) {
+        if (!debugStart && !com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(arena)) {
+            task.cancel();
+            arena.changeStatus(GameState.waiting);
+            return;
+        }
+        if (arena instanceof Arena concrete) concrete.shortenFullCountdown();
+        if (countdown <= 0) {
 
-            getArena().getTeamAssigner().assignTeams(getArena());
+            java.util.List<java.util.List<Player>> groups =
+                    com.andrei1058.bedwars.arena.team.PreGameSquadManager.getInstance().getAssignmentGroups(arena);
+            if (debugStart && getArena().getTeamAssigner() instanceof com.andrei1058.bedwars.arena.team.TeamAssigner assigner) {
+                assigner.assignTeams(arena, true);
+            } else getArena().getTeamAssigner().assignTeams(getArena());
+            if (!com.andrei1058.bedwars.arena.MatchStartGate.isOpen()
+                    || arena.getStatus() != GameState.starting
+                    || !com.andrei1058.bedwars.arena.team.TeamAssigner.isAssignmentValid(arena, groups, debugStart)) {
+                com.andrei1058.bedwars.arena.team.TeamAssigner.clearAssignment(arena);
+                task.cancel();
+                if (arena.getStatus() == GameState.starting) arena.changeStatus(GameState.waiting);
+                return;
+            }
+            com.andrei1058.bedwars.arena.team.PreGameSquadManager.getInstance().clearArena(arena);
             if (getArena() instanceof Arena) {
                 ((Arena) getArena()).captureTeamSizesAtGameStart();
             }

@@ -80,6 +80,10 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.MATCH_STATISTICS_TIMEZONE, "Asia/Shanghai");
         yml.addDefault(ConfigPath.MATCH_STATISTICS_REPORT_INTERVAL_SECONDS, 300);
         yml.addDefault(ConfigPath.MATCH_STATISTICS_FINISH_GRACE_TICKS, 40);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_VIOLATIONS_ENABLED, true);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_VIOLATIONS_MATCH_LEAVE_THRESHOLD, 25);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_VIOLATIONS_CROSS_TEAM_ITEM_TRANSFER, true);
+        yml.addDefault(ConfigPath.MATCH_STATISTICS_VIOLATIONS_WARNING_THRESHOLDS, Arrays.asList(10, 20, 50, 100));
         yml.addDefault(ConfigPath.MATCH_STATISTICS_QUEUE_CAPACITY, 10000);
         yml.addDefault(ConfigPath.MATCH_STATISTICS_RETRY_DELAY_SECONDS, 5);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_MARK_LEAVE_AS_ABANDON, false);
@@ -255,6 +259,7 @@ public class MainConfig extends ConfigManager {
         if (hadTntEnemyDamage && Double.compare(oldTntEnemyDamage, 10.0D) == 0) {
             yml.set(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS, 6.0D);
         }
+        ViolationConfigMigration.migrate(yml);
         save();
 
         //remove old config
@@ -421,6 +426,7 @@ public class MainConfig extends ConfigManager {
         BedWars.setDebug(yml.getBoolean("debug"));
         for (Language language : Language.getLanguages()) {
             com.andrei1058.bedwars.language.MatchmakingMessages.install(language);
+            com.andrei1058.bedwars.language.RecallMessages.install(language);
         }
         new ConfigManager(plugin, "bukkit", Bukkit.getWorldContainer().getPath()).set("ticks-per.autosave", -1);
 

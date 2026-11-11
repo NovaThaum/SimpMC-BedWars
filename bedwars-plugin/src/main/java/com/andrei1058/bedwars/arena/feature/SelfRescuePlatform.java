@@ -63,17 +63,29 @@ public final class SelfRescuePlatform implements Listener {
     private final Map<Long, BukkitTask> platformTasks = new HashMap<>();
     private final Map<UUID, RescueArea> rescueAreas = new HashMap<>();
     private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private final Map<UUID, LandingProtection> landingProtections = new HashMap<>();
+    private final java.util.function.LongSupplier clock;
     private long nextPlatformId;
 
-    public SelfRescuePlatform() {
+    public SelfRescuePlatform() { this(System::nanoTime); }
+
+    SelfRescuePlatform(java.util.function.LongSupplier clock) {
+        this.clock = clock;
         instance = this;
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
         Location to = event.getTo();
-        if (to == null || event.getFrom().getBlockY() == to.getBlockY()) return;
-        tryAutomaticDeploy(event.getPlayer(), to);
+        if (to == null) return;
+        Player player = event.getPlayer();
+        if (player.isOnGround()) landingProtections.remove(player.getUniqueId());
+        IArena arena = activeArena(player);
+        if (arena != null && player.getFallDistance() > 0.0F
+                && (isOnPlatform(arena, event.getFrom()) || isOnPlatform(arena, to))) {
+            player.setFallDistance(0.0F);
+        }
+        if (event.getFrom().getBlockY() != to.getBlockY()) tryAutomaticDeploy(player, to);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -147,6 +159,7 @@ public final class SelfRescuePlatform implements Listener {
         automaticDeployments.remove(uuid);
         rescueAreas.remove(uuid);
         cooldowns.remove(uuid);
+        landingProtections.remove(uuid);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -154,12 +167,37 @@ public final class SelfRescuePlatform implements Listener {
         if (event.getCause() != EntityDamageEvent.DamageCause.FALL || !(event.getEntity() instanceof Player)) return;
         Player player = (Player) event.getEntity();
         IArena arena = activeArena(player);
-        RescueArea area = rescueAreas.get(player.getUniqueId());
-        if (arena != null && isInsideActiveArea(area, arena, player.getLocation())) {
+        LandingProtection landing = landingProtections.remove(player.getUniqueId());
+        Location location = player.getLocation();
+        boolean firstLanding = arena != null && landing != null
+                && clock.getAsLong() - landing.startedAt < 5_000_000_000L
+                && isInsideActiveArea(landing.area, arena, location)
+                && location.getY() >= landing.area.y + 0.875
+                && location.getY() <= landing.startedY + 0.5;
+        if (arena != null && (firstLanding || isOnPlatform(arena, location))) {
             player.setFallDistance(0.0F);
             event.setCancelled(true);
         }
     }
+
+    // 1.8 玩家脚部宽度为 0.6；无需依赖现代 Bukkit BoundingBox API。
+    private boolean isOnPlatform(IArena arena, Location location) {
+        if (!arena.getWorld().equals(location.getWorld())) return false;
+        double surfaceY = Math.rint(location.getY());
+        if (Math.abs(location.getY() - surfaceY) > 0.125) return false;
+        int y = (int) surfaceY - 1;
+        for (int x = (int) Math.floor(location.getX() - 0.3 + 1.0E-5);
+             x <= (int) Math.floor(location.getX() + 0.3 - 1.0E-5); x++) {
+            for (int z = (int) Math.floor(location.getZ() - 0.3 + 1.0E-5);
+                 z <= (int) Math.floor(location.getZ() + 0.3 - 1.0E-5); z++) {
+                TemporaryBlock block = temporaryBlocks.get(location.getWorld().getUID() + ":" + x + ":" + y + ":" + z);
+                if (block != null && block.arena == arena && block.block.getType() == Material.SLIME_BLOCK) return true;
+            }
+        }
+        return false;
+    }
+
+    private record LandingProtection(RescueArea area, double startedY, long startedAt) { }
 
     public static boolean isItem(ItemStack item) {
         return item != null && item.getType() == Material.BLAZE_ROD && BedWars.nms != null
@@ -213,6 +251,7 @@ public final class SelfRescuePlatform implements Listener {
         if (arena == null) {
             automaticDeployments.remove(player.getUniqueId());
             rescueAreas.remove(player.getUniqueId());
+            landingProtections.remove(player.getUniqueId());
             return;
         }
         double triggerY = automaticTriggerY();
@@ -315,9 +354,13 @@ public final class SelfRescuePlatform implements Listener {
         if (placed.isEmpty()) return;
 
         platforms.put(platformId, placed);
-        cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
-        rescueAreas.put(player.getUniqueId(), new RescueArea(platformId, arena, centerX, centerZ, y,
-                blocksAutomaticDeployment));
+        UUID uuid = player.getUniqueId();
+        cooldowns.put(uuid, clock.getAsLong());
+        RescueArea area = new RescueArea(platformId, arena, centerX, centerZ, y, blocksAutomaticDeployment);
+        rescueAreas.put(uuid, area);
+        player.setFallDistance(0.0F);
+        landingProtections.remove(uuid);
+        if (!player.isOnGround()) landingProtections.put(uuid, new LandingProtection(area, center.getY(), clock.getAsLong()));
         platformTasks.put(platformId, Bukkit.getScheduler().runTaskLater(BedWars.plugin,
                 () -> removePlatform(platformId), LIFETIME_TICKS));
     }
@@ -326,6 +369,7 @@ public final class SelfRescuePlatform implements Listener {
         List<String> placed = platforms.remove(platformId);
         if (placed == null) return;
         platformTasks.remove(platformId);
+        landingProtections.entrySet().removeIf(e -> e.getValue().area.platformId == platformId);
         for (String key : placed) {
             TemporaryBlock temporaryBlock = temporaryBlocks.get(key);
             if (temporaryBlock == null) continue;
@@ -362,7 +406,7 @@ public final class SelfRescuePlatform implements Listener {
             for (Player player : new ArrayList<>(arena.getPlayers())) affectedPlayers.add(player.getUniqueId());
         }
         automaticDeployments.removeAll(affectedPlayers);
-        for (UUID uuid : affectedPlayers) cooldowns.remove(uuid);
+        for (UUID uuid : affectedPlayers) { cooldowns.remove(uuid); landingProtections.remove(uuid); }
     }
 
     private void discardWorld(String worldName, boolean changeBlocks) {
@@ -392,7 +436,7 @@ public final class SelfRescuePlatform implements Listener {
     private boolean isCoolingDown(UUID uuid) {
         Long started = cooldowns.get(uuid);
         if (started == null) return false;
-        if (System.currentTimeMillis() - started < COOLDOWN_MILLIS) return true;
+        if (clock.getAsLong() - started < COOLDOWN_MILLIS * 1_000_000L) return true;
         cooldowns.remove(uuid);
         return false;
     }

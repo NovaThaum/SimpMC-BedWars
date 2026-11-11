@@ -110,13 +110,16 @@ public final class MatchStatsRecorder implements Listener, AutoCloseable {
         this.reportIntervalTicks = Math.max(20L, intervalSeconds * 20L);
         this.finishGraceTicks = Math.max(0L, BedWars.config.getYml().getLong(
                 "match-statistics.finish-grace-ticks", 40L));
-        this.violationTracking = false;
-        this.matchLeaveVlThreshold = 0;
-        boolean crossTeamItemTransfer = false;
-        List<Integer> warningThresholds = Collections.emptyList();
+        this.violationTracking = BedWars.config.getYml().getBoolean(ConfigPath.MATCH_STATISTICS_VIOLATIONS_ENABLED, true);
+        this.matchLeaveVlThreshold = Math.max(0, BedWars.config.getYml().getInt(
+                ConfigPath.MATCH_STATISTICS_VIOLATIONS_MATCH_LEAVE_THRESHOLD, 25));
+        boolean crossTeamItemTransfer = BedWars.config.getYml().getBoolean(
+                ConfigPath.MATCH_STATISTICS_VIOLATIONS_CROSS_TEAM_ITEM_TRANSFER, true);
+        List<Integer> warningThresholds = BedWars.config.getYml().getIntegerList(
+                ConfigPath.MATCH_STATISTICS_VIOLATIONS_WARNING_THRESHOLDS);
 
-        int queueCapacity = 10000;
-        int retryDelay = 5;
+        int queueCapacity = Math.max(100, BedWars.config.getYml().getInt(ConfigPath.MATCH_STATISTICS_QUEUE_CAPACITY, 10000));
+        int retryDelay = Math.max(1, BedWars.config.getYml().getInt(ConfigPath.MATCH_STATISTICS_RETRY_DELAY_SECONDS, 5));
         this.store = new MatchStatsStore(database, zone, serverId, queueCapacity, retryDelay,
                 warningThresholds);
         this.violationDetector = new IllegalTeamDetector(plugin, this, violationTracking,

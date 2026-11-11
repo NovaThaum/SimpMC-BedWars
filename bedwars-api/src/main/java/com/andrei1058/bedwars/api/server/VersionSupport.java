@@ -466,4 +466,9 @@ public abstract class VersionSupport {
     public abstract void placeLadder(Block b, int x, int y, int z, IArena a, int ladderdata);
 
     public abstract void playVillagerEffect(Player player, Location location);
+
+    /** 回城引导粒子；默认实现保留已有版本适配器的二进制兼容。 */
+    public void playRecallEffect(Player viewer, Location location) {
+        playVillagerEffect(viewer, location);
+    }
 }

@@ -515,11 +515,7 @@ public class Arena implements IArena {
             setArenaByPlayer(p, this);
 
             /* check if you can start the arena */
-            boolean isStatusChange = false;
-            if (status == GameState.waiting && MatchStartGate.isOpen() && com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this)) {
-                changeStatus(GameState.starting);
-                isStatusChange = true;
-            }
+            boolean isStatusChange = reevaluateStartEligibility();
 
             //half full arena time shorten
             if (players.size() >= getMaxPlayers() / 2 && players.size() > minPlayers) {
@@ -585,15 +581,7 @@ public class Arena implements IArena {
             p.getEnderChest().clear();
         }
 
-        if (getPlayers().size() >= getMaxPlayers()) {
-            if (startingTask != null) {
-                if (Bukkit.getScheduler().isCurrentlyRunning(startingTask.getTask())) {
-                    if (startingTask.getCountdown() > BedWars.config.getInt(ConfigPath.GENERAL_CONFIGURATION_START_COUNTDOWN_SHORTENED)) {
-                        startingTask.setCountdown(BedWars.config.getInt(ConfigPath.GENERAL_CONFIGURATION_START_COUNTDOWN_SHORTENED));
-                    }
-                }
-            }
-        }
+        shortenFullCountdown();
 
         refreshSigns();
         JoinNPC.updateNPCs(getGroup());
@@ -790,6 +778,7 @@ public class Arena implements IArena {
         //players.remove must be under call event in order to check if the player is a spectator or not
         players.remove(p);
         removeArenaByPlayer(p, this);
+        reevaluateStartEligibility();
 
         for (PotionEffect pf : p.getActivePotionEffects()) {
             p.removePotionEffect(pf.getType());
@@ -1575,6 +1564,7 @@ public class Arena implements IArena {
 
         if (status == GameState.starting) {
             startingTask = new GameStartingTask(this);
+            shortenFullCountdown();
         } else if (status == GameState.playing) {
             if (BedWars.getLevelSupport() instanceof InternalLevel) {
                 perMinuteTask = new PerMinuteTask(this);
@@ -1588,9 +1578,18 @@ public class Arena implements IArena {
         }
     }
 
+    public void shortenFullCountdown() {
+        if (status == GameState.starting && startingTask != null
+                && getPlayers().size() >= getMaxPlayers() && startingTask.getCountdown() > 5) {
+            startingTask.setCountdown(5);
+        }
+    }
+
     /** 根据当前人数和小队重新判断正常开局资格。 */
     public boolean reevaluateStartEligibility() {
         if (status != GameState.waiting && status != GameState.starting) return false;
+        if (startingTask instanceof GameStartingTask concrete && concrete.isDebugStart() && MatchStartGate.isOpen()) return false;
+        shortenFullCountdown();
         boolean eligible = MatchStartGate.isOpen()
                 && com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this);
         if (status == GameState.waiting && eligible) {

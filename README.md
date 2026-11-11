@@ -172,3 +172,11 @@ If you are not a programmer you can help answering people in the [Issues](https:
 - 权限分别为 `bw.command.stopgames` 与 `bw.command.resumegames`，默认 OP；控制台也可使用。重复执行不会重置倒计时。
 - 暂停期间 `/bw start`、`/bw forceStart` 和调试开局均不能绕过开关。开关仅保存在本服进程内，重启后默认恢复开放。
 - 提示可在玩家语言文件的 `cmd-matchmaking-*` 键中覆盖。
+
+
+## 1.5.0 行为同步
+
+- 自救平台成功部署会清空旧下落距离；首次救援落地保护在 5 秒内生效并仅使用一次，后续只对实际接触临时平台的摔落免伤。
+- 回城卷轴引导 5 秒，移动或受到伤害取消；死亡、重生等待、旁观或变更对局后失效。动作栏文本在玩家语言文件的 `recall-scroll.*` 键下覆盖，蓝色粒子仅发送给同场 24 格内的其他玩家。出生点附近 5 格内没有安全的两格站立空间时拒绝传送；取消或失败归还卷轴。
+- `match-statistics.violations.enabled` 默认 `true`；`match-leave-threshold` 默认 `25`，有效违规值严格超过阈值才移出对局；`cross-team-item-transfer` 默认 `true`，同一对敌方玩家 30 秒内重复资源交接才计入相应证据。`warning-thresholds` 默认 `[10, 20, 50, 100]`。自动迁移只补缺失项，保留自定义值和扩展配置，并在统计配置节内排序。
+- 接受邀请、退出小队及玩家进出后按当前人数与小队重算资格；满员倒计时大于 5 秒时固定压至 5 秒，旧缩时配置不再影响满员规则。分队失败、人数不足、漏分或拆散正常小队时取消开局并保留小队；只有 OP 显式执行 `/bw start debug` 可在当前场次测试单队。

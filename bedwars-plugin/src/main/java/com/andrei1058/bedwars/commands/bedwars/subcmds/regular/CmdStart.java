@@ -76,11 +76,13 @@ public class CmdStart extends SubCommand {
         if (a.getStartingTask() == null){
             if (args.length == 1 && args[0].equalsIgnoreCase("debug") && s.isOp()){
                 a.changeStatus(GameState.starting);
-                BedWars.debug = true;
             } else {
                 return true;
             }
         }
+        if (args.length == 1 && args[0].equalsIgnoreCase("debug") && s.isOp()
+                && a.getStartingTask() instanceof com.andrei1058.bedwars.arena.tasks.GameStartingTask task) task.enableDebugStart();
+        if (a.getStartingTask() == null) return true;
         if (a.getStartingTask().getCountdown() < 5) return true;
         a.getStartingTask().setCountdown(5);
         p.sendMessage(getMsg(p, Messages.COMMAND_FORCESTART_SUCCESS));

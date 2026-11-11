@@ -410,6 +410,7 @@ public class BedWars extends JavaPlugin {
             if (matchDatabase != null) {
                 matchStatsRecorder = new MatchStatsRecorder(this, matchDatabase);
                 registerEvents(matchStatsRecorder);
+                registerEvents(matchStatsRecorder.getViolationDetector());
                 matchStatsRecorder.start();
                 matchHistory = new MatchHistoryService(matchDatabase, matchStatsRecorder);
             } else {

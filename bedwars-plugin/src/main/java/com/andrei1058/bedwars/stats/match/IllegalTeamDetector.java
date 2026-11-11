@@ -237,9 +237,33 @@ public final class IllegalTeamDetector implements Listener, AutoCloseable {
                 System.currentTimeMillis()));
     }
 
-    // 1.8 has no entity pickup event exposing the picked item entity. Drop tracking is
-    // retained for compatible event paths; cross-team transfer evidence is therefore
-    // unavailable on this server API.
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPickup(org.bukkit.event.player.PlayerPickupItemEvent event) {
+        if (!enabled || !crossTeamItemTransfer) return;
+        Player player = event.getPlayer();
+        IArena arena = Arena.getArenaByPlayer(player);
+        ArenaEvidence state = activeState(arena);
+        if (state == null || !isActivePlayer(arena, player)) return;
+        DropInfo drop = state.drops.remove(event.getItem().getUniqueId());
+        if (drop == null || drop.ownerUuid.equals(player.getUniqueId())
+                || !enemyTeams(drop.teamId, team(arena, player.getUniqueId()))) return;
+        long now = System.currentTimeMillis();
+        TransferState transfer = state.transfers.computeIfAbsent(
+                new PlayerPair(drop.ownerUuid, player.getUniqueId()), ignored -> new TransferState());
+        if (recentOrZero(transfer.lastSeenAt, now, RESOURCE_TRANSFER_WINDOW_MILLIS)) {
+            transfer.count++;
+            if (transfer.count == 2 && !transfer.awarded) {
+                addBoth(state, arena, drop.ownerUuid, player.getUniqueId(), 5, false,
+                        "REPEATED_RESOURCE_TRANSFER", "material=" + drop.material.name()
+                                + ";repeat=2");
+                transfer.awarded = true;
+            }
+        } else {
+            transfer.count = 1;
+            transfer.awarded = false;
+        }
+        transfer.lastSeenAt = now;
+    }
 
     private void scanProximity() {
         if (closed || !enabled) return;

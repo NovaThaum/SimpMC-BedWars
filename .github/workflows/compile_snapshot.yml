@@ -8,13 +8,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['21', '25']
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
+          java-version: ${{ matrix.java }}
           distribution: 'temurin'
           cache: maven
 
@@ -35,6 +38,7 @@ jobs:
           grep -Fx "main: com.andrei1058.bedwars.BedWars" < <(unzip -p "$plugin_path" plugin.yml)
 
       - name: Upload plugin jar
+        if: matrix.java == '25'
         uses: actions/upload-artifact@v4
         with:
           name: SimpMC-BW1.8.8-plugin

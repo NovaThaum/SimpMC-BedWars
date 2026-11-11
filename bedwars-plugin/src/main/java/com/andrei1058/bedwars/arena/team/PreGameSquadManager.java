@@ -55,6 +55,7 @@ public final class PreGameSquadManager implements Listener, PreGameSquad {
         if (squad.ids.size() >= arena.getMaxInTeam()) return Result.SQUAD_FULL;
         squad.ids.add(target.getUniqueId()); members.put(target.getUniqueId(), squad);
         removeInvites(target.getUniqueId());
+        reevaluate(arena);
         return Result.SUCCESS;
     }
 
@@ -106,7 +107,8 @@ public final class PreGameSquadManager implements Listener, PreGameSquad {
     @EventHandler public void onState(GameStateChangeEvent e) { if (e.getNewState() == GameState.playing || e.getNewState() == GameState.restarting) clearArena(e.getArena()); }
     @EventHandler public void onDisable(ArenaDisableEvent e) { for (Squad s : new HashSet<>(members.values())) if (s.arena.getWorldName().equalsIgnoreCase(e.getWorldName())) removeSquad(s); }
     private IArena preGame(Player p) { IArena a = Arena.getArenaByPlayer(p); if (a == null || !a.isPlayer(p)) return null; GameState s = a.getStatus(); return s == GameState.waiting || s == GameState.starting ? a : null; }
-    private void removePlayer(UUID id) { removeInvites(id); Squad s = members.remove(id); if (s == null) return; s.ids.remove(id); if (s.ids.size() < 2) removeSquad(s); else if (s.leader.equals(id)) s.leader = s.ids.iterator().next(); }
+    private void removePlayer(UUID id) { removeInvites(id); Squad s = members.remove(id); if (s == null) return; s.ids.remove(id); if (s.ids.size() < 2) removeSquad(s); else if (s.leader.equals(id)) s.leader = s.ids.iterator().next(); reevaluate(s.arena); }
+    private void reevaluate(IArena arena) { if (arena instanceof Arena concrete) concrete.reevaluateStartEligibility(); }
     private void removeSquad(Squad s) { for (UUID id : s.ids) members.remove(id); s.ids.clear(); }
     private void removeInvites(UUID id) { invites.keySet().removeIf(k -> k.inviter.equals(id) || k.target.equals(id)); }
     private void purge() { long now = System.currentTimeMillis(); invites.entrySet().removeIf(e -> e.getValue().expires < now); }

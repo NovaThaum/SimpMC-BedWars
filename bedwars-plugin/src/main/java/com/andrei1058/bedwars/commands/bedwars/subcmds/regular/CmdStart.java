@@ -68,6 +68,11 @@ public class CmdStart extends SubCommand {
         }
         if (a.getStatus() == GameState.playing) return true;
         if (a.getStatus() == GameState.restarting) return true;
+        if (!com.andrei1058.bedwars.arena.MatchStartGate.isOpen()) {
+            p.sendMessage(com.andrei1058.bedwars.language.MatchmakingMessages.text(p,
+                    com.andrei1058.bedwars.language.MatchmakingMessages.Key.MATCHES_BLOCKED));
+            return true;
+        }
         if (a.getStartingTask() == null){
             if (args.length == 1 && args[0].equalsIgnoreCase("debug") && s.isOp()){
                 a.changeStatus(GameState.starting);

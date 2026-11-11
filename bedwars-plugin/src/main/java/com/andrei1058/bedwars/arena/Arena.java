@@ -516,7 +516,7 @@ public class Arena implements IArena {
 
             /* check if you can start the arena */
             boolean isStatusChange = false;
-            if (status == GameState.waiting && com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this)) {
+            if (status == GameState.waiting && MatchStartGate.isOpen() && com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this)) {
                 changeStatus(GameState.starting);
                 isStatusChange = true;
             }
@@ -1514,6 +1514,8 @@ public class Arena implements IArena {
      */
     public void changeStatus(GameState status) {
 
+        if (status == GameState.starting && !MatchStartGate.isOpen()) return;
+
         // prevent called twice #https://github.com/andrei1058/BedWars1058/issues/774
         if (status == this.status) {
             return;
@@ -1584,6 +1586,22 @@ public class Arena implements IArena {
         } else if (status == GameState.restarting) {
             restartingTask = new GameRestartingTask(this);
         }
+    }
+
+    /** 根据当前人数和小队重新判断正常开局资格。 */
+    public boolean reevaluateStartEligibility() {
+        if (status != GameState.waiting && status != GameState.starting) return false;
+        boolean eligible = MatchStartGate.isOpen()
+                && com.andrei1058.bedwars.arena.team.TeamAssigner.canFormValidTeams(this);
+        if (status == GameState.waiting && eligible) {
+            changeStatus(GameState.starting);
+            return true;
+        }
+        if (status == GameState.starting && !eligible) {
+            changeStatus(GameState.waiting);
+            return true;
+        }
+        return false;
     }
 
     /** Keep every participant non-collidable while managed by an arena. */

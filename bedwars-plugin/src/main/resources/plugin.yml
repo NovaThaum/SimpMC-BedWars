@@ -5,3 +5,10 @@ description: 兼容 Spigot 1.8.8 和 1.8.9 的起床战争插件
 main: com.andrei1058.bedwars.BedWars
 softdepend: [Vault,PlaceholderAPI,Citizens,Parties,PartyAndFriends,Spigot-Party-API-PAF]
 #load: STARTUP
+permissions:
+  bw.command.stopgames:
+    description: 暂停本服新对局开局
+    default: op
+  bw.command.resumegames:
+    description: 恢复本服新对局开局
+    default: op

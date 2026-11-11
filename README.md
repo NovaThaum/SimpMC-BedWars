@@ -164,3 +164,11 @@ If you are not a programmer you can help answering people in the [Issues](https:
 
 # Contact
 [![Discord Server](https://discordapp.com/api/guilds/201345265821679617/widget.png?style=banner3)](https://discord.gg/XdJfN2X)
+
+## 新对局开局控制
+
+- `/bw stopGames`：暂停本服新对局开局，正在倒计时的地图退回等待；玩家仍可加入，已开始的比赛继续。
+- `/bw resumeGames`：恢复新对局，按当前人数、队伍容量和固定小队重新评估开局资格。
+- 权限分别为 `bw.command.stopgames` 与 `bw.command.resumegames`，默认 OP；控制台也可使用。重复执行不会重置倒计时。
+- 暂停期间 `/bw start`、`/bw forceStart` 和调试开局均不能绕过开关。开关仅保存在本服进程内，重启后默认恢复开放。
+- 提示可在玩家语言文件的 `cmd-matchmaking-*` 键中覆盖。

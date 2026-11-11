@@ -91,6 +91,11 @@ public class GameStartingTask implements Runnable, StartingTask {
 
     @Override
     public void run() {
+        if (!com.andrei1058.bedwars.arena.MatchStartGate.isOpen()) {
+            task.cancel();
+            getArena().changeStatus(GameState.waiting);
+            return;
+        }
         if (countdown == 0) {
 
             getArena().getTeamAssigner().assignTeams(getArena());

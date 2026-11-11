@@ -419,6 +419,9 @@ public class MainConfig extends ConfigManager {
         //
 
         BedWars.setDebug(yml.getBoolean("debug"));
+        for (Language language : Language.getLanguages()) {
+            com.andrei1058.bedwars.language.MatchmakingMessages.install(language);
+        }
         new ConfigManager(plugin, "bukkit", Bukkit.getWorldContainer().getPath()).set("ticks-per.autosave", -1);
 
         Bukkit.spigot().getConfig().set("commands.send-namespaced", false);

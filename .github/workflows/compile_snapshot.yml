@@ -21,6 +21,9 @@ jobs:
       - name: Build and test with Maven
         run: mvn -B -U clean verify -s ci_settings.xml
 
+      - name: Test configuration migration tool
+        run: mvn -B -ntp -f tools/config-migrator/pom.xml -Dmaven.compiler.fork=true clean verify
+
       - name: Verify plugin jar
         shell: bash
         run: |

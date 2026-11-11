@@ -109,6 +109,19 @@ class ConfigMigratorTest {
         assertTrue(migrated.contains("DAMAGE_ALL,4,sword"));
     }
 
+    @Test void retainsUpgradePriceSourceVersionAndResetsTargetMigrationMarker() throws Exception {
+        Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
+        Files.createDirectories(sourceDir); Files.createDirectories(targetDir);
+        Files.writeString(sourceDir.resolve("upgrades2.yml"), "config-version: 9\nupgrade-swords:\n  tier-1:\n    cost: 2\n");
+        Files.writeString(targetDir.resolve("upgrades2.yml"), "price-schema: 2\nupgrade-swords:\n  tier-1:\n    cost: 4\n");
+        ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
+        String migrated = Files.readString(targetDir.resolve("upgrades2.yml"));
+        assertTrue(migrated.contains("config-version: 9"));
+        assertTrue(migrated.contains("price-schema: 0"));
+        assertTrue(migrated.contains("cost: 2"));
+        assertTrue(Files.readString(targetDir.resolve("migration-report.txt")).contains("保留升级价格来源"));
+    }
+
     @Test void convertsLegacyMaterialDataAlongsideMaterialNames() throws Exception {
         Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
         Files.createDirectories(sourceDir); Files.createDirectories(targetDir);

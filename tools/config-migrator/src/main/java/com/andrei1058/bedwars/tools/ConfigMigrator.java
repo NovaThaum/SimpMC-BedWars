@@ -53,7 +53,9 @@ public final class ConfigMigrator {
                 } else if (Files.isRegularFile(legacy)) {
                     target = map(yaml.load(Files.readString(legacy)));
                     Map<String,Object> transferableSource = new LinkedHashMap<>(source);
-                    if (transferableSource.remove("config-version") != null) notes.add("config-version 已忽略，由目标插件管理");
+                    boolean upgradesConfig = relative.getNameCount() == 1 && "upgrades2.yml".equalsIgnoreCase(relative.getFileName().toString());
+                    if (transferableSource.remove("config-version") != null && !upgradesConfig)
+                        notes.add("config-version 已忽略，由目标插件管理");
                     boolean mainConfig = relative.getNameCount() == 1 && "config.yml".equalsIgnoreCase(relative.getFileName().toString());
                     if (mainConfig) {
                         transferableSource.remove("lobbyLoc");
@@ -76,6 +78,15 @@ public final class ConfigMigrator {
                     merge(transferableSource, target, "", migrated, skipped, warnings, notes, languageFile);
                     migrateLegacyConfigKeys(source, target, migrated, warnings, relative);
                     mergeSupportedSwordTiers(supportedSwordTiers, target, migrated, skipped, warnings, notes);
+                    if (upgradesConfig) {
+                        // 升级价格迁移必须知道源配置版本；目标旧版使用独立 price-schema 标记。
+                        target.remove("config-version");
+                        target.put("price-schema", 0);
+                        if (source.get("config-version") instanceof Integer version) {
+                            target.put("config-version", version);
+                            notes.add("保留升级价格来源 config-version，启动后由目标插件迁移价格");
+                        }
+                    }
                 } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
                 Path output = legacyDir.resolve(relative).normalize();
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);

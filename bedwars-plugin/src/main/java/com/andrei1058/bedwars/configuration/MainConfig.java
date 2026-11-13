@@ -117,7 +117,7 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_START_COUNTDOWN_REGULAR, 40);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_START_COUNTDOWN_HALF, 25);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_START_COUNTDOWN_SHORTENED, 5);
-        yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RESTART, 45);
+        yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RESTART, 30);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RE_SPAWN_COUNTDOWN, 5);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_BEDS_DESTROY_COUNTDOWN, 360);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_DRAGON_SPAWN_COUNTDOWN, 600);
@@ -250,6 +250,7 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.GENERAL_GAME_END_SB_TOP_STATISTIC, DefaultStatistics.KILLS.toString());
         yml.addDefault(ConfigPath.GENERAL_GAME_END_SB_TOP_HIDE_MISSING, true);
         yml.options().copyDefaults(true);
+        migrateRestartCountdownDefault(yml);
         if (!hadSeasonalEffects && !oldHalloweenEnabled) {
             yml.set("seasonal-effects.enabled", false);
         }
@@ -425,6 +426,7 @@ public class MainConfig extends ConfigManager {
 
         BedWars.setDebug(yml.getBoolean("debug"));
         for (Language language : Language.getLanguages()) {
+            com.andrei1058.bedwars.language.MatchQueryMessages.install(language);
             com.andrei1058.bedwars.language.MatchmakingMessages.install(language);
             com.andrei1058.bedwars.language.RecallMessages.install(language);
         }
@@ -450,6 +452,13 @@ public class MainConfig extends ConfigManager {
         }
 
         BedWars.setLobbyWorld(getLobbyWorldName());
+    }
+
+    /** Replaces the old built-in reset countdown while preserving other admin values. */
+    static void migrateRestartCountdownDefault(YamlConfiguration yml) {
+        if (Double.compare(yml.getDouble(ConfigPath.GENERAL_CONFIGURATION_RESTART, Double.NaN), 45.0D) == 0) {
+            yml.set(ConfigPath.GENERAL_CONFIGURATION_RESTART, 30);
+        }
     }
 
     public String getLobbyWorldName() {

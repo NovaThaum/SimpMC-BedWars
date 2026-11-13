@@ -389,8 +389,9 @@ public class Sidebar {
             tabTeamNames.put(tab.getIdentifier(), teamName);
         }
         String color = tab.getColor().toString();
-        int prefixLength = Math.max(0, 16 - color.length());
-        String prefix = trimLegacy(renderText(tab.getPrefix(), tab.getPlaceholders()), prefixLength) + color;
+        String italic = tab.isItalic() ? ChatColor.ITALIC.toString() : "";
+        int prefixLength = Math.max(0, 16 - color.length() - italic.length());
+        String prefix = trimLegacy(renderText(tab.getPrefix(), tab.getPlaceholders()), prefixLength) + color + italic;
         return new RenderedTab(teamName, tab.getPlayer().getName(),
                 prefix,
                 trimLegacy(renderText(tab.getSuffix(), tab.getPlaceholders()), 16),

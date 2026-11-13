@@ -254,27 +254,12 @@ public class BwTabList {
 
             // when player leaves but decides to join to spectate later
             if (null != exTeam) {
-
-                HashMap<String, String> replacements = getTeamReplacements(exTeam);
-
-                if (arena.getStatus() == GameState.restarting && null != arena.getWinner()) {
-                    if (arena.getWinner().equals(exTeam)) {
-                        prefix = getTabText(Messages.FORMATTING_SB_TAB_RESTARTING_WIN2_PREFIX, player, replacements);
-                        suffix = getTabText(Messages.FORMATTING_SB_TAB_RESTARTING_WIN2_SUFFIX, player, replacements);
-                    } else {
-                        prefix = getTabText(Messages.FORMATTING_SB_TAB_RESTARTING_ELM_PREFIX, player, replacements);
-                        suffix = getTabText(Messages.FORMATTING_SB_TAB_RESTARTING_ELM_SUFFIX, player, replacements);
-                    }
-                } else {
-                    prefix = getTabText(Messages.FORMATTING_SB_TAB_PLAYING_ELM_PREFIX, player, replacements);
-                    suffix = getTabText(Messages.FORMATTING_SB_TAB_PLAYING_ELM_SUFFIX, player, replacements);
-                }
-
                 PlayerTab tab = handle.playerTabCreate(
                         getPlayerTabIdentifierEliminatedInTeam(exTeam, playerTabId),
-                        player, prefix, suffix, PlayerTab.PushingRule.NEVER,
-                        this.sidebar.getPlaceholders(player), getPlayerListColor(exTeam)
+                        player, new SidebarLine(), new SidebarLine(), PlayerTab.PushingRule.NEVER,
+                        this.sidebar.getPlaceholders(player), ChatColor.GRAY
                 );
+                tab.setItalic(true);
                 deployedPerPlayerTabList.put(player.getUniqueId(), tab);
                 return;
             }
@@ -302,9 +287,10 @@ public class BwTabList {
 
             PlayerTab tab = handle.playerTabCreate(
                     getPlayerTabIdentifierSpectator(null, playerTabId),
-                    player, prefix, suffix, PlayerTab.PushingRule.NEVER,
-                    this.sidebar.getPlaceholders(player), ChatColor.WHITE
+                    player, new SidebarLine(), new SidebarLine(), PlayerTab.PushingRule.NEVER,
+                    this.sidebar.getPlaceholders(player), ChatColor.GRAY
             );
+            tab.setItalic(true);
             deployedPerPlayerTabList.put(player.getUniqueId(), tab);
             return;
         }

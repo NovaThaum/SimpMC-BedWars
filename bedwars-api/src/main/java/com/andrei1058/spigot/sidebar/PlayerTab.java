@@ -28,6 +28,7 @@ public class PlayerTab {
     private final ConcurrentLinkedQueue<PlaceholderProvider> placeholders = new ConcurrentLinkedQueue<>();
     private NameTagVisibility nameTagVisibility = NameTagVisibility.ALWAYS;
     private ChatColor color = ChatColor.WHITE;
+    private boolean italic;
     private Consumer<PlayerTab> updateCallback = tab -> {
     };
 
@@ -89,6 +90,16 @@ public class PlayerTab {
     @NotNull
     public ChatColor getColor() {
         return color;
+    }
+
+    public void setItalic(boolean italic) {
+        if (this.italic == italic) return;
+        this.italic = italic;
+        updateCallback.accept(this);
+    }
+
+    public boolean isItalic() {
+        return italic;
     }
 
     @NotNull

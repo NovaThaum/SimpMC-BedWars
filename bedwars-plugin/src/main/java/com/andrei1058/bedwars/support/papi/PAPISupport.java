@@ -145,6 +145,11 @@ public class PAPISupport extends PlaceholderExpansion {
                     return String.valueOf(stats.getBedsDestroyed());
                 case "gamesplayed":
                     return String.valueOf(stats.getGamesPlayed());
+                case "gamesplayed_leaderboard":
+                    return gamesPlayedLeaderboardValue(stats);
+                case "kd":
+                case "kd_leaderboard":
+                    return qualifiedKdLeaderboardValue(stats);
             }
         }
 
@@ -254,5 +259,16 @@ public class PAPISupport extends PlaceholderExpansion {
                 break;
         }
         return response;
+    }
+
+    static String gamesPlayedLeaderboardValue(PlayerStats stats) {
+        return String.valueOf(stats.getGamesPlayed());
+    }
+
+    static String qualifiedKdLeaderboardValue(PlayerStats stats) {
+        if (stats.getGamesPlayed() <= 100) return "N/A";
+        long deaths = (long) stats.getDeaths() + stats.getFinalDeaths();
+        double kd = deaths == 0 ? stats.getKills() : (double) stats.getKills() / deaths;
+        return Double.toString(kd);
     }
 }

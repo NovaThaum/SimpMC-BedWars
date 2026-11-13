@@ -22,9 +22,11 @@ package com.andrei1058.bedwars.language;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.events.player.PlayerLangChangeEvent;
+import com.andrei1058.bedwars.api.language.Language;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.sidebar.SidebarService;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -33,16 +35,19 @@ public class LangListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onLanguageChangeEvent(PlayerLangChangeEvent e) {
-        if (e == null) return;
         if (e.isCancelled()) return;
-        if (BedWars.config.getLobbyWorldName().equalsIgnoreCase(e.getPlayer().getWorld().getName())) {
-            Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
-                Arena.sendLobbyCommandItems(e.getPlayer());
-                SidebarService.getInstance().giveSidebar(e.getPlayer(), Arena.getArenaByPlayer(e.getPlayer()), false);
-
-                // save to db
-                Bukkit.getScheduler().runTaskAsynchronously(BedWars.plugin, ()-> BedWars.getRemoteDatabase().setLanguage(e.getPlayer().getUniqueId(), e.getNewLang()));
-            }, 10L);
-        }
+        Player player = e.getPlayer();
+        String selectedIso = e.getNewLang();
+        java.util.UUID uuid = player.getUniqueId();
+        Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
+            if (!Language.getPlayerLanguage(uuid).getIso().equalsIgnoreCase(selectedIso)) return;
+            Bukkit.getScheduler().runTaskAsynchronously(BedWars.plugin,
+                    () -> BedWars.getRemoteDatabase().setLanguage(uuid, selectedIso));
+            if (player.isOnline() && BedWars.config.getLobbyWorldName()
+                    .equalsIgnoreCase(player.getWorld().getName())) {
+                Arena.sendLobbyCommandItems(player);
+                SidebarService.getInstance().giveSidebar(player, Arena.getArenaByPlayer(player), false);
+            }
+        }, 1L);
     }
 }

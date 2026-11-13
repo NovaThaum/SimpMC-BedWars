@@ -20,6 +20,16 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SelfRescueLandingTest {
+    @Test void overlapPolicyDetectsPlayerBodyIntersectingGeneratedBlock() {
+        assertTrue(SelfRescuePlatform.overlapsPlayerBody(.5, 5.5, .5, 0, 5, 0));
+    }
+
+    @Test void overlapPolicyAllowsTouchingButNotIntersectingBlockFaces() {
+        assertFalse(SelfRescuePlatform.overlapsPlayerBody(.5, 6.0, .5, 0, 5, 0));
+        assertFalse(SelfRescuePlatform.overlapsPlayerBody(.5, 3.2, .5, 0, 5, 0));
+        assertFalse(SelfRescuePlatform.overlapsPlayerBody(-.3, 5.5, .5, 0, 5, 0));
+    }
+
     MainConfig original; MockedStatic<Arena> arenas; MockedStatic<Bukkit> bukkit;
     IArena arena; Player player; World world; SelfRescuePlatform platform;
     AtomicLong clock; Map<String, Block> blocks;

@@ -326,6 +326,7 @@ public final class SelfRescuePlatform implements Listener {
     private void deploy(IArena arena, Player player, Location center, int y, boolean blocksAutomaticDeployment) {
         long platformId = ++nextPlatformId;
         List<String> placed = new ArrayList<>();
+        List<Block> generatedBlocks = new ArrayList<>();
         int centerX = center.getBlockX();
         int centerZ = center.getBlockZ();
         for (int row = 0; row < PATTERN.length; row++) {
@@ -338,6 +339,7 @@ public final class SelfRescuePlatform implements Listener {
                     existing.platformIds.add(platformId);
                     if (isAir(block)) block.setType(Material.SLIME_BLOCK, false);
                     placed.add(key);
+                    generatedBlocks.add(block);
                     continue;
                 }
                 if (!isAir(block)) continue;
@@ -349,10 +351,12 @@ public final class SelfRescuePlatform implements Listener {
                 temporaryBlock.platformIds.add(platformId);
                 temporaryBlocks.put(key, temporaryBlock);
                 placed.add(key);
+                generatedBlocks.add(block);
             }
         }
         if (placed.isEmpty()) return;
 
+        moveOwnerOutOfGeneratedBlocks(player, generatedBlocks);
         platforms.put(platformId, placed);
         UUID uuid = player.getUniqueId();
         cooldowns.put(uuid, clock.getAsLong());
@@ -363,6 +367,34 @@ public final class SelfRescuePlatform implements Listener {
         if (!player.isOnGround()) landingProtections.put(uuid, new LandingProtection(area, center.getY(), clock.getAsLong()));
         platformTasks.put(platformId, Bukkit.getScheduler().runTaskLater(BedWars.plugin,
                 () -> removePlatform(platformId), LIFETIME_TICKS));
+    }
+
+    private static void moveOwnerOutOfGeneratedBlocks(Player player, List<Block> generatedBlocks) {
+        if (player == null || generatedBlocks.isEmpty()) return;
+        Location location = player.getLocation();
+        int highestY = Integer.MIN_VALUE;
+        boolean overlaps = false;
+        for (Block block : generatedBlocks) {
+            highestY = Math.max(highestY, block.getY());
+            if (overlapsPlayerBody(location.getX(), location.getY(), location.getZ(),
+                    block.getX(), block.getY(), block.getZ())) {
+                overlaps = true;
+            }
+        }
+        if (overlaps) {
+            Location safe = location.clone();
+            safe.setY(highestY + 1.05);
+            player.teleport(safe);
+        }
+    }
+
+    static boolean overlapsPlayerBody(double playerX, double playerFeetY, double playerZ,
+                                      int blockX, int blockY, int blockZ) {
+        double halfWidth = 0.3;
+        double playerHeadY = playerFeetY + 1.8;
+        return playerX + halfWidth > blockX && playerX - halfWidth < blockX + 1
+                && playerZ + halfWidth > blockZ && playerZ - halfWidth < blockZ + 1
+                && playerHeadY > blockY && playerFeetY < blockY + 1;
     }
 
     private void removePlatform(long platformId) {

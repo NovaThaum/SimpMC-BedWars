@@ -66,6 +66,7 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
         instance = this;
         new CmdJoin(this, "join");
         new CmdLeave(this, "leave");
+        new CmdHelp(this, "help");
         new CmdLang(this, "lang");
         new CmdTeleporter(this, "teleporter");
         if (getServerType() != ServerType.BUNGEE) {
@@ -104,6 +105,8 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.WaitingPos(this, "waitingPos");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.RemoveTeam(this, "removeTeam");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.SetMaxInTeam(this, "setMaxInTeam");
+        new SetMinPlayers(this, "setMinPlayers");
+        new ListTeams(this, "listTeams");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.SetBuildHeight(this, "setMaxBuildHeight");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.SetSpawn(this, "setSpawn");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.SetBed(this, "setBed");
@@ -137,11 +140,11 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
                         sendSubCommands((Player) s);
                     }
                 } else {
-                    s.sendMessage("§f   bw safemode §eenable/ disable");
+                    Bukkit.dispatchCommand(s, mainCmd + " help");
                 }
             } else {
                 if (s instanceof ConsoleCommandSender) {
-                    s.sendMessage("§fNo console commands available atm.");
+                    Bukkit.dispatchCommand(s, mainCmd + " help");
                     return true;
                 }
                 /* Send player commands */
@@ -193,7 +196,11 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
         for (int i = 0; i <= 20; i++) {
             for (SubCommand sb : getSubCommands()) {
                 if (sb.getPriority() == i && sb.isShow() && sb.canSee(p, BedWars.getAPI())) {
-                    p.spigot().sendMessage(sb.getDisplayInfo());
+                    if (sb instanceof CmdMatchQuery) {
+                        p.spigot().sendMessage(((CmdMatchQuery) sb).getDisplayInfo(p));
+                    } else {
+                        p.spigot().sendMessage(sb.getDisplayInfo());
+                    }
                 }
             }
         }

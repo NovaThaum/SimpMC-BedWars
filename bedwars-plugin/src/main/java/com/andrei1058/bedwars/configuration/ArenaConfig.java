@@ -41,6 +41,8 @@ public class ArenaConfig extends ConfigManager {
         super(plugin, name, dir);
 
         YamlConfiguration yml = getYml();
+        boolean hadMinPlayers = yml.get("minPlayers") != null;
+        Integer legacyMinInTeam = yml.get("minInTeam") == null ? null : yml.getInt("minInTeam");
         yml.options().header(plugin.getName() + " arena configuration file.\n" +
                 "Documentation here: https://gitlab.com/andrei1058/BedWars1058/wikis/configuration/Arena-Configuration");
         yml.addDefault("group", "Default");
@@ -94,7 +96,18 @@ public class ArenaConfig extends ConfigManager {
         }
         set(ConfigPath.GENERAL_CONFIGURATION_ENABLE_GEN_SPLIT, null);
 
+        migrateMinimumPlayers(yml, hadMinPlayers, legacyMinInTeam);
+        save();
+
         cachedGameOverridables = getGameOverridables();
+    }
+
+    static void migrateMinimumPlayers(YamlConfiguration yml, boolean hadMinPlayers, Integer legacyMinInTeam) {
+        if (!hadMinPlayers && legacyMinInTeam != null) {
+            yml.set("minPlayers", Math.max(2, legacyMinInTeam));
+        }
+        yml.set("minPlayers", Math.max(2, yml.getInt("minPlayers", 2)));
+        yml.set("minInTeam", null);
     }
 
     @SuppressWarnings({"SpellCheckingInspection"})

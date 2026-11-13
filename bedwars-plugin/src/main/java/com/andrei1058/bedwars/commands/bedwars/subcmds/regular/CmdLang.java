@@ -28,6 +28,7 @@ import com.andrei1058.bedwars.api.language.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.commands.bedwars.MainCommand;
+import com.andrei1058.bedwars.language.MatchmakingMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -50,9 +51,11 @@ public class CmdLang extends SubCommand {
 
     @Override
     public boolean execute(String[] args, CommandSender s) {
-        if (s instanceof ConsoleCommandSender) return false;
+        if (!(s instanceof Player)) {
+            s.sendMessage(Language.getDefaultLanguage().m("cmd-lang-player-only"));
+            return true;
+        }
         Player p = (Player) s;
-        if (Arena.getArenaByPlayer(p) != null) return false;
         if (args.length == 0) {
             p.sendMessage(getMsg(p, Messages.COMMAND_LANG_LIST_HEADER));
             for (Language l : Language.getLanguages()) {
@@ -60,23 +63,25 @@ public class CmdLang extends SubCommand {
             }
             p.sendMessage(getMsg(p, Messages.COMMAND_LANG_USAGE));
             return true;
-        } else if (Language.isLanguageExist(args[0])) {
-            if (Arena.getArenaByPlayer(p) == null) {
-                if (Language.setPlayerLanguage(p.getUniqueId(), args[0])) {
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> p.sendMessage(getMsg(p, Messages.COMMAND_LANG_SELECTED_SUCCESSFULLY)), 3L);
-                } else {
-                    p.sendMessage(getMsg(p, Messages.COMMAND_LANG_LIST_HEADER));
-                    for (Language l : Language.getLanguages()) {
-                        p.sendMessage(getMsg(p, Messages.COMMAND_LANG_LIST_FORMAT).replace("{iso}", l.getIso()).replace("{name}", l.getLangName()));
-                    }
-                    p.sendMessage(getMsg(p, Messages.COMMAND_LANG_USAGE));
-                    return true;
-                }
-            } else {
-                p.sendMessage(getMsg(p, Messages.COMMAND_LANG_USAGE_DENIED));
-            }
-        } else {
+        }
+        if (args.length != 1) {
+            p.sendMessage(getMsg(p, Messages.COMMAND_LANG_USAGE));
+            return true;
+        }
+        if (Arena.getArenaByPlayer(p) != null) {
+            p.sendMessage(getMsg(p, Messages.COMMAND_LANG_USAGE_DENIED));
+            return true;
+        }
+        if (!Language.isLanguageExist(args[0])) {
             p.sendMessage(getMsg(p, Messages.COMMAND_LANG_SELECTED_NOT_EXIST));
+            return true;
+        }
+        if (Language.getPlayerLanguage(p).getIso().equalsIgnoreCase(args[0])
+                || Language.setPlayerLanguage(p.getUniqueId(), args[0])) {
+            Bukkit.getScheduler().runTaskLater(plugin,
+                    () -> p.sendMessage(getMsg(p, Messages.COMMAND_LANG_SELECTED_SUCCESSFULLY)), 3L);
+        } else {
+            p.sendMessage(MatchmakingMessages.text(p, MatchmakingMessages.Key.LANG_CHANGE_CANCELLED));
         }
         return true;
     }

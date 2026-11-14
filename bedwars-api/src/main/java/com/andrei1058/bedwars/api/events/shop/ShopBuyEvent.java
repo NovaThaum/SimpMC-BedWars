@@ -88,6 +88,11 @@ public class ShopBuyEvent extends Event implements Cancellable {
         return purchaseAmount;
     }
 
+    /** Modern API name retained alongside the legacy accessor. */
+    public int getPurchaseCount() {
+        return purchaseAmount;
+    }
+
     @Override
     public HandlerList getHandlers() {
         return HANDLERS;

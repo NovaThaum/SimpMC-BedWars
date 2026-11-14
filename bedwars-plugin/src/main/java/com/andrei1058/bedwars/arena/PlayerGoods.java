@@ -128,6 +128,11 @@ class PlayerGoods {
         return playerGoods.containsKey(p.getUniqueId());
     }
 
+    static void discard(UUID playerId) {
+        PlayerGoods goods = playerGoods.remove(playerId);
+        if (goods != null) goods.clearSnapshot();
+    }
+
     /**
      * get a player vault
      */
@@ -140,7 +145,10 @@ class PlayerGoods {
      */
     void restore() {
         Player player = Bukkit.getPlayer(uuid);
-        if (player == null) return;
+        if (player == null) {
+            if (!ReJoin.hasPendingForPlayer(uuid)) discard(uuid);
+            return;
+        }
         playerGoods.remove(player.getUniqueId());
 
 
@@ -197,6 +205,18 @@ class PlayerGoods {
         potions = null;
         armor = null;
         enderchest = null;
+        displayName = null;
+        tabName = null;
+    }
+
+    private void clearSnapshot() {
+        uuid = null;
+        items = null;
+        potions = null;
+        armor = null;
+        enderchest = null;
+        displayName = null;
+        tabName = null;
     }
 
 }

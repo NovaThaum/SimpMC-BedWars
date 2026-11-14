@@ -490,7 +490,7 @@ public class Arena implements IArena {
             //Remove from ReJoin
             ReJoin rejoin = ReJoin.getPlayer(p);
             if (rejoin != null) {
-                rejoin.destroy(true);
+                rejoin.destroyAndDiscard(true);
             }
 
             p.closeInventory();
@@ -607,7 +607,7 @@ public class Arena implements IArena {
             //Remove from ReJoin
             ReJoin reJoin = ReJoin.getPlayer(p);
             if (reJoin != null) {
-                reJoin.destroy(true);
+                reJoin.destroyAndDiscard(true);
             }
 
             leaving.remove(p);
@@ -957,7 +957,7 @@ public class Arena implements IArena {
                 //noinspection ConstantConditions
                 if (ReJoin.getPlayer(p).getArena() == this) {
                     //noinspection ConstantConditions
-                    ReJoin.getPlayer(p).destroy(false);
+                    ReJoin.getPlayer(p).destroyAndDiscard(false);
                 }
             }
         }
@@ -1084,7 +1084,7 @@ public class Arena implements IArena {
             //noinspection ConstantConditions
             if (ReJoin.getPlayer(p).getArena() == this) {
                 //noinspection ConstantConditions
-                ReJoin.getPlayer(p).destroy(false);
+                ReJoin.getPlayer(p).destroyAndDiscard(false);
             }
         }
 
@@ -1358,6 +1358,14 @@ public class Arena implements IArena {
         }
     }
 
+    @Override
+    public List<ITeam> getActiveTeamsAtGameStart() {
+        List<ITeam> result = new ArrayList<>();
+        for (ITeam team : teams) if (getTeamSizeAtGameStart(team) > 0) result.add(team);
+        return List.copyOf(result);
+    }
+
+    @Override
     public int getTeamSizeAtGameStart(ITeam team) {
         if (team == null) return 0;
         Integer size = teamSizesAtGameStart.get(team.getName());
@@ -1738,13 +1746,36 @@ public class Arena implements IArena {
      * Not used in serverType BUNGEE.
      * This will clear the inventory first.
      */
+    /** 应用大厅状态；异步调用切回主线程，且不覆盖已经入场的玩家。 */
+    public static void enterLobby(Player p) {
+        if (!Bukkit.isPrimaryThread()) {
+            Bukkit.getScheduler().runTask(plugin, () -> enterLobby(p));
+            return;
+        }
+        if (!isCurrentLobbyPlayer(p)) return;
+        p.setGameMode(GameMode.ADVENTURE);
+        p.setFlying(false);
+        p.setAllowFlight(false);
+        p.setCanPickupItems(true);
+        p.getInventory().clear();
+        p.getInventory().setArmorContents(null);
+        p.getOpenInventory().setCursor(null);
+        sendLobbyCommandItems(p);
+    }
+
+    private static boolean isCurrentLobbyPlayer(Player p) {
+        return p != null && p.isOnline() && !isInArena(p)
+                && !SetupSession.isInSetupSession(p.getUniqueId())
+                && p.getWorld().getName().equalsIgnoreCase(BedWars.getLobbyWorld());
+    }
+
     public static void sendLobbyCommandItems(Player p) {
         if (config.getYml().get(ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_PATH) == null) return;
         if (!BedWars.config.getLobbyWorldName().equalsIgnoreCase(p.getWorld().getName())) return;
         p.getInventory().clear();
 
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-            if (!BedWars.config.getLobbyWorldName().equalsIgnoreCase(p.getWorld().getName())) return;
+        Runnable refreshItems = () -> {
+            if (!isCurrentLobbyPlayer(p)) return;
             for (String item : config.getYml().getConfigurationSection(ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_PATH).getKeys(false)) {
 
                 if (config.getYml().get(ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_MATERIAL.replace("%path%", item)) == null) {
@@ -1776,7 +1807,9 @@ public class Arena implements IArena {
 
                 p.getInventory().setItem(config.getInt(ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_SLOT.replace("%path%", item)), i);
             }
-        }, 15L);
+        };
+        refreshItems.run();
+        Bukkit.getScheduler().runTaskLater(plugin, refreshItems, 15L);
     }
 
     /**
@@ -2649,7 +2682,7 @@ public class Arena implements IArena {
         List<ReJoin> reJoins = new ArrayList<>(ReJoin.getReJoinList());
         for (ReJoin reJoin : reJoins) {
             if (reJoin.getArena() == this) {
-                reJoin.destroy(true);
+                reJoin.destroyAndDiscard(true);
             }
         }
     }
@@ -2671,7 +2704,7 @@ public class Arena implements IArena {
             team.getMembersCache().removeIf(cachedPlayer -> cachedPlayer.getUniqueId().equals(player.getUniqueId()));
             ReJoin rejoin = ReJoin.getPlayer(player);
             if (rejoin != null) {
-                rejoin.destroy(team.getMembers().isEmpty());
+                rejoin.destroyAndDiscard(team.getMembers().isEmpty());
             }
         }
     }

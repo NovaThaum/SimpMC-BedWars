@@ -85,6 +85,11 @@ public interface IArena {
      */
     List<Player> getSpectators();
 
+    /** 返回当前列表的只读快照。 */
+    default List<Player> getSpectatorsSnapshot() {
+        return List.copyOf(getSpectators());
+    }
+
     /**
      * Get the player's team.
      * This will work if the player is alive only.
@@ -125,7 +130,7 @@ public interface IArena {
 
     /** 返回当前参赛玩家的独立快照，供异步边界或生命周期记录使用。 */
     default List<Player> getPlayersSnapshot() {
-        return new java.util.ArrayList<>(getPlayers());
+        return List.copyOf(getPlayers());
     }
 
     /**
@@ -140,6 +145,19 @@ public interface IArena {
      * Get arena group.
      */
     String getGroup();
+
+    /** 单分组模型的旧接口兼容入口。 */
+    @Deprecated
+    default List<String> getGroups() { return Collections.singletonList(getGroup()); }
+
+    default boolean isInGroup(String group) {
+        String current = getGroup();
+        return group != null && current != null && current.equalsIgnoreCase(group.trim());
+    }
+
+    /** 旧的每队下限不参与匹配。 */
+    @Deprecated
+    default int getMinInTeam() { return 1; }
 
     /**
      * Get maximum players allowed in a team.
@@ -246,6 +264,11 @@ public interface IArena {
 
     List<ITeam> getTeams();
 
+    /** 返回当前列表的只读快照。 */
+    default List<ITeam> getTeamsSnapshot() {
+        return List.copyOf(getTeams());
+    }
+
     /**
      * Add placed block to cache.
      * So players will be able to remove blocks placed by players only.
@@ -297,12 +320,26 @@ public interface IArena {
      */
     List<Block> getSigns();
 
+    /** 返回当前列表的只读快照。 */
+    default List<Block> getSignsSnapshot() {
+        return List.copyOf(getSigns());
+    }
+
     /**
      * Get the island radius
      */
     int getIslandRadius();
 
     void setGroup(String group);
+
+    /** 旧多分组调用保留首个非空分组。 */
+    @Deprecated
+    default void setGroups(List<String> groups) {
+        if (groups != null) for (String group : groups) {
+            if (group != null && !group.isBlank()) { setGroup(group.trim()); return; }
+        }
+        setGroup("Default");
+    }
 
     /**
      * Set game status without starting stats.
@@ -403,6 +440,11 @@ public interface IArena {
      */
     List<IGenerator> getOreGenerators();
 
+    /** 返回当前列表的只读快照。 */
+    default List<IGenerator> getOreGeneratorsSnapshot() {
+        return List.copyOf(getOreGenerators());
+    }
+
     /**
      * Get the list of next events to come.
      * Not ordered.
@@ -431,6 +473,19 @@ public interface IArena {
      * List of placed blocks.
      */
     LinkedList<Vector> getPlaced();
+
+    /** 返回玩家放置方块的只读快照。 */
+    default Set<Vector> getPlacedBlocksSnapshot() {
+        Set<Vector> snapshot = new HashSet<>();
+        for (Vector vector : getPlaced()) snapshot.add(vector.clone());
+        return Collections.unmodifiableSet(snapshot);
+    }
+
+    /** 第三方竞技场可覆盖此方法提供真正的开局快照。 */
+    default List<ITeam> getActiveTeamsAtGameStart() { return getTeams(); }
+
+    /** 返回开局队伍人数；第三方竞技场默认回退到当前人数。 */
+    default int getTeamSizeAtGameStart(ITeam team) { return team == null ? 0 : team.getSize(); }
 
     /**
      * This is used to destroy arena data when it restarts.

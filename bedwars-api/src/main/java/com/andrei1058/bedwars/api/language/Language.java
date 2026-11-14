@@ -46,6 +46,7 @@ public class Language extends ConfigManager {
     public Language(Plugin plugin, String iso) {
         super(plugin, "messages_" + iso, plugin.getDataFolder().getPath() + "/Languages");
         this.iso = iso;
+        migrateLegacyTowerShopItem(getYml());
 
         // replace old placeholders
         List<String> oldMsg = getYml().getStringList(Messages.GAME_END_TOP_PLAYER_CHAT);
@@ -407,6 +408,37 @@ public class Language extends ConfigManager {
                 path2 = Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", categoryName).replace("%content%", contentName);
         if (yml.getDefaults() == null || !yml.getDefaults().contains(path1)) yml.addDefault(path1, itemName);
         if (yml.getDefaults() == null || !yml.getDefaults().contains(path2)) yml.addDefault(path2, itemLore);
+    }
+
+    /** 只接受完整语言文件名，拒绝迁移备份和临时文件。 */
+    public static String isoFromFileName(String fileName) {
+        if (fileName == null || !fileName.matches("messages_[A-Za-z0-9_-]+\\.yml")) return null;
+        return fileName.substring("messages_".length(), fileName.length() - 4);
+    }
+
+    private static boolean isGeneratedShopPlaceholder(Object value, String placeholder) {
+        if (value == null) return true;
+        if (value instanceof String text)
+            return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', text)).trim().equalsIgnoreCase(placeholder);
+        return value instanceof List<?> values && values.size() == 1
+                && isGeneratedShopPlaceholder(values.get(0), placeholder);
+    }
+
+    public static void migrateLegacyTowerShopItem(@NotNull YamlConfiguration yml) {
+        String oldName = Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY)
+                .replace("%content%", "Compact Pop-up Tower");
+        String oldLore = Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY)
+                .replace("%content%", "Compact Pop-up Tower");
+        String newName = Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY)
+                .replace("%content%", "tower");
+        String newLore = Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY)
+                .replace("%content%", "tower");
+        if (isGeneratedShopPlaceholder(yml.get(newName), "name not set"))
+            yml.set(newName, isGeneratedShopPlaceholder(yml.get(oldName), "name not set") ? null : yml.get(oldName));
+        if (isGeneratedShopPlaceholder(yml.get(newLore), "lore not set"))
+            yml.set(newLore, isGeneratedShopPlaceholder(yml.get(oldLore), "lore not set") ? null : yml.get(oldLore));
+        yml.set(oldName, null);
+        yml.set(oldLore, null);
     }
 
     /**

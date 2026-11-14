@@ -26,7 +26,12 @@ import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.events.player.PlayerAfkEvent;
 import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.arena.team.PreGameSquad;
 import com.andrei1058.bedwars.api.party.Party;
+import com.andrei1058.bedwars.arena.team.PreGameSquadManager;
+import com.andrei1058.bedwars.configuration.LevelsConfig;
+import com.andrei1058.bedwars.configuration.MoneyConfig;
+import com.andrei1058.bedwars.configuration.Sounds;
 import com.andrei1058.bedwars.api.server.ISetupSession;
 import com.andrei1058.bedwars.api.server.RestoreAdapter;
 import com.andrei1058.bedwars.api.server.ServerType;
@@ -200,6 +205,9 @@ public class API implements com.andrei1058.bedwars.api.BedWars {
         public void sendLobbyCommandItems(Player p) {
             Arena.sendLobbyCommandItems(p);
         }
+
+        @Override
+        public void applyLobbyState(Player player) { Arena.enterLobby(player); }
     };
 
     private final Configs configs = new Configs() {
@@ -227,6 +235,13 @@ public class API implements com.andrei1058.bedwars.api.BedWars {
         public ConfigManager getUpgradesConfig() {
             return UpgradesManager.getConfiguration();
         }
+
+        @Override
+        public ConfigManager getLevelsConfig() { return LevelsConfig.levels; }
+        @Override
+        public ConfigManager getRewardsConfig() { return MoneyConfig.money; }
+        @Override
+        public ConfigManager getSoundsConfig() { return Sounds.getSounds(); }
     };
 
     private final ShopUtil shopUtil = new ShopUtil() {
@@ -322,6 +337,9 @@ public class API implements com.andrei1058.bedwars.api.BedWars {
     public Party getPartyUtil() {
         return BedWars.getParty();
     }
+
+    @Override
+    public PreGameSquad getPreGameSquadUtil() { return PreGameSquadManager.getInstance(); }
 
     @Override
     public ISetupSession getSetupSession(UUID player) {

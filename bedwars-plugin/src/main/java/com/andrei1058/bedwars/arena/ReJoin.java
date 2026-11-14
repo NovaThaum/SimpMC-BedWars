@@ -84,7 +84,7 @@ public class ReJoin {
             if (recipient.getUniqueId().equals(player.getUniqueId()) || !notified.add(recipient.getUniqueId())) continue;
             recipient.sendMessage(rejoinNotice(getMsg(recipient, Messages.REJOIN_WAITING), player.getName(), timeoutSeconds));
         }
-        if (bwt.getMembers().isEmpty()) task = new ReJoinTask(this, arena, bwt);
+        task = new ReJoinTask(this, arena, bwt);
         this.permanentsAndNonDowngradables.addAll(cachedArmor);
 
         if (BedWars.autoscale) {
@@ -104,6 +104,11 @@ public class ReJoin {
             }
         }
         return false;
+    }
+
+    static boolean hasPendingForPlayer(@NotNull UUID playerId) {
+        ReJoin reservation = getPlayer(playerId);
+        return reservation != null && reservation.isLeaseActive();
     }
 
     /**
@@ -137,27 +142,27 @@ public class ReJoin {
         }
         if (expiresAtMillis <= System.currentTimeMillis()) {
             BedWars.debug("ReJoin canReJoin reservation has expired");
-            destroy(true);
+            expire();
             return false;
         }
         if (arena == null) {
             BedWars.debug("ReJoin canReJoin arena is null " + player.toString());
-            destroy(true);
+            destroyAndDiscard(true);
             return false;
         }
         if (arena.getStatus() != GameState.playing) {
             BedWars.debug("ReJoin canReJoin status is restarting " + player.toString());
-            destroy(true);
+            destroyAndDiscard(true);
             return false;
         }
         if (bwt == null) {
             BedWars.debug("ReJoin canReJoin bwt is null " + player.toString());
-            destroy(true);
+            destroyAndDiscard(true);
             return false;
         }
         if (bwt.isBedDestroyed()) {
             BedWars.debug("ReJoin canReJoin bed is destroyed " + player.toString());
-            destroy(false);
+            destroyAndDiscard(false);
             return false;
         }
         return true;
@@ -239,6 +244,13 @@ public class ReJoin {
         }
     }
 
+    /** Invalidate a reconnect lease and release its disconnected inventory snapshot. */
+    public void destroyAndDiscard(boolean destroyTeam) {
+        UUID playerId = player;
+        destroy(destroyTeam);
+        if (playerId != null) PlayerGoods.discard(playerId);
+    }
+
     /**
      * Get Player
      */
@@ -287,7 +299,7 @@ public class ReJoin {
     /** Expire the local lease and finalize an abandoned empty team. */
     public void expire() {
         if (!isActiveReservation(reJoinList, this)) return;
-        destroy(true);
+        destroyAndDiscard(true);
     }
 
     @SuppressWarnings("WeakerAccess")

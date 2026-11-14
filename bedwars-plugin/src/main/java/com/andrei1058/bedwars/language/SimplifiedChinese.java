@@ -35,10 +35,25 @@ import static com.andrei1058.bedwars.BedWars.mainCmd;
 
 public class SimplifiedChinese extends Language {
 
+    static void migrateTowerShopTranslation(YamlConfiguration yml) {
+        String namePath = Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY).replace("%content%", "tower");
+        String lorePath = Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY).replace("%content%", "tower");
+        String currentName = yml.getString(namePath);
+        if ("{color}Compact Pop-up Tower".equals(currentName) || "&cName not set".equals(currentName) || "&8Name not set".equals(currentName)) {
+            yml.set(namePath, "{color}袖珍弹出塔");
+        }
+        List<String> currentLore = yml.getStringList(lorePath);
+        if (currentLore.equals(List.of("&7Cost: {cost} {currency}", "", "&7Place a compact pop-up", "&7tower defense!", "", "{quick_buy}", "{buy_status}"))
+                || currentLore.equals(List.of("&8Lore not set")) || currentLore.equals(List.of("&7Fallback lore"))) {
+            yml.set(lorePath, List.of("&7花费：{cost} {currency}", "", "&7放置后自动生成一座", "&7带梯子的队伍色防御塔。", "", "{quick_buy}", "{buy_status}"));
+        }
+    }
+
     public SimplifiedChinese() {
         super(BedWars.plugin, "zh_cn");
 
         YamlConfiguration yml = getYml();
+        migrateTowerShopTranslation(yml);
         yml.options().copyDefaults(true);
         yml.addDefault(Messages.PREFIX, "");
         yml.addDefault("name", "简体中文");
@@ -1026,8 +1041,8 @@ public class SimplifiedChinese extends Language {
                 "&7用来吸水不错", "", "{quick_buy}", "{buy_status}"));
         addContentMessages(yml, "self-rescue-platform", ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "{color}自救平台", Arrays.asList("&7花费：{cost} {currency}", "",
                 "&7掉入虚空时自动生成临时粘液平台", "&7也可以手持右键主动释放", "", "{quick_buy}", "{buy_status}"));
-        addContentMessages(yml, "Compact Pop-up Tower", ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "{color}袖珍弹出塔", Arrays.asList("&花费: {cost} {currency}", "",
-                "&7放置一个袖珍弹出塔", "&7塔防！", "", "{quick_buy}", "{buy_status}"));
+        addContentMessages(yml, "tower", ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "{color}袖珍弹出塔", Arrays.asList("&7花费：{cost} {currency}", "",
+                "&7放置后自动生成一座", "&7带梯子的队伍色防御塔。", "", "{quick_buy}", "{buy_status}"));
 
         yml.addDefault(Messages.MEANING_NO_TRAP, "无陷阱！");
         yml.addDefault(Messages.FORMAT_SPECTATOR_TARGET, "{targetTeamColor}{targetDisplayName}");

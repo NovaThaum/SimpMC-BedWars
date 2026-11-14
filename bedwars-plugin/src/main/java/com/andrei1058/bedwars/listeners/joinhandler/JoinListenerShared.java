@@ -74,6 +74,7 @@ public class JoinListenerShared implements Listener {
     private static void applyLobbyState(Player p) {
         if (!p.isOnline() || Arena.isInArena(p)) return;
         if (p.getWorld().getName().equalsIgnoreCase(BedWars.getLobbyWorld())) {
+            Arena.enterLobby(p);
             SidebarService.getInstance().giveSidebar(p, null, true);
         }
     }

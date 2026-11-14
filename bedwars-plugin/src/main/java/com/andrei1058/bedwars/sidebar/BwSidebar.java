@@ -31,7 +31,6 @@ import static com.andrei1058.bedwars.api.language.Language.*;
 
 public class BwSidebar implements ISidebar {
 
-    private static final String TAB_TITLE = "&fSimpMC Bedwars";
 
     private static final SidebarLine EMPTY_TITLE = new SidebarLine() {
         @Override
@@ -582,25 +581,12 @@ public class BwSidebar implements ISidebar {
         }
 
         this.headerFooter = new TabHeaderFooter(
-                this.normalizeLines(prependTabTitle(lang.l(headerPath))),
+                this.normalizeLines(lang.l(headerPath)),
                 this.normalizeLines(lang.l(footerPath)),
                 getPlaceholders(this.getPlayer())
         );
 
         SidebarManager.getInstance().sendHeaderFooter(player, headerFooter);
-    }
-
-    private static List<String> prependTabTitle(@Nullable List<String> lines) {
-        List<String> result = lines == null ? new ArrayList<>() : new ArrayList<>(lines);
-        if (result.isEmpty()) {
-            result.add(TAB_TITLE);
-            return result;
-        }
-        String visible = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', result.get(0)));
-        if (visible == null || !visible.startsWith("SimpMC Bedwars")) {
-            result.set(0, TAB_TITLE + " " + result.get(0));
-        }
-        return result;
     }
 
     @Override

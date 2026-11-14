@@ -77,4 +77,8 @@ public final class MatchmakingMessages {
         for (Key key : Key.values()) values.put(key, chinese ? key.chinese : key.english);
         return new Snapshot(values);
     }
+
+    static Snapshot snapshot(Map<Key, String> values) {
+        return new Snapshot(values);
+    }
 }

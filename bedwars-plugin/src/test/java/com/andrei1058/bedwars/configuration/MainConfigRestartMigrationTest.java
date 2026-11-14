@@ -5,6 +5,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class MainConfigRestartMigrationTest {
 
@@ -19,5 +20,12 @@ class MainConfigRestartMigrationTest {
         config.set(ConfigPath.GENERAL_CONFIGURATION_RESTART, 75);
         MainConfig.migrateRestartCountdownDefault(config);
         assertEquals(75, config.getInt(ConfigPath.GENERAL_CONFIGURATION_RESTART));
+    }
+
+    @Test
+    void acceptsOnlyRealLanguageFiles() {
+        assertEquals("zh_cn", com.andrei1058.bedwars.api.language.Language.isoFromFileName("messages_zh_cn.yml"));
+        assertNull(com.andrei1058.bedwars.api.language.Language.isoFromFileName("messages_zh_cn.yml.bak"));
+        assertNull(com.andrei1058.bedwars.api.language.Language.isoFromFileName("messages_zh_cn.backup.yml"));
     }
 }

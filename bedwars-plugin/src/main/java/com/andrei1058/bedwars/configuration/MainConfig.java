@@ -399,7 +399,7 @@ public class MainConfig extends ConfigManager {
         if (langs != null) {
             for (File f : langs) {
                 if (f.isFile()) {
-                    if (f.getName().contains("messages_") && f.getName().contains(".yml")) {
+                    if (Language.isoFromFileName(f.getName()) != null) {
                         String lang = f.getName().replace("messages_", "").replace(".yml", "");
                         if (lang.equalsIgnoreCase(yml.getString("language"))) {
                             whatLang = f.getName().replace("messages_", "").replace(".yml", "");

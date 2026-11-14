@@ -39,7 +39,10 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.sql.Timestamp;
+import com.andrei1058.bedwars.api.arena.team.PreGameSquad;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
@@ -208,6 +211,11 @@ public interface BedWars {
          */
         IArena getArenaByPlayer(Player player);
 
+        /** 返回可选的竞技场查询结果。 */
+        default Optional<IArena> findArenaByPlayer(Player player) {
+            return Optional.ofNullable(getArenaByPlayer(player));
+        }
+
         /**
          * Set an arena by player if the player is in this arena.
          */
@@ -226,7 +234,17 @@ public interface BedWars {
          */
         IArena getArenaByName(String worldName);
 
+        /** 返回可选的竞技场查询结果。 */
+        default Optional<IArena> findArenaByName(String worldName) {
+            return Optional.ofNullable(getArenaByName(worldName));
+        }
+
         IArena getArenaByIdentifier(String worldName);
+
+        /** 返回可选的竞技场查询结果。 */
+        default Optional<IArena> findArenaByIdentifier(String worldName) {
+            return Optional.ofNullable(getArenaByIdentifier(worldName));
+        }
 
         void setArenaByName(IArena arena);
 
@@ -237,6 +255,11 @@ public interface BedWars {
         void removeArenaByName(String worldName);
 
         LinkedList<IArena> getArenas();
+
+        /** 返回竞技场注册表的只读快照。 */
+        default List<IArena> getArenasSnapshot() {
+            return List.copyOf(getArenas());
+        }
 
         /**
          * Check if a player has vip join.
@@ -276,6 +299,9 @@ public interface BedWars {
          * This will clear the inventory first.
          */
         void sendLobbyCommandItems(Player p);
+
+        /** 在已进入大厅世界的玩家身上应用完整大厅状态。 */
+        void applyLobbyState(Player player);
     }
 
     Configs getConfigs();
@@ -308,6 +334,13 @@ public interface BedWars {
          */
         @SuppressWarnings("unused")
         ConfigManager getUpgradesConfig();
+
+        /** 插件启用完成后可读取的等级配置。 */
+        ConfigManager getLevelsConfig();
+        /** 经济奖励配置。 */
+        ConfigManager getRewardsConfig();
+        /** 音效配置。 */
+        ConfigManager getSoundsConfig();
     }
 
     /**
@@ -389,6 +422,9 @@ public interface BedWars {
      * Get party util.
      */
     Party getPartyUtil();
+
+    /** 获取内置预组队服务。 */
+    PreGameSquad getPreGameSquadUtil();
 
     /**
      * Get active setup session.

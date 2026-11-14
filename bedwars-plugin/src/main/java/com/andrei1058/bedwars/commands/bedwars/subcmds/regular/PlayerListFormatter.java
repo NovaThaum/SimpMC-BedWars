@@ -48,6 +48,7 @@ public final class PlayerListFormatter {
             MatchmakingMessages.Key key = group.arenaName == null
                     ? MatchmakingMessages.Key.LIST_LOBBY : MatchmakingMessages.Key.LIST_ARENA;
             lines.add(messages.text(key, "{arena}", group.arenaName == null ? "" : group.arenaName,
+                    "{count}", String.valueOf(group.players.size()),
                     "{players}", names));
         }
         return lines;

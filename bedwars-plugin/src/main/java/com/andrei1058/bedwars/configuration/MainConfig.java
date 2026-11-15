@@ -64,15 +64,28 @@ public class MainConfig extends ConfigManager {
     private static final double TNT_DAMAGE_OTHERS_DEFAULT = 6.0;
     private static final double TNT_KNOCKBACK_MULTIPLIER_DEFAULT = 0.6;
 
+    static void migrateChineseOnly(YamlConfiguration yml) {
+        yml.set("language", null);
+        yml.set(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES, null);
+    }
+
     public MainConfig(Plugin plugin, String name) {
         super(plugin, name, BedWars.plugin.getDataFolder().getPath());
 
         YamlConfiguration yml = getYml();
+        if (yml.isSet("language") || yml.isSet(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES)) {
+            java.nio.file.Path original = new File(plugin.getDataFolder(), name + ".yml").toPath();
+            java.nio.file.Path backup = original.resolveSibling(name + ".yml.before-chinese-only.bak");
+            try {
+                if (!java.nio.file.Files.exists(backup)) java.nio.file.Files.copy(original, backup);
+            } catch (java.io.IOException ex) {
+                throw new IllegalStateException("无法备份旧语言配置，已停止迁移", ex);
+            }
+        }
+        migrateChineseOnly(yml);
 
         yml.options().header(plugin.getDescription().getName() + "，由 SimpMC 维护。\n");
         yml.addDefault("serverType", "MULTIARENA");
-        yml.addDefault("language", Language.SIMPLIFIED_CHINESE_ISO);
-        yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES, Collections.emptyList());
         yml.addDefault("storeLink", "https://www.spigotmc.org/resources/authors/39904/");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_BUNGEE_LOBBY_SERVER, "hub");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN, true);
@@ -291,53 +304,7 @@ public class MainConfig extends ConfigManager {
             }
         });
 
-        // BW1058 workflow: languages dropped into the Languages folder are
-        // registered automatically; the server default language always stays
-        // loaded. Only canonical message_<iso>.yml files count; migration
-        // backups never match.
-        boolean registeredCustomLanguage = false;
-        for (String customIso : collectCustomLanguageIsos(new File(plugin.getDataFolder(), "/Languages").listFiles())) {
-            if (Language.isLanguageExist(customIso)) continue;
-            Language customLanguage = new Language(plugin, customIso);
-            customLanguage.getYml().addDefault("name", customIso);
-            MatchQueryMessages.install(customLanguage);
-            MatchmakingMessages.install(customLanguage);
-            ProxyLobbyMessages.install(customLanguage);
-            customLanguage.save();
-            plugin.getLogger().info("已从 Languages 目录加载自定义语言 " + customIso + "。");
-            registeredCustomLanguage = true;
-        }
-        // Languages scanned here missed the onLoad fallback pass for shop
-        // features; fill their missing defaults once a custom file loaded.
-        if (registeredCustomLanguage) {
-            SelfRescuePlatform.installLanguageFallbacks();
-        }
-
-        String configuredLanguage = yml.getString("language");
-        if (!Language.isLanguageExist(configuredLanguage)) {
-            plugin.getLogger().warning("未找到语言 " + configuredLanguage + "，已使用默认语言。 ");
-            configuredLanguage = Language.SIMPLIFIED_CHINESE_ISO;
-            yml.set("language", configuredLanguage);
-            save();
-        }
-        Language def = Language.getLang(configuredLanguage);
-
-        if (def == null) {
-            throw new IllegalStateException("未找到简体中文语言配置："
-                    + Language.SIMPLIFIED_CHINESE_ISO);
-        }
-        Language.setDefaultLanguage(def);
-
-        // Restore the BW1058 disabled-language behavior: listed languages are
-        // removed after startup while the server default language always stays
-        // loaded. Unknown ISO values resolve to the default language, so they
-        // are ignored.
-        for (String disabledIso : yml.getStringList(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES)) {
-            Language disabledLanguage = Language.getLang(disabledIso);
-            if (disabledLanguage != def && Language.getLanguages().remove(disabledLanguage)) {
-                plugin.getLogger().info("已按 disabled-languages 配置停用语言 " + disabledIso + "。");
-            }
-        }
+        // Language 构造时已注册唯一的简体中文消息配置。
 
         BedWars.setDebug(yml.getBoolean("debug"));
         new ConfigManager(plugin, "bukkit", Bukkit.getWorldContainer().getPath()).set("ticks-per.autosave", -1);
@@ -412,11 +379,7 @@ public class MainConfig extends ConfigManager {
                 "大厅等待竞技场节点确认玩家预加载的时间，单位为秒；默认 8 秒。", "超时会释放预约并提示玩家重试，不会阻塞服务器主线程。");
         setComments(ConfigPath.GENERAL_CONFIGURATION_BUNGEE_STATUS_HEARTBEAT_SECONDS,
                 "竞技场节点向大厅发送全量状态心跳的间隔，单位为秒；默认 15 秒。", "平时状态变化通过事件立即发送，心跳只用于断线重连后的恢复。");
-        setComments("language", "服务器默认语言，使用 Languages 目录中的 ISO 代码。");
         setComments("storeLink", "商店或官方网站链接，可在消息占位符中使用。");
-        setComments(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES,
-                "在此填写的语言启动后不会加载，也不会出现在 /bw lang 中；服务器默认语言始终保留。",
-                "语言文件放在 Languages 目录中，文件名必须为 messages_<iso>.yml。");
         setComments(ConfigPath.GENERAL_CONFIGURATION_ARENA_GROUPS,
                 "可用于匹配和竞技场选择器的全局分组名称。Default 是内置组，无需填写。",
                 "每张地图在 Arenas/<地图>.yml 的 group 中引用一个名称。");
@@ -688,13 +651,8 @@ public class MainConfig extends ConfigManager {
      * Migration backups and other file types are ignored.
      */
     static List<String> collectCustomLanguageIsos(final File[] files) {
-        List<String> isos = new ArrayList<>();
-        if (files == null) return isos;
-        for (File file : files) {
-            if (!file.isFile()) continue;
-            Language.isoFromFileName(file.getName()).ifPresent(isos::add);
-        }
-        return isos;
+        // 不再扫描或注册自定义语言文件。
+        return Collections.emptyList();
     }
 
     static LegacyLobbyItemHistory findLegacyLobbyItemHistory(File dataFolder, int storedConfigVersion) {

@@ -44,7 +44,6 @@ public class LoadedUser {
     private long toleranceTime;
     private String arenaIdentifier;
     private String requestId;
-    private Language language = null;
 
     private static final ConcurrentHashMap<UUID, LoadedUser> loaded = new ConcurrentHashMap<>();
 
@@ -64,8 +63,6 @@ public class LoadedUser {
             }
         }
         this.toleranceTime = System.currentTimeMillis() + waitMillis;
-        Language l = Language.getLang(langIso);
-        if (l != null) language = l;
 
         loaded.put(this.uuid, this);
     }
@@ -102,7 +99,7 @@ public class LoadedUser {
     }
 
     public Language getLanguage() {
-        return language;
+        return Language.getDefaultLanguage();
     }
 
     public static LoadedUser getPreLoaded(UUID uuid){

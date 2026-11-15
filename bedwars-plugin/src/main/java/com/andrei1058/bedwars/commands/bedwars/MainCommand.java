@@ -69,8 +69,7 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
         new CmdHelp(this, "help");
         new CmdJoin(this, "join");
         new CmdLeave(this, "leave");
-        new CmdLang(this, "message");
-        new CmdLang(this, "lang");
+
         new CmdTeleporter(this, "teleporter");
         // A dedicated BUNGEE lobby has no local Arena instances, but it still
         // exposes the selector GUI backed by the remote arena directory.

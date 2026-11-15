@@ -33,7 +33,6 @@ Spigot、Folia、其他 Minecraft 版本，以及缺少根级 `level.dat` 与 `r
 
 ## `Missing message key ... zh_cn.v1.bak`
 
-这是旧版本误加载语言迁移备份造成的。当前版本只加载规范的 `messages_<iso>.yml` 文件：内置语言和 Languages 目录中的自定义语言文件会正常注册，`<iso>.yml.v1.bak` 之类的迁移备份文件仍会被忽略并保留在磁盘上。升级并完整重启即可。
 
 ## 玩家加入时报位置数组越界
 
@@ -168,3 +167,5 @@ Spigot、Folia、其他 Minecraft 版本，以及缺少根级 `level.dat` 与 `r
 ## 报告 BUG
 
 按照仓库 [BUGS.md](../../BUGS.md) 的模板提供：版本、Paper 构建、Java 版本、复现步骤、预期/实际行为、完整日志、相关竞技场配置以及是否能在无其他插件环境复现。
+
+本版本仅支持简体中文，消息文件为 `Languages/messages_zh_cn.yml`，仍可自定义文本。旧 `language`、`disabled-languages` 配置自动清理；其他语言文件保留但不加载，玩家语言偏好不再读写。语言切换命令已移除。

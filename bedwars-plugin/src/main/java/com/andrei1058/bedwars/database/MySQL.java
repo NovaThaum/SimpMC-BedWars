@@ -172,10 +172,6 @@ public class MySQL implements Database {
                 statement.executeUpdate(sql);
             }
 
-            sql = "CREATE TABLE IF NOT EXISTS player_language (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, uuid VARCHAR(200), iso VARCHAR(200));";
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(sql);
-            }
         } catch (SQLException e) {
             logFailure(Level.WARNING, "initialize the MySQL schema", e);
         }
@@ -425,43 +421,12 @@ public class MySQL implements Database {
 
     @Override
     public void setLanguage(UUID uuid, String iso) {
-        try (Connection connection = dataSource.getConnection()) {
-            int updated;
-            try (PreparedStatement statement = connection.prepareStatement(
-                    "UPDATE player_language SET iso=? WHERE uuid=?;")) {
-                statement.setString(1, iso);
-                statement.setString(2, uuid.toString());
-                updated = statement.executeUpdate();
-            }
-            if (updated == 0) {
-                try (PreparedStatement statement = connection.prepareStatement(
-                        "INSERT INTO player_language (uuid, iso) VALUES (?, ?);")) {
-                    statement.setString(1, uuid.toString());
-                    statement.setString(2, iso);
-                    statement.executeUpdate();
-                }
-            }
-        } catch (SQLException e) {
-            logFailure(Level.WARNING, "save MySQL player language", e);
-        }
+        // 已移除玩家语言偏好，保留兼容入口但不读写数据库。
     }
 
     @Override
     public String getLanguage(UUID uuid) {
-        String sql = "SELECT iso FROM player_language WHERE uuid = ?;";
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, uuid.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getString(1);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            logFailure(Level.WARNING, "load MySQL player language", e);
-        }
-        return Language.getDefaultLanguage().getIso();
+        return Language.SIMPLIFIED_CHINESE_ISO;
     }
 
     @Override

@@ -654,7 +654,7 @@ class MainConfigTest {
     }
 
     @Test
-    void languagesDirectoryScanAcceptsOnlyCanonicalMessageFiles(@TempDir Path directory) throws IOException {
+    void ignoresAllOtherLanguageFiles(@TempDir Path directory) throws IOException {
         assertTrue(MainConfig.collectCustomLanguageIsos(null).isEmpty());
         assertTrue(MainConfig.collectCustomLanguageIsos(new File[0]).isEmpty());
 
@@ -668,8 +668,7 @@ class MainConfigTest {
         Files.createDirectory(languages.resolve("messages_dir.yml"));
 
         List<String> isos = MainConfig.collectCustomLanguageIsos(languages.toFile().listFiles());
-        Collections.sort(isos);
 
-        assertEquals(List.of("ZH_HK", "fr_fr"), isos);
+        assertTrue(isos.isEmpty());
     }
 }

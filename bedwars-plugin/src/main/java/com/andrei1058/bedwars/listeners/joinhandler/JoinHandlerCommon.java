@@ -22,18 +22,10 @@ package com.andrei1058.bedwars.listeners.joinhandler;
 
 import com.andrei1058.bedwars.api.util.AdventureText;
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.language.Language;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 
-import java.util.UUID;
 
-import static com.andrei1058.bedwars.BedWars.plugin;
 
 public class JoinHandlerCommon implements Listener {
 
@@ -51,24 +43,4 @@ public class JoinHandlerCommon implements Listener {
         }
     }
 
-    @EventHandler
-    public void requestLanguage(AsyncPlayerPreLoginEvent e) {
-        String iso = BedWars.getRemoteDatabase().getLanguage(e.getUniqueId());
-        UUID uuid = e.getUniqueId();
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            Language.setPlayerLanguage(uuid, iso);
-            if (!Language.isLanguageExist(iso)) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin,
-                        () -> BedWars.getRemoteDatabase().setLanguage(
-                                uuid, Language.getDefaultLanguage().getIso()));
-            }
-        });
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void removeLanguage(PlayerLoginEvent e) {
-        if (e.getResult() != PlayerLoginEvent.Result.ALLOWED) {
-            Language.setPlayerLanguage(e.getPlayer().getUniqueId(), null);
-        }
-    }
 }

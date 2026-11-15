@@ -14,17 +14,13 @@ public final class ProxyLobbyMessages {
     private ProxyLobbyMessages() { }
 
     public enum Key {
-        UNAVAILABLE("misc-proxy-lobby-unavailable",
-                "&cProxy lobby is temporarily unavailable, please contact an administrator.",
-                "&c代理大厅暂不可用，请联系管理员。");
+        UNAVAILABLE("misc-proxy-lobby-unavailable", "&c代理大厅暂不可用，请联系管理员。");
 
         private final String path;
-        private final String english;
         private final String chinese;
 
-        Key(String path, String english, String chinese) {
+        Key(String path, String chinese) {
             this.path = path;
-            this.english = english;
             this.chinese = chinese;
         }
 
@@ -39,11 +35,10 @@ public final class ProxyLobbyMessages {
 
     private static final Map<UUID, Long> LAST_PROMPT = new ConcurrentHashMap<>();
 
-    /** 为语言文件补默认值：中文服务器使用中文模板，其他语言使用英文后备文本。 */
+    /** 为语言文件补默认值：统一使用简体中文模板。 */
     public static void install(Language language) {
-        boolean chinese = Language.isSimplifiedChineseIso(language.getIso());
         for (Key key : Key.values()) {
-            language.getYml().addDefault(key.path, chinese ? key.chinese : key.english);
+            language.getYml().addDefault(key.path, key.chinese);
         }
         language.setComments(Key.UNAVAILABLE.path, "代理大厅返回失败时发送给玩家的提示；控制台会保留详细诊断。");
     }

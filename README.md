@@ -94,3 +94,5 @@ mvn -B clean verify
 - [SLF4J](https://www.slf4j.org/)
 
 本项目采用 [GPL-3.0](LICENSE) 许可证。第三方组件遵循各自许可证。
+
+本版本仅支持简体中文，消息文件为 `Languages/messages_zh_cn.yml`，仍可自定义文本。旧 `language`、`disabled-languages` 配置自动清理；其他语言文件保留但不加载，玩家语言偏好不再读写。语言切换命令已移除。

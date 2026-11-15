@@ -157,7 +157,7 @@ public class JoinListenerBungee implements Listener {
                 if (reJoin.canReJoin() && reJoin.reJoin(p)) {
                     JoinHandlerCommon.displayCustomerDetails(p);
                     // Cache player language
-                    Language.setPlayerLanguage(p.getUniqueId(), playerLang.getIso());
+
                 } else {
                 p.kick(AdventureText.section(playerLang.m(Messages.REJOIN_DENIED)));
                 }
@@ -178,7 +178,7 @@ public class JoinListenerBungee implements Listener {
             }
 
             // Join allowed, cache player language
-            Language.setPlayerLanguage(p.getUniqueId(), playerLang.getIso());
+
             JoinHandlerCommon.displayCustomerDetails(p);
 
             // Join as player

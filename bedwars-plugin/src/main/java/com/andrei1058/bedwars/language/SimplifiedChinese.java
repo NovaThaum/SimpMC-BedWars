@@ -49,6 +49,7 @@ public class SimplifiedChinese extends Language {
         super(BedWars.plugin, Language.SIMPLIFIED_CHINESE_ISO);
 
         YamlConfiguration yml = getYml();
+        removeLanguageSelectionMessages(yml);
         yml.options().copyDefaults(true);
         migrateTowerShopTranslation(yml);
         yml.addDefault(Messages.PREFIX, "");
@@ -67,13 +68,7 @@ public class SimplifiedChinese extends Language {
             yml.set("player-die-knocked-final", null);
         }
 
-        yml.addDefault(Messages.COMMAND_MAIN, Arrays.asList("", "&2▪ &7/" + mainCmd + " stats", "&2▪ &7/" + mainCmd + " join &o<游戏/模式>", "&2▪ &7/" + mainCmd + " leave", "&2▪ &7/" + mainCmd + " lang", "&2▪ &7/" + mainCmd + " gui", "&2▪ &7/" + mainCmd + " invite &o<大厅或未开局竞技场玩家>", "&2▪ &7/" + mainCmd + " start &3（赞助者）"));
-        yml.addDefault(Messages.COMMAND_LANG_LIST_HEADER, "{prefix} &2可用的语言：");
-        yml.addDefault(Messages.COMMAND_LANG_LIST_FORMAT, "&a▪  &7{iso} - &f{name}");
-        yml.addDefault(Messages.COMMAND_LANG_USAGE, "{prefix}&7用法：/bw lang &f&o<iso>");
-        yml.addDefault(Messages.COMMAND_LANG_SELECTED_NOT_EXIST, "{prefix}&c该语言不存在！");
-        yml.addDefault(Messages.COMMAND_LANG_SELECTED_SUCCESSFULLY, "{prefix}&a语言已设置！");
-        yml.addDefault(Messages.COMMAND_LANG_USAGE_DENIED, "{prefix}&c你不能在游戏进行时修改语言。");
+        yml.addDefault(Messages.COMMAND_MAIN, Arrays.asList("", "&2▪ &7/" + mainCmd + " stats", "&2▪ &7/" + mainCmd + " join &o<游戏/模式>", "&2▪ &7/" + mainCmd + " leave", "&2▪ &7/" + mainCmd + " gui", "&2▪ &7/" + mainCmd + " invite &o<大厅或未开局竞技场玩家>", "&2▪ &7/" + mainCmd + " start &3（赞助者）"));
         MatchQueryMessages.registerDefaults(this);
         yml.addDefault(Messages.COMMAND_JOIN_USAGE, "&a▪ &7用法：/" + BedWars.mainCmd + " join &o<游戏/模式>");
         yml.addDefault(Messages.COMMAND_JOIN_GROUP_OR_ARENA_NOT_FOUND, "{prefix}&c游戏{name}不存在！");
@@ -1395,4 +1390,21 @@ public class SimplifiedChinese extends Language {
         }
         yml.set(path, before + " &f>> &f{message}" + format.substring(messageIndex + "{message}".length()));
     }
+    static void removeLanguageSelectionMessages(YamlConfiguration yml) {
+        for (String key : new ArrayList<>(yml.getKeys(false))) {
+            if (key.startsWith("cmd-lang-")) yml.set(key, null);
+        }
+        if (yml.getDefaults() != null) {
+            for (String key : new ArrayList<>(yml.getDefaults().getKeys(false))) {
+                if (key.startsWith("cmd-lang-")) yml.getDefaults().set(key, null);
+            }
+        }
+        if (yml.isList(Messages.COMMAND_MAIN)) {
+            List<String> help = new ArrayList<>(yml.getStringList(Messages.COMMAND_MAIN));
+            help.removeIf(line -> line.matches(".*\\/(?:bw|bedwars|" + java.util.regex.Pattern.quote(mainCmd)
+                    + ")\\s+(?:lang|message)(?:\\s.*|$)"));
+            yml.set(Messages.COMMAND_MAIN, help);
+        }
+    }
+
 }

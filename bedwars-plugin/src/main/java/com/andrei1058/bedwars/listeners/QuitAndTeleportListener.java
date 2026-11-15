@@ -65,13 +65,7 @@ public class QuitAndTeleportListener implements Listener {
             }
         }
 
-        if (Language.getLangByPlayer().containsKey(p.getUniqueId())) {
-            final UUID u = p.getUniqueId();
-            final String languageToSave = Language.getPlayerLanguage(p).getIso();
-            Language.getLangByPlayer().remove(u);
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,
-                    () -> BedWars.getRemoteDatabase().setLanguage(u, languageToSave));
-        }
+
         // Manage internal parties
         if (getParty().isInternal()) {
             if (getParty().hasParty(p)) {

@@ -91,7 +91,7 @@ class CmdMatchQueryTest {
         List<String> lines = command.history(new String[]{"all"}, mock(CommandSender.class), history,
                 MatchQueryMessages.defaults(false)).join();
 
-        assertTrue(lines.getFirst().contains("All matches"));
+        assertTrue(lines.getFirst().contains("全部记录"));
         for (int index = 1; index <= 5; index++) {
             assertTrue(lines.get(index).contains("#" + index + " "), lines.get(index));
         }

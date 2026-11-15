@@ -179,7 +179,7 @@ public final class LobbyArenaDispatcher implements Listener, AutoCloseable {
         json.addProperty("batch_id", request.batch.batchId);
         json.addProperty("uuid", player.getUniqueId().toString());
         json.addProperty("arena_identifier", request.batch.node.arenaIdentifier());
-        json.addProperty("lang_iso", Language.getPlayerLanguage(player).getIso());
+        json.addProperty("lang_iso", Language.SIMPLIFIED_CHINESE_ISO);
         json.addProperty("target", request.batch.partyOwner);
         json.addProperty("join_mode", request.batch.spectator ? "SPECTATOR" : "PLAYER");
         socketServer.send(request.batch.node, json.toString()).whenComplete((sent, error) ->

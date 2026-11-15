@@ -21,6 +21,7 @@
 package com.andrei1058.bedwars.lobbysocket;
 
 import com.andrei1058.bedwars.BedWars;
+import com.andrei1058.bedwars.api.language.Language;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
 import com.andrei1058.bedwars.arena.Arena;
@@ -243,7 +244,7 @@ public class ArenaSocket {
                             //pre load data
                             //pld,worldIdentifier,uuidUser,languageIso,uuidPartyOwner
                             case "PLD":
-                                if (!hasStringFields(json, "uuid", "arena_identifier", "lang_iso", "target")) {
+                                if (!hasStringFields(json, "uuid", "arena_identifier", "target")) {
                                     warnInvalidMessage("PLD message is missing fields");
                                     continue;
                                 }
@@ -255,7 +256,7 @@ public class ArenaSocket {
                                     continue;
                                 }
                                 String arenaIdentifier = json.get("arena_identifier").getAsString();
-                                String language = json.get("lang_iso").getAsString();
+                                String language = Language.SIMPLIFIED_CHINESE_ISO;
                                 String target = json.get("target").getAsString();
                                 String joinMode = json.has("join_mode") && json.get("join_mode").isJsonPrimitive()
                                         ? json.get("join_mode").getAsString().trim().toUpperCase(Locale.ROOT) : "AUTO";

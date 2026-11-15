@@ -23,7 +23,6 @@ package com.andrei1058.bedwars.api.language;
 import com.andrei1058.bedwars.api.BedWars;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.events.player.PlayerLangChangeEvent;
 import com.andrei1058.bedwars.api.util.AdventureText;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -45,44 +44,47 @@ public class Language extends ConfigManager {
     private final String iso;
     private String prefix = "";
     private static String prefixStatic = "";
-    private static final HashMap<UUID, Language> langByPlayer = new HashMap<>();
-    private static final List<Language> languages = new ArrayList<>();
     private static Language defaultLanguage;
     private String serverIp;
 
+    private static String requireChineseIso(String iso) {
+        if (!isSimplifiedChineseIso(iso)) throw new IllegalArgumentException("仅支持简体中文 zh_cn");
+        return SIMPLIFIED_CHINESE_ISO;
+    }
+
     public Language(Plugin plugin, String iso) {
-        super(plugin, "messages_" + iso, plugin.getDataFolder().getPath() + "/Languages");
+        super(plugin, "messages_" + requireChineseIso(iso), plugin.getDataFolder().getPath() + "/Languages");
         migrateLegacyUpgradeMessageKeys(getYml());
-        this.iso = iso;
+        this.iso = SIMPLIFIED_CHINESE_ISO;
         migrateLegacyTowerShopItem(getYml());
         addContentMessages(getYml(), "tower", ConfigPath.SHOP_PATH_CATEGORY_UTILITY,
-                "{color}Compact Pop-up Tower",
-                List.of("&7Cost: {cost} {currency}", "", "&7Place a compact pop-up",
-                        "&7tower defense!", "", "{quick_buy}", "{buy_status}"));
+                "{color}袖珍弹出塔",
+                List.of("&7花费：{cost} {currency}", "", "&7放置一座袖珍",
+                        "&7防御塔！", "", "{quick_buy}", "{buy_status}"));
         addContentMessages(getYml(), "recall-scroll", ConfigPath.SHOP_PATH_CATEGORY_UTILITY,
-                "{color}Recall Scroll",
-                List.of("&7Cost: {cost} {currency}", "", "&7Use to return to your team",
-                        "&7spawn after a 5-second channel.", "", "{quick_buy}", "{buy_status}"));
+                "{color}回城卷轴",
+                List.of("&7花费：{cost} {currency}", "", "&7使用后引导 5 秒",
+                        "&7返回本队出生点。", "", "{quick_buy}", "{buy_status}"));
         getYml().addDefault(Messages.RECALL_SCROLL_COUNTDOWN,
-                "&bReturning to base in &f{time}&b seconds...");
+                "&b回城倒计时：&f{time}&b 秒……");
         getYml().addDefault(Messages.RECALL_SCROLL_ALREADY_CHANNELING,
-                "&cA recall scroll is already channeling.");
+                "&c回城卷轴正在引导中。");
         getYml().addDefault(Messages.RECALL_SCROLL_UNAVAILABLE,
-                "&cYou cannot use a recall scroll right now.");
+                "&c当前无法使用回城卷轴。");
         getYml().addDefault(Messages.RECALL_SCROLL_CANCELLED,
-                "&cRecall cancelled; the scroll was returned.");
+                "&c回城已取消，卷轴已返还。");
         getYml().addDefault(Messages.RECALL_SCROLL_COMPLETED,
-                "&aReturned to your team spawn.");
+                "&a已返回本队出生点。");
         getYml().addDefault(Messages.RECALL_SCROLL_FAILED,
-                "&cRecall teleport failed.");
+                "&c回城传送失败。");
         getYml().addDefault(Messages.REJOIN_WAITING,
                 "&e{player} 已离线；如果在 &c{time} &e秒内没有返回，游戏将结算。");
         getYml().addDefault(Messages.ARENA_RESTART_COUNTDOWN,
-                "&eArena resets in &c{time}&e seconds.");
+                "&e竞技场将在 &c{time}&e 秒后重置。");
         getYml().addDefault(Messages.FORMATTING_SB_TAB_GAME_TIME,
-                "&7Game time: &a{gameTime}");
+                "&7游戏时间：&a{gameTime}");
         getYml().addDefault(Messages.FORMATTING_SB_TAB_GAME_ID,
-                "&7Game ID: &f{gameId}");
+                "&7对局编号：&f{gameId}");
 
         // replace old placeholders
         List<String> oldMsg = getYml().getStringList(Messages.GAME_END_TOP_PLAYER_CHAT);
@@ -145,7 +147,7 @@ public class Language extends ConfigManager {
             });
             save();
         }
-        languages.add(this);
+        defaultLanguage = this;
     }
 
     /**
@@ -160,7 +162,7 @@ public class Language extends ConfigManager {
         } else if (!currentHeader.contains("SimpMC-BedWars 语言文件")) {
             getYml().options().header(documentation + "\n" + currentHeader);
         }
-        setComments("name", "语言在 /bw lang 菜单中的显示名称。");
+        setComments("name", "简体中文消息文件的名称。");
         setComments(Messages.PREFIX, "插件消息前缀；留空表示不添加统一前缀。");
         setComments(Messages.COMMAND_MAIN, "玩家执行 /bw 时看到的命令帮助文本。");
         setComments(Messages.FORMATTING_CHAT_LOBBY, "大厅聊天格式；必须保留 {player} 和 {message}。", "运行时会统一使用 &f> &7 分隔名字和消息。");
@@ -181,9 +183,7 @@ public class Language extends ConfigManager {
     }
 
     /**
-     * Return the ISO portion of a canonical language filename. The plugin
-     * runtime registers such files from the Languages folder; migration
-     * backups such as messages_zh_cn.yml.v1.bak are intentionally rejected.
+     * 兼容旧版文件名解析；运行时只加载 messages_zh_cn.yml，不扫描语言目录。
      */
     public static Optional<String> isoFromFileName(String fileName) {
         if (fileName == null) return Optional.empty();
@@ -239,7 +239,7 @@ public class Language extends ConfigManager {
         if (player == null) {
             return getDefaultLanguage().m(path);
         }
-        return langByPlayer.getOrDefault(player.getUniqueId(), getDefaultLanguage())
+        return getDefaultLanguage()
                 .m(path).replace("{prefix}", (prefixStatic == null ? "" : prefixStatic));
     }
 
@@ -247,11 +247,11 @@ public class Language extends ConfigManager {
      * Retrieve a player language.
      */
     public static Language getPlayerLanguage(@NotNull Player player) {
-        return langByPlayer.getOrDefault(player.getUniqueId(), getDefaultLanguage());
+        return getDefaultLanguage();
     }
 
     public static Language getPlayerLanguage(UUID p) {
-        return langByPlayer.getOrDefault(p, getDefaultLanguage());
+        return getDefaultLanguage();
     }
 
     /**
@@ -265,7 +265,7 @@ public class Language extends ConfigManager {
      * Get a string list in player's language.
      */
     public static List<String> getList(@NotNull Player player, String path) {
-        return langByPlayer.getOrDefault(player.getUniqueId(), getDefaultLanguage()).l(path);
+        return getDefaultLanguage().l(path);
     }
 
     @SuppressWarnings("unused")
@@ -281,7 +281,7 @@ public class Language extends ConfigManager {
      * Save a value to file if not exists.
      */
     public static void saveIfNotExists(String path, Object data) {
-        for (Language l : languages) {
+        for (Language l : getLanguages()) {
             if (l.getYml().get(path) == null) {
                 l.set(path, data);
             }
@@ -376,20 +376,18 @@ public class Language extends ConfigManager {
         }
     }
 
+    /** @deprecated 已移除玩家语言映射，返回值仅为独立兼容快照。 */
+    @Deprecated
     public static HashMap<UUID, Language> getLangByPlayer() {
-        return langByPlayer;
+        // 兼容旧 API：返回独立空表，不再维护玩家语言偏好。
+        return new HashMap<>();
     }
 
     /**
      * Check if a language exists.
      */
     public static boolean isLanguageExist(String iso) {
-        for (Language l : languages) {
-            if (l.iso.equalsIgnoreCase(iso)) {
-                return true;
-            }
-        }
-        return false;
+        return isSimplifiedChineseIso(iso) && defaultLanguage != null;
     }
 
     /**
@@ -410,12 +408,6 @@ public class Language extends ConfigManager {
      * @return the configured default language when the ISO code is unknown.
      */
     public static Language getLang(String iso) {
-        iso = normalizeIso(iso);
-        for (Language l : languages) {
-            if (l.iso.equalsIgnoreCase(iso)) {
-                return l;
-            }
-        }
         return getDefaultLanguage();
     }
 
@@ -430,7 +422,7 @@ public class Language extends ConfigManager {
      * Get loaded languages list.
      */
     public static List<Language> getLanguages() {
-        return languages;
+        return defaultLanguage == null ? Collections.emptyList() : Collections.singletonList(defaultLanguage);
     }
 
     /**
@@ -447,9 +439,9 @@ public class Language extends ConfigManager {
             for (String item : api.getConfigs().getMainConfig().getYml().getConfigurationSection(ConfigPath.GENERAL_CONFIGURATION_STATS_PATH).getKeys(false)) {
                 if (ConfigPath.GENERAL_CONFIGURATION_STATS_GUI_SIZE.contains(item)) continue;
                 if (l.getYml().getDefaults() == null || !l.getYml().getDefaults().contains(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name"))
-                    l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name", "Name not set");
+                    l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name", "未设置名称");
                 if (l.getYml().getDefaults() == null || !l.getYml().getDefaults().contains(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore"))
-                    l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore", Collections.singletonList("lore not set"));
+                    l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore", Collections.singletonList("未设置说明"));
             }
             l.save();
         }
@@ -477,9 +469,9 @@ public class Language extends ConfigManager {
                 String p1 = Messages.GENERAL_CONFIGURATION_LOBBY_ITEMS_NAME.replace("%path%", item);
                 String p2 = Messages.GENERAL_CONFIGURATION_LOBBY_ITEMS_LORE.replace("%path%", item);
                 if (yml.getDefaults() == null || !yml.getDefaults().contains(p1))
-                    yml.addDefault(p1, "&cName not set at: &f" + p1);
+                    yml.addDefault(p1, "&c未设置名称：&f" + p1);
                 if (yml.getDefaults() == null || !yml.getDefaults().contains(p2))
-                    yml.addDefault(p2, Arrays.asList("&cLore not set at:", " &f" + p2));
+                    yml.addDefault(p2, Arrays.asList("&c未设置说明：", " &f" + p2));
             }
         }
         if (api.getConfigs().getMainConfig().getYml().get(ConfigPath.GENERAL_CONFIGURATION_SPECTATOR_ITEMS_PATH) != null) {
@@ -488,9 +480,9 @@ public class Language extends ConfigManager {
                 String p1 = Messages.GENERAL_CONFIGURATION_SPECTATOR_ITEMS_NAME.replace("%path%", item);
                 String p2 = Messages.GENERAL_CONFIGURATION_SPECTATOR_ITEMS_LORE.replace("%path%", item);
                 if (yml.getDefaults() == null || !yml.getDefaults().contains(p1))
-                    yml.addDefault(p1, "&cName not set at: &f" + p1);
+                    yml.addDefault(p1, "&c未设置名称：&f" + p1);
                 if (yml.getDefaults() == null || !yml.getDefaults().contains(p2))
-                    yml.addDefault(p2, Arrays.asList("&cLore not set at:", " &f" + p2));
+                    yml.addDefault(p2, Arrays.asList("&c未设置说明：", " &f" + p2));
             }
         }
         if (api.getConfigs().getMainConfig().getYml().get(ConfigPath.GENERAL_CONFIGURATION_PRE_GAME_ITEMS_PATH) != null) {
@@ -499,9 +491,9 @@ public class Language extends ConfigManager {
                 String p1 = Messages.GENERAL_CONFIGURATION_WAITING_ITEMS_NAME.replace("%path%", item);
                 String p2 = Messages.GENERAL_CONFIGURATION_WAITING_ITEMS_LORE.replace("%path%", item);
                 if (yml.getDefaults() == null || !yml.getDefaults().contains(p1))
-                    yml.addDefault(p1, "&cName not set at: &f" + p1);
+                    yml.addDefault(p1, "&c未设置名称：&f" + p1);
                 if (yml.getDefaults() == null || !yml.getDefaults().contains(p2))
-                    yml.addDefault(p2, Arrays.asList("&cLore not set at:", " &f" + p2));
+                    yml.addDefault(p2, Arrays.asList("&c未设置说明：", " &f" + p2));
             }
         }
         yml.options().copyDefaults(true);
@@ -519,22 +511,22 @@ public class Language extends ConfigManager {
             if (s.equalsIgnoreCase(ConfigPath.SHOP_SPECIALS_PATH)) continue;
             if (s.equals(ConfigPath.SHOP_QUICK_DEFAULTS_PATH)) continue;
             if (!exists(Messages.SHOP_CATEGORY_INVENTORY_NAME.replace("%category%", s))) {
-                set(Messages.SHOP_CATEGORY_INVENTORY_NAME.replace("%category%", s), "&8Name not set");
+                set(Messages.SHOP_CATEGORY_INVENTORY_NAME.replace("%category%", s), "&8未设置名称");
             }
             if (!exists(Messages.SHOP_CATEGORY_ITEM_NAME.replace("%category%", s))) {
-                set(Messages.SHOP_CATEGORY_ITEM_NAME.replace("%category%", s), "&8Name not set");
+                set(Messages.SHOP_CATEGORY_ITEM_NAME.replace("%category%", s), "&8未设置名称");
             }
             if (!exists(Messages.SHOP_CATEGORY_ITEM_LORE.replace("%category%", s))) {
-                set(Messages.SHOP_CATEGORY_ITEM_LORE.replace("%category%", s), Collections.singletonList("&8Lore not set"));
+                set(Messages.SHOP_CATEGORY_ITEM_LORE.replace("%category%", s), Collections.singletonList("&8未设置说明"));
             }
             if (api.getConfigs().getShopConfig().getYml().get(s + ConfigPath.SHOP_CATEGORY_CONTENT_PATH) == null)
                 continue;
             for (String c : api.getConfigs().getShopConfig().getYml().getConfigurationSection(s + ConfigPath.SHOP_CATEGORY_CONTENT_PATH).getKeys(false)) {
                 if (!exists(Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", s).replace("%content%", c))) {
-                    set(Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", s).replace("%content%", c), "&8Name not set");
+                    set(Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", s).replace("%content%", c), "&8未设置名称");
                 }
                 if (!exists(Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", s).replace("%content%", c))) {
-                    set(Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", s).replace("%content%", c), Collections.singletonList("&8Lore not set"));
+                    set(Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", s).replace("%content%", c), Collections.singletonList("&8未设置说明"));
                 }
             }
         }
@@ -686,8 +678,9 @@ public class Language extends ConfigManager {
     private static boolean isGeneratedPlaceholder(Object value, String placeholder) {
         if (value == null) return true;
         if (value instanceof String text) {
-            return AdventureText.plain(AdventureText.ampersand(text))
-                    .trim().equalsIgnoreCase(placeholder);
+            String plain = AdventureText.plain(AdventureText.ampersand(text)).trim();
+            return plain.equalsIgnoreCase(placeholder)
+                    || plain.equals("name not set".equals(placeholder) ? "未设置名称" : "未设置说明");
         }
         if (value instanceof List<?> values && values.size() == 1 && values.get(0) instanceof String text) {
             return isGeneratedPlaceholder(text, placeholder);
@@ -699,45 +692,11 @@ public class Language extends ConfigManager {
      * Change a player language and refresh
      * scoreboard and custom join items.
      */
+    /** @deprecated 玩家固定使用简体中文；外语代码返回 false。 */
+    @Deprecated
     public static boolean setPlayerLanguage(UUID uuid, String iso) {
-
-        if (iso == null) {
-            if (langByPlayer.containsKey(uuid)) {
-                Player player = Bukkit.getPlayer(uuid);
-                if (player != null && player.isOnline()) {
-                    PlayerLangChangeEvent e = new PlayerLangChangeEvent(player, langByPlayer.get(uuid).iso, getDefaultLanguage().iso);
-                    Bukkit.getPluginManager().callEvent(e);
-                    if (e.isCancelled()) return false;
-                }
-            }
-            langByPlayer.remove(uuid);
-            return true;
-        }
-
-        iso = normalizeIso(iso);
-        Language newLang = Language.getLang(iso);
-        if (newLang == null) return false;
-        Language oldLang = Language.getPlayerLanguage(uuid);
-        if (oldLang.getIso().equals(newLang.getIso())) return false;
-
-        Player player = Bukkit.getPlayer(uuid);
-        if (player != null && player.isOnline()) {
-            PlayerLangChangeEvent e = new PlayerLangChangeEvent(player, oldLang.getIso(), newLang.getIso());
-            Bukkit.getPluginManager().callEvent(e);
-            if (e.isCancelled()) return false;
-        }
-
-        if (Language.getDefaultLanguage().getIso().equals(newLang.getIso())) {
-            langByPlayer.remove(uuid);
-            return true;
-        }
-
-        if (langByPlayer.containsKey(uuid)) {
-            langByPlayer.replace(uuid, newLang);
-        } else {
-            langByPlayer.put(uuid, newLang);
-        }
-        return true;
+        // 兼容旧 API；不保存偏好、不触发语言切换事件。
+        return iso == null || isSimplifiedChineseIso(iso);
     }
 
     public static String @NotNull [] getCountDownTitle(@NotNull Language playerLang, int second) {
@@ -757,6 +716,9 @@ public class Language extends ConfigManager {
      * Change server default language.
      */
     public static void setDefaultLanguage(Language defaultLanguage) {
+        if (defaultLanguage == null || !isSimplifiedChineseIso(defaultLanguage.getIso())) {
+            throw new IllegalArgumentException("仅支持简体中文 zh_cn");
+        }
         Language.defaultLanguage = defaultLanguage;
     }
 

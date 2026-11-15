@@ -191,19 +191,7 @@ public class BedWars extends JavaPlugin {
 
         this.getLogger().info("Loading Paper API support for Minecraft " + version + ".");
 
-        // Restore the language set and per-player language selection used by BW1058.
-        new English();
-        new Romanian();
-        new Italian();
-        new Polish();
-        new Spanish();
-        new Russian();
-        new Bangla();
-        new Indonesia();
-        new Portuguese();
-        new Persian();
-        new Hindi();
-        new Turkish();
+        // 仅初始化简体中文消息配置。
         new SimplifiedChinese();
 
         // Persist the shared Chinese documentation after its defaults load.
@@ -286,7 +274,7 @@ public class BedWars extends JavaPlugin {
                 new PlacedBlockListener(), new DamageDeathMove(), new InvisibleMovementEffects(), new TntKnockbackListener(),
                 new Inventory(), new Interact(), new LobbyProtection(), new LobbyWorldProtection(), new LobbyPortalListener(), new LegacyShearsMigration(), new RefreshGUI(), new HungerWeatherSpawn(), new CmdProcess(), new PlayerListCommandListener(),
                 new FireballListener(), new EggBridge(), new SpectatorListeners(), new BaseListener(),
-                new TargetListener(), new LangListener(), new Warnings(this), new ChatAFK(),
+                new TargetListener(), new Warnings(this), new ChatAFK(),
                 new GameEndListener(), new DefaultStatsHandler(), new VanillaAdvancementListener(), new MoneyListeners(),
                 PreGameSquadManager.getInstance(), PreGameSquadGUI.getInstance(),
                 selfRescuePlatform

@@ -27,7 +27,6 @@ Release 标签格式为 `v版本号-提交前八位`。同一版本号发生纯�
 
 ```yaml
 serverType: MULTIARENA
-language: zh_cn
 debug: false
 ```
 
@@ -181,3 +180,5 @@ mvn -B clean verify
 ```
 
 最终插件位于 `bedwars-plugin/target/SimpMC-BedWars-版本.jar`。
+
+本版本仅支持简体中文，消息文件为 `Languages/messages_zh_cn.yml`，仍可自定义文本。旧 `language`、`disabled-languages` 配置自动清理；其他语言文件保留但不加载，玩家语言偏好不再读写。语言切换命令已移除。

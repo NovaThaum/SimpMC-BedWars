@@ -45,6 +45,13 @@ public final class CmdMatchQuery extends SubCommand {
         setDisplayInfo(MainCommand.createTC("§6 ▪ §7" + usage, usage, description(null, name)));
     }
 
+    static Key disabledReason(boolean enabled, boolean mysqlRequested, boolean mysqlActive, boolean servicePresent) {
+        if (servicePresent) return Key.SERVICE_CLOSED;
+        if (!enabled) return Key.DISABLED_BY_CONFIG;
+        if (mysqlRequested && !mysqlActive) return Key.MYSQL_UNAVAILABLE;
+        return Key.SERVICE_NOT_STARTED;
+    }
+
     private static String description(CommandSender sender, String command) {
         return MatchQueryMessages.description(sender, command);
     }
@@ -61,6 +68,11 @@ public final class CmdMatchQuery extends SubCommand {
         Snapshot messages = MatchQueryMessages.forSender(sender);
         if (history == null || !history.isEnabled()) {
             send(sender, messages.text(Key.DISABLED));
+            send(sender, messages.text(disabledReason(
+                    BedWars.plugin.isMatchStatisticsConfigured(),
+                    BedWars.plugin.isMatchStatisticsMysqlRequested(),
+                    BedWars.getRemoteDatabase() instanceof com.andrei1058.bedwars.database.MySQL,
+                    history != null)));
             return true;
         }
         if (!PENDING.add(sender)) {

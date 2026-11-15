@@ -15,6 +15,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CmdMatchQueryTest {
     @Test
+    public void disabledDiagnosticsDistinguishBootConfigurationBackendAndServiceState() {
+        assertEquals(MatchQueryMessages.Key.DISABLED_BY_CONFIG, CmdMatchQuery.disabledReason(false, true, true, false));
+        assertEquals(MatchQueryMessages.Key.MYSQL_UNAVAILABLE, CmdMatchQuery.disabledReason(true, true, false, false));
+        assertEquals(MatchQueryMessages.Key.SERVICE_NOT_STARTED, CmdMatchQuery.disabledReason(true, true, true, false));
+        assertEquals(MatchQueryMessages.Key.SERVICE_NOT_STARTED, CmdMatchQuery.disabledReason(true, false, false, false));
+        assertEquals(MatchQueryMessages.Key.SERVICE_CLOSED, CmdMatchQuery.disabledReason(true, true, true, true));
+    }
+
+    @Test
     public void historyAllDisplaysEachDescendingPageInAscendingOrder() {
         List<MatchInfo> newestFirst = Arrays.asList(match(30), match(20), match(10));
 

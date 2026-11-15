@@ -412,6 +412,7 @@ public class ShopManager extends ConfigManager {
         }
 
         getYml().options().copyDefaults(true);
+        com.andrei1058.bedwars.configuration.LegacyBedItems.migrate(getYml());
         save();
     }
 

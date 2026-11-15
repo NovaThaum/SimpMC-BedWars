@@ -263,6 +263,7 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.GENERAL_GAME_END_SB_TOP_STATISTIC, DefaultStatistics.KILLS.toString());
         yml.addDefault(ConfigPath.GENERAL_GAME_END_SB_TOP_HIDE_MISSING, true);
         yml.options().copyDefaults(true);
+        LegacyBedItems.migrate(yml);
         migrateRestartCountdownDefault(yml);
         if (!hadSeasonalEffects && !oldHalloweenEnabled) {
             yml.set("seasonal-effects.enabled", false);

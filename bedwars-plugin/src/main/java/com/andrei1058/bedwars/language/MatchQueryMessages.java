@@ -14,6 +14,10 @@ public final class MatchQueryMessages {
 
     public enum Key {
         DISABLED("cmd-match-query-disabled", "&c对局统计未启用，请联系管理员检查统计设置与数据库连接。"),
+        DISABLED_BY_CONFIG("cmd-match-query-disabled-config", "&c启动时 match-statistics.enabled 未开启；修改配置后需完整重启服务器。"),
+        MYSQL_UNAVAILABLE("cmd-match-query-disabled-mysql", "&c已请求使用 MySQL，但当前未使用 MySQL 后端；为避免编号分裂，未切换到本地统计。请检查启动日志。"),
+        SERVICE_NOT_STARTED("cmd-match-query-disabled-startup", "&c统计开关已开启，但统计服务没有完成启动。请检查本插件启动日志及当前命令所属插件。"),
+        SERVICE_CLOSED("cmd-match-query-disabled-closed", "&c对局统计服务已关闭，请完整重启服务器。"),
         PENDING("cmd-match-query-pending", "&e上一条战绩查询仍在处理中，请稍候。"),
         FAILED("cmd-match-query-failed", "&c暂时无法读取战绩，请稍后重试；详细原因已写入服务器日志。"),
         MATCH_USAGE("cmd-match-query-match-usage", "&e用法：/bw match [对局编号或 UUID]"),

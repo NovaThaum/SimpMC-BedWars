@@ -181,7 +181,7 @@ public class ReJoin {
         }
 
         Sounds.playSound("rejoin-allowed", player);
-        player.sendMessage(Language.getMsg(player, Messages.REJOIN_ALLOWED).replace("{arena}", getArena().getDisplayName()));
+        player.sendMessage(ArenaMessages.withArena(Language.getMsg(player, Messages.REJOIN_ALLOWED), getArena().getDisplayName()));
 
         return true;
     }

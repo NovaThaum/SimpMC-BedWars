@@ -175,12 +175,12 @@ class ConfigMigratorTest {
         assertTrue(migrated.contains("material: BED"));
         assertTrue(migrated.contains("material: SKULL_ITEM"));
         assertTrue(migrated.contains("data: 5") || migrated.contains("data: 5.0"));
-        assertTrue(migrated.contains("data: 14") || migrated.contains("data: 14.0"));
+        assertTrue(migrated.contains("data: 0") || migrated.contains("data: 0.0"));
         assertTrue(migrated.contains("data: 3") || migrated.contains("data: 3.0"));
         assertFalse(migrated.contains("profile: player-texture"));
         assertTrue(report.contains("head.profile"));
         assertTrue(report.contains("自动映射为 5"));
-        assertTrue(report.contains("自动映射为 14"));
+        assertTrue(report.contains("自动映射为 0"));
         assertTrue(report.contains("自动映射为 3"));
     }
 

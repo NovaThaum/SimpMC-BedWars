@@ -312,10 +312,8 @@ public final class ConfigMigrator {
         return switch (material.toUpperCase(Locale.ROOT)) {
             case "LIME_CONCRETE" -> 5;
             case "YELLOW_CONCRETE" -> 4;
-            case "RED_CONCRETE", "RED_BED" -> 14;
-            case "BLUE_BED" -> 11;
-            case "GREEN_BED" -> 13;
-            case "YELLOW_BED" -> 4;
+            case "RED_CONCRETE" -> 14;
+            case "RED_BED", "BLUE_BED", "GREEN_BED", "YELLOW_BED" -> 0;
             case "PLAYER_HEAD" -> 3;
             default -> -1;
         };

@@ -218,6 +218,9 @@ public class BedWars extends JavaPlugin {
             return;
         }
 
+        matchStatisticsConfigured = config.getYml().getBoolean(ConfigPath.MATCH_STATISTICS_ENABLED, true);
+        matchStatisticsMysqlRequested = config.getBoolean("database.enable");
+
         nms.registerVersionListeners();
 
         api.setRestoreAdapter(new InternalAdapter(this));
@@ -389,7 +392,7 @@ public class BedWars extends JavaPlugin {
             remoteDatabase.init();
         }
 
-        if (config.getYml().getBoolean(ConfigPath.MATCH_STATISTICS_ENABLED, true)) {
+        if (matchStatisticsConfigured) {
             MatchStatsDatabase matchDatabase = null;
             if (remoteDatabase instanceof com.andrei1058.bedwars.database.MySQL) {
                 matchDatabase = MatchStatsDatabase.mysql((com.andrei1058.bedwars.database.MySQL) remoteDatabase);
@@ -402,9 +405,13 @@ public class BedWars extends JavaPlugin {
                 registerEvents(matchStatsRecorder.getViolationDetector());
                 matchStatsRecorder.start();
                 matchHistory = new MatchHistoryService(matchDatabase, matchStatsRecorder);
+                getLogger().info("对局统计服务已启动：" + (matchDatabase.isSqlite() ? "本地 Cache/matches.db" : "MySQL")
+                        + "；数据库表初始化由后台线程执行。");
             } else {
                 getLogger().warning("对局历史未启用：已配置的 MySQL 不可用。");
             }
+        } else {
+            getLogger().warning("对局统计未启用：启动时 match-statistics.enabled=false；修改此开关后需完整重启服务器。");
         }
 
         if (getServerType() != ServerType.BUNGEE) {
@@ -577,6 +584,12 @@ public class BedWars extends JavaPlugin {
         }
 
     }
+
+    private boolean matchStatisticsConfigured;
+    private boolean matchStatisticsMysqlRequested;
+
+    public boolean isMatchStatisticsConfigured() { return matchStatisticsConfigured; }
+    public boolean isMatchStatisticsMysqlRequested() { return matchStatisticsMysqlRequested; }
 
     public MatchHistoryService getMatchHistory() {
         return matchHistory;

@@ -7,7 +7,7 @@
     <groupId>com.simpmc.bedwars</groupId>
     <artifactId>SimpMC-BedWars</artifactId>
     <packaging>pom</packaging>
-    <version>8.0.0</version>
+    <version>8.0.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,6 +58,18 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions><execution><id>require-java25-build</id><goals><goal>enforce</goal></goals>
+                    <configuration><rules><requireJavaVersion>
+                        <version>[25,26)</version>
+                        <message>构建和验证仅允许 Java 25；字节码目标仍为 Java 21。请将 JAVA_HOME 指向 JDK 25。</message>
+                    </requireJavaVersion></rules></configuration>
+                </execution></executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

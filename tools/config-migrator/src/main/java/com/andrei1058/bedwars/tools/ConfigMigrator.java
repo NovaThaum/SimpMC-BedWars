@@ -35,6 +35,11 @@ public final class ConfigMigrator {
         try (var files = Files.walk(modernDir)) {
             for (Path modern : files.filter(Files::isRegularFile).filter(ConfigMigrator::isYaml).toList()) {
                 Path relative = modernDir.relativize(modern);
+                if (relative.getNameCount() > 0 && "Languages".equalsIgnoreCase(relative.getName(0).toString())
+                        && (relative.getNameCount() != 2 || !"messages_zh_cn.yml".equals(relative.getFileName().toString()))) {
+                    report.add(relative + ": 已跳过，仅支持简体中文 messages_zh_cn.yml");
+                    continue;
+                }
                 if (relative.getNameCount() > 0 && "Cache".equalsIgnoreCase(relative.getName(0).toString())) {
                     report.add(relative + ": 主动跳过，Cache 由 1.8.8 插件重新获取地图缓存");
                     continue;
@@ -58,6 +63,10 @@ public final class ConfigMigrator {
                         notes.add("config-version 已忽略，由目标插件管理");
                     boolean mainConfig = relative.getNameCount() == 1 && "config.yml".equalsIgnoreCase(relative.getFileName().toString());
                     if (mainConfig) {
+                        transferableSource.remove("language");
+                        transferableSource.remove("disabled-languages");
+                        target.remove("language");
+                        target.remove("disabled-languages");
                         transferableSource.remove("lobbyLoc");
                         transferableSource.remove("arenaGroups");
                     }

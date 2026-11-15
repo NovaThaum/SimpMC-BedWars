@@ -63,11 +63,9 @@ bungee-settings:
 
 控制套接字是明文 TCP，只应开放在受信任内网。生产环境必须设置随机 `socket-secret`，并用防火墙限制大厅监听端口只允许竞技场子服访问。玩家只能连接代理入口，不应直接连接 1.8 后端端口。
 
-###### Language | Per player language system:
-- each player can receive messages, holograms, GUIs etc. in their desired language. /bw lang.
-- you can either remove or add new languages.
-- team names, group names, shop contents and a lot more can be translated in your languages.
-- custom titles and subtitles for [starting countdown](https://gitlab.com/andrei1058/BedWars1058/-/wikis/language-configuration#custom-title-sub-title-for-arena-countdown).
+###### 简体中文消息配置
+
+只加载 `Languages/messages_zh_cn.yml`，支持管理员自定义消息、队伍名称和商店文本。
 
 ###### Lobby removal | Optional:
 The waiting-lobby inside the map can be removed once the game starts.
@@ -180,3 +178,5 @@ If you are not a programmer you can help answering people in the [Issues](https:
 - 回城卷轴引导 5 秒，移动或受到伤害取消；死亡、重生等待、旁观或变更对局后失效。动作栏文本在玩家语言文件的 `recall-scroll.*` 键下覆盖，蓝色粒子仅发送给同场 24 格内的其他玩家。出生点附近 5 格内没有安全的两格站立空间时拒绝传送；取消或失败归还卷轴。
 - `match-statistics.violations.enabled` 默认 `true`；`match-leave-threshold` 默认 `25`，有效违规值严格超过阈值才移出对局；`cross-team-item-transfer` 默认 `true`，同一对敌方玩家 30 秒内重复资源交接才计入相应证据。`warning-thresholds` 默认 `[10, 20, 50, 100]`。自动迁移只补缺失项，保留自定义值和扩展配置，并在统计配置节内排序。
 - 接受邀请、退出小队及玩家进出后按当前人数与小队重算资格；满员倒计时大于 5 秒时固定压至 5 秒，旧缩时配置不再影响满员规则。分队失败、人数不足、漏分或拆散正常小队时取消开局并保留小队；只有 OP 显式执行 `/bw start debug` 可在当前场次测试单队。
+
+本版本仅支持简体中文，消息文件为 `Languages/messages_zh_cn.yml`，仍可自定义文本。旧 `language`、`disabled-languages` 配置自动清理；其他语言文件保留但不加载，玩家语言偏好不再读写。语言切换命令已移除。

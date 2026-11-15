@@ -40,10 +40,25 @@ import static com.andrei1058.bedwars.BedWars.getForCurrentVersion;
 
 public class MainConfig extends ConfigManager {
 
+    static void migrateChineseOnly(YamlConfiguration yml) {
+        yml.set("language", null);
+        yml.set(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES, null);
+    }
+
     public MainConfig(Plugin plugin, String name) {
         super(plugin, name, BedWars.plugin.getDataFolder().getPath());
 
         YamlConfiguration yml = getYml();
+        if (yml.isSet("language") || yml.isSet(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES)) {
+            java.nio.file.Path original = new File(plugin.getDataFolder(), name + ".yml").toPath();
+            java.nio.file.Path backup = original.resolveSibling(name + ".yml.before-chinese-only.bak");
+            try {
+                if (!java.nio.file.Files.exists(backup)) java.nio.file.Files.copy(original, backup);
+            } catch (IOException ex) {
+                throw new IllegalStateException("无法备份旧语言配置，已停止迁移", ex);
+            }
+        }
+        migrateChineseOnly(yml);
         boolean hadFireballHorizontal = yml.contains(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL);
         double oldFireballHorizontal = yml.getDouble(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL, Double.NaN);
         boolean hadTntEnemyDamage = yml.contains(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS);
@@ -56,8 +71,6 @@ public class MainConfig extends ConfigManager {
                 "Documentation here: https://gitlab.com/andrei1058/BedWars1058/wikis/home\n" +
                 "seasonal-effects 按服务器时区运行对局效果；窗口格式 MM-dd HH:mm，开始包含、结束不包含，支持跨年。效果支持 firework/cobweb，触发支持 kill/bed-break/victory。旧 enable-halloween-feature=false 会迁移为总开关关闭。\n");
         yml.addDefault("serverType", "MULTIARENA");
-        yml.addDefault("language", "en");
-        yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES, Collections.singletonList("your language iso here"));
         yml.addDefault("storeLink", "https://www.spigotmc.org/resources/authors/39904/");
         yml.addDefault("lobbyServer", "hub");
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_ENABLE_HALLOWEEN, true);
@@ -393,36 +406,7 @@ public class MainConfig extends ConfigManager {
 
         //Finished old configuration conversion
 
-        //set default server language
-        String whatLang = "en";
-        File[] langs = new File(plugin.getDataFolder(), "/Languages").listFiles();
-        if (langs != null) {
-            for (File f : langs) {
-                if (f.isFile()) {
-                    if (Language.isoFromFileName(f.getName()) != null) {
-                        String lang = f.getName().replace("messages_", "").replace(".yml", "");
-                        if (lang.equalsIgnoreCase(yml.getString("language"))) {
-                            whatLang = f.getName().replace("messages_", "").replace(".yml", "");
-                        }
-                        if (Language.getLang(lang) == null) new Language(BedWars.plugin, lang);
-                    }
-                }
-            }
-        }
-        Language def = Language.getLang(whatLang);
-
-        if (def == null) throw new IllegalStateException("Could not found default language: " + whatLang);
-        Language.setDefaultLanguage(def);
-
-        //remove languages if disabled
-        //server language can t be disabled
-        for (String iso : yml.getStringList(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES)) {
-            Language l = Language.getLang(iso);
-            if (l != null) {
-                if (l != def) Language.getLanguages().remove(l);
-            }
-        }
-        //
+        // Language 构造时已注册唯一的简体中文消息配置。
 
         BedWars.setDebug(yml.getBoolean("debug"));
         for (Language language : Language.getLanguages()) {

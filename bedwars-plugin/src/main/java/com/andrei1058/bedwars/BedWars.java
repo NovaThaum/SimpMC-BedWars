@@ -198,19 +198,7 @@ public class BedWars extends JavaPlugin {
         this.getLogger().info("Loading support for paper/spigot: " + version);
 
         // Setup languages
-        new English();
-        new Romanian();
-        new Italian();
-        new Polish();
-        new Spanish();
-        new Russian();
-        new Bangla();
-        new Persian();
-        new Hindi();
-        new Indonesia();
-        new Portuguese();
         new SimplifiedChinese();
-        new Turkish();
         SelfRescuePlatform.installLanguageFallbacks();
         com.andrei1058.bedwars.arena.team.PreGameSquadMessages.installLanguageFallbacks();
 
@@ -294,7 +282,7 @@ public class BedWars extends JavaPlugin {
                 new Inventory(), new Interact(), new RefreshGUI(), new HungerWeatherSpawn(), new CmdProcess(),
                 new com.andrei1058.bedwars.listeners.PlayerListCommandListener(),
                 new FireballListener(), new EggBridge(), new SpectatorListeners(), new BaseListener(),
-                new TargetListener(), new LangListener(), new Warnings(this), new ChatAFK(),
+                new TargetListener(), new Warnings(this), new ChatAFK(),
                 new GameEndListener(), new DefaultStatsHandler(), selfRescuePlatform
         );
 

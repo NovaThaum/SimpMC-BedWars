@@ -6,6 +6,17 @@ import java.nio.file.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigMigratorTest {
+    @Test void ignoresOtherLanguagesWithoutChangingTheirExistingFiles() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("chinese-only-source"));
+        Path target = Files.createDirectories(temp.resolve("chinese-only-target"));
+        Files.createDirectories(source.resolve("Languages"));
+        Files.createDirectories(target.resolve("Languages"));
+        Files.writeString(source.resolve("Languages/messages_en.yml"), "custom: source\n");
+        Files.writeString(target.resolve("Languages/messages_en.yml"), "custom: retained\n");
+        ConfigMigrator.main(new String[]{source.toString(), target.toString()});
+        assertEquals("custom: retained\n", Files.readString(target.resolve("Languages/messages_en.yml")));
+        assertTrue(Files.readString(target.resolve("migration-report.txt")).contains("仅支持简体中文"));
+    }
     @TempDir Path temp;
 
     @Test void mergesOnlyKnownTargetPathsAndReportsLegacyConversions() throws Exception {
@@ -32,11 +43,11 @@ class ConfigMigratorTest {
         Path sourceDir = temp.resolve("modern"), targetDir = temp.resolve("legacy");
         Files.createDirectories(sourceDir.resolve("Languages")); Files.createDirectories(sourceDir.resolve("Cache"));
         Files.createDirectories(targetDir.resolve("Languages")); Files.createDirectories(targetDir.resolve("Cache"));
-        Files.writeString(sourceDir.resolve("Languages/messages_en.yml"), "existing: modern\nnew-key: migrated\nrejoin:\n  waiting: new text\n");
-        Files.writeString(targetDir.resolve("Languages/messages_en.yml"), "existing: custom\nrejoin: legacy custom text\n");
+        Files.writeString(sourceDir.resolve("Languages/messages_zh_cn.yml"), "existing: modern\nnew-key: migrated\nrejoin:\n  waiting: new text\n");
+        Files.writeString(targetDir.resolve("Languages/messages_zh_cn.yml"), "existing: custom\nrejoin: legacy custom text\n");
         Files.writeString(sourceDir.resolve("Cache/map.zip.yml"), "should: skip\n");
         ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
-        String migrated = Files.readString(targetDir.resolve("Languages/messages_en.yml"));
+        String migrated = Files.readString(targetDir.resolve("Languages/messages_zh_cn.yml"));
         String report = Files.readString(targetDir.resolve("migration-report.txt"));
         assertTrue(migrated.contains("existing: modern"));
         assertTrue(migrated.contains("new-key: migrated"));

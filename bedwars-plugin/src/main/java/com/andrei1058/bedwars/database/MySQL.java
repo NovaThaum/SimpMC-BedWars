@@ -174,10 +174,6 @@ public class MySQL implements Database {
                 statement.executeUpdate(sql);
             }
 
-            sql = "CREATE TABLE IF NOT EXISTS player_language (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, uuid VARCHAR(200), iso VARCHAR(200));";
-            try (Statement statement = connection.createStatement()) {
-                statement.executeUpdate(sql);
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -435,49 +431,12 @@ public class MySQL implements Database {
 
     @Override
     public void setLanguage(UUID uuid, String iso) {
-        String sql = "SELECT iso FROM player_language WHERE uuid = ?;";
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, uuid.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        sql = "UPDATE player_language SET iso = ? WHERE uuid = ?;";
-                        try (PreparedStatement statement2 = connection.prepareStatement(sql)) {
-                            statement2.setString(1, iso);
-                            statement2.setString(2, uuid.toString());
-                            statement2.executeUpdate();
-                        }
-                    } else {
-                        sql = "INSERT INTO player_language VALUES (0, ?, ?);";
-                        try (PreparedStatement statement2 = connection.prepareStatement(sql)) {
-                            statement2.setString(1, uuid.toString());
-                            statement2.setString(2, iso);
-                            statement2.executeUpdate();
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // 已移除玩家语言偏好，保留兼容入口但不读写数据库。
     }
 
     @Override
     public String getLanguage(UUID uuid) {
-        String sql = "SELECT iso FROM player_language WHERE uuid = ?;";
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, uuid.toString());
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        return result.getString(1);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return Language.getDefaultLanguage().getIso();
+        return Language.SIMPLIFIED_CHINESE_ISO;
     }
 
     @Override

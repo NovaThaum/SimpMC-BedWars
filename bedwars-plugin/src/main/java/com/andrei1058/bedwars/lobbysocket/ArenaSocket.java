@@ -11,6 +11,7 @@
 package com.andrei1058.bedwars.lobbysocket;
 
 import com.andrei1058.bedwars.BedWars;
+import com.andrei1058.bedwars.api.language.Language;
 import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
@@ -385,13 +386,13 @@ public final class ArenaSocket {
         }
 
         private void handlePreload(JsonObject json) {
-            if (!hasStringFields(json, "uuid", "arena_identifier", "lang_iso", "target")) {
+            if (!hasStringFields(json, "uuid", "arena_identifier", "target")) {
                 invalid("PLD is missing fields");
                 return;
             }
             final String uuid = bounded(json, "uuid", 64);
             final String arenaIdentifier = bounded(json, "arena_identifier", 256);
-            final String language = bounded(json, "lang_iso", 32);
+            final String language = Language.SIMPLIFIED_CHINESE_ISO;
             final String target = bounded(json, "target", 128);
             final String joinMode = bounded(json, "join_mode", 16).toUpperCase(Locale.ROOT);
             final String requestId = bounded(json, "request_id", 128);

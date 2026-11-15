@@ -24,6 +24,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+/** @deprecated 已移除语言切换；插件不再发出此事件。 */
+@Deprecated
 public class PlayerLangChangeEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
 

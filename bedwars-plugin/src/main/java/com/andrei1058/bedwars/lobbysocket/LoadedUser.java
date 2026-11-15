@@ -43,7 +43,6 @@ public final class LoadedUser {
     private final String requestId;
     private final String joinMode;
     private final String rejoinReservationId;
-    private final Language language;
 
     private static final ConcurrentHashMap<UUID, LoadedUser> loaded =
             new ConcurrentHashMap<UUID, LoadedUser>();
@@ -69,7 +68,6 @@ public final class LoadedUser {
             this.joinMode = "AUTO";
             this.rejoinReservationId = "";
             this.toleranceTime = 0L;
-            this.language = null;
             return;
         }
         this.uuid = UUID.fromString(uuid);
@@ -81,7 +79,6 @@ public final class LoadedUser {
                 || partyOwnerOrSpectateTarget.trim().isEmpty()
                 ? null : partyOwnerOrSpectateTarget;
         this.toleranceTime = System.currentTimeMillis() + waitMillis;
-        this.language = Language.getLang(langIso);
         loaded.put(this.uuid, this);
     }
 
@@ -136,7 +133,7 @@ public final class LoadedUser {
     }
 
     public Language getLanguage() {
-        return language;
+        return Language.getDefaultLanguage();
     }
 
     public static LoadedUser getPreLoaded(UUID uuid) {

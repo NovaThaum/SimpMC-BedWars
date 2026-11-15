@@ -180,4 +180,45 @@ class ConfigMigratorTest {
         assertTrue(report.contains("recall-scroll"));
         assertTrue(report.contains("bedwars-item"));
     }
+
+    @Test void migratesModernArenaGroupsForBothExistingAndNewMapsAndRegistersReferences() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("groups-source/Arenas")).getParent();
+        Path target = Files.createDirectories(temp.resolve("groups-target/Arenas")).getParent();
+        Files.writeString(source.resolve("config.yml"), "arenaGroups: [Solo, Doubles]\nlobbyServer: login\n");
+        Files.writeString(target.resolve("config.yml"), "arenaGroups: [LegacyOnly, solo]\nlobbyServer: hub\n");
+        Files.writeString(source.resolve("Arenas/existing.yml"), "groups: ['', Solo, Doubles]\ngroup: WrongOldValue\ncustom: source\n");
+        Files.writeString(target.resolve("Arenas/existing.yml"), "group: LegacyOnly\ngroups: [Stale]\ncustom: target\n");
+        Files.writeString(source.resolve("Arenas/new.yml"), "groups: [ImportedOnly, Solo]\ngroup: WrongOldValue\n");
+        Files.writeString(source.resolve("Arenas/scalar.yml"), "groups: doubles\n");
+        Files.writeString(source.resolve("Arenas/current.yml"), "group: Solo\n");
+        Files.writeString(target.resolve("Arenas/current.yml"), "custom: keep\n");
+        ConfigMigrator.main(new String[]{source.toString(), target.toString()});
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
+        java.util.Map<?,?> main = yaml.load(Files.readString(target.resolve("config.yml")));
+        assertEquals(java.util.List.of("LegacyOnly", "solo", "Doubles", "ImportedOnly"), main.get("arenaGroups"));
+        assertEquals("login", main.get("lobbyServer"));
+        for (String[] row : new String[][]{{"existing", "solo"}, {"new", "ImportedOnly"}, {"scalar", "Doubles"}, {"current", "solo"}}) {
+            java.util.Map<?,?> arena = yaml.load(Files.readString(target.resolve("Arenas/" + row[0] + ".yml")));
+            assertEquals(row[1], arena.get("group"));
+            assertFalse(arena.containsKey("groups"));
+        }
+        String before = Files.readString(target.resolve("config.yml"));
+        ConfigMigrator.main(new String[]{source.toString(), target.toString()});
+        assertEquals(before, Files.readString(target.resolve("config.yml")));
+        assertTrue(Files.readString(target.resolve("migration-report.txt")).contains("竞技场分组转换为 group: Solo"));
+    }
+
+    @Test void convertsAliasGroupOnExistingMapEvenWithoutGroupTemplateKey() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("alias-source/Arenas")).getParent();
+        Path target = Files.createDirectories(temp.resolve("alias-target/Arenas")).getParent();
+        Files.writeString(source.resolve("Arenas/map.yml"), "arena-group: Solo\n");
+        Files.writeString(target.resolve("Arenas/map.yml"), "custom: retained\n");
+        Files.writeString(target.resolve("config.yml"), "lobbyServer: login\n");
+        ConfigMigrator.main(new String[]{source.toString(), target.toString()});
+        java.util.Map<?,?> arena = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve("Arenas/map.yml")));
+        assertEquals("Solo", arena.get("group"));assertEquals("retained", arena.get("custom"));assertFalse(arena.containsKey("arena-group"));
+        java.util.Map<?,?> main = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve("config.yml")));
+        assertEquals(java.util.List.of("Solo"), main.get("arenaGroups"));assertEquals("login", main.get("lobbyServer"));
+        assertFalse(Files.readString(target.resolve("migration-report.txt")).contains("group (目标版无对应配置项"));
+    }
 }

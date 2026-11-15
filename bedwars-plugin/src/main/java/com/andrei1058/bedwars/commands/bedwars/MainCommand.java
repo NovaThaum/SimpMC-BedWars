@@ -206,6 +206,12 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
     }
 
     public List<String> tabComplete(CommandSender s, String alias, String[] args, Location location) throws IllegalArgumentException {
+        if (args.length >= 2 && args[0].equalsIgnoreCase("arenaGroup")) {
+            SubCommand command = getSubCommand(args[0]);
+            if (command instanceof com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.ArenaGroup group
+                    && group.canSee(s, BedWars.getAPI())) return group.complete(args);
+            return java.util.Collections.emptyList();
+        }
         if (args.length == 1) {
             List<String> sub = new ArrayList<>();
             for (SubCommand sb : getSubCommands()) {

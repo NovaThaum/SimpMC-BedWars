@@ -112,8 +112,8 @@ public class ArenaGroup extends SubCommand {
                 sendArenaGroupCmdList(p);
                 return true;
             }
-            if (config.getYml().get(ConfigPath.GENERAL_CONFIGURATION_ARENA_GROUPS) != null) {
-                if (config.getYml().getStringList(ConfigPath.GENERAL_CONFIGURATION_ARENA_GROUPS).contains(args[2])) {
+            if (args[2].equalsIgnoreCase("Default") || config.getYml().get(ConfigPath.GENERAL_CONFIGURATION_ARENA_GROUPS) != null) {
+                if (args[2].equalsIgnoreCase("Default") || config.getYml().getStringList(ConfigPath.GENERAL_CONFIGURATION_ARENA_GROUPS).contains(args[2])) {
                     File arena = new File(plugin.getDataFolder(), "/Arenas/" + args[1] + ".yml");
                     if (!arena.exists()) {
                         p.sendMessage("§c▪ §7Arena " + args[1] + " doesn't exist!");
@@ -142,6 +142,26 @@ public class ArenaGroup extends SubCommand {
     @Override
     public List<String> getTabComplete() {
         return Arrays.asList("create", "remove", "list", "set");
+    }
+
+    /** 按实际参数位置补全，包括尚未启用的地图。 */
+    public List<String> complete(String[] args) {
+        List<String> candidates = new ArrayList<>();
+        if (args.length == 2) candidates.addAll(getTabComplete());
+        else if (args.length == 3 && args[1].equalsIgnoreCase("set")) {
+            File[] files = new File(plugin.getDataFolder(), "Arenas").listFiles();
+            if (files != null) for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".yml"))
+                    candidates.add(file.getName().substring(0, file.getName().length() - 4));
+            }
+        } else if ((args.length == 4 && args[1].equalsIgnoreCase("set"))
+                || (args.length == 3 && args[1].equalsIgnoreCase("remove"))) {
+            if (args[1].equalsIgnoreCase("set")) candidates.add("Default");
+            candidates.addAll(config.getYml().getStringList(ConfigPath.GENERAL_CONFIGURATION_ARENA_GROUPS));
+        }
+        String prefix = args[args.length - 1].toLowerCase(java.util.Locale.ROOT);
+        return candidates.stream().distinct().filter(value -> value.toLowerCase(java.util.Locale.ROOT).startsWith(prefix))
+                .sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
     private void sendArenaGroupCmdList(Player p) {

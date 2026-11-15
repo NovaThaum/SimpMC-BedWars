@@ -32,6 +32,7 @@ public final class ConfigMigrator {
         DumperOptions options = new DumperOptions(); options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); options.setIndent(2); options.setPrettyFlow(true);
         Yaml yaml = new Yaml(options);
         List<String> report = new ArrayList<>();
+        Map<Path,String> migratedArenaGroups = new LinkedHashMap<>();
         try (var files = Files.walk(modernDir)) {
             for (Path modern : files.filter(Files::isRegularFile).filter(ConfigMigrator::isYaml).toList()) {
                 Path relative = modernDir.relativize(modern);
@@ -48,6 +49,12 @@ public final class ConfigMigrator {
                 Path legacy = legacyDir.resolve(relative);
                 List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>(), notes = new ArrayList<>();
                 Map<String,Object> source = map(yaml.load(Files.readString(modern)));
+                boolean arenaFile = relative.getNameCount() > 1 && "Arenas".equalsIgnoreCase(relative.getName(0).toString());
+                String arenaGroup = arenaFile ? readArenaGroup(source) : null;
+                if (arenaGroup != null) {
+                    source.remove("groups"); source.remove("arena-group"); source.put("group", arenaGroup);
+                    warnings.add("竞技场分组转换为 group: " + arenaGroup);
+                }
                 Map<String,Object> target;
                 boolean newArena = relative.getNameCount() > 1 && "Arenas".equalsIgnoreCase(relative.getName(0).toString()) && !Files.isRegularFile(legacy);
                 if (newArena) {
@@ -58,6 +65,7 @@ public final class ConfigMigrator {
                 } else if (Files.isRegularFile(legacy)) {
                     target = map(yaml.load(Files.readString(legacy)));
                     Map<String,Object> transferableSource = new LinkedHashMap<>(source);
+                    if (arenaGroup != null) transferableSource.remove("group");
                     boolean upgradesConfig = relative.getNameCount() == 1 && "upgrades2.yml".equalsIgnoreCase(relative.getFileName().toString());
                     if (transferableSource.remove("config-version") != null && !upgradesConfig)
                         notes.add("config-version 已忽略，由目标插件管理");
@@ -86,6 +94,10 @@ public final class ConfigMigrator {
                             ? map(target.get("upgrade-swords")) : new LinkedHashMap<>(), "upgrade-swords", migrated);
                     merge(transferableSource, target, "", migrated, skipped, warnings, notes, languageFile);
                     migrateLegacyConfigKeys(source, target, migrated, warnings, relative);
+                    if (arenaGroup != null) {
+                        target.remove("groups"); target.remove("arena-group"); target.put("group", arenaGroup);
+                        migrated.add("group");
+                    }
                     mergeSupportedSwordTiers(supportedSwordTiers, target, migrated, skipped, warnings, notes);
                     if (upgradesConfig) {
                         // 升级价格迁移必须知道源配置版本；目标旧版使用独立 price-schema 标记。
@@ -101,11 +113,27 @@ public final class ConfigMigrator {
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
                 Files.createDirectories(output.getParent());
                 Files.writeString(output, yaml.dump(target), StandardCharsets.UTF_8);
+                if (arenaGroup != null) migratedArenaGroups.put(output, arenaGroup);
                 report.add(relative + ": 已迁移 " + migrated.size() + " 项，已回退目标版默认值/忽略 " + notes.size() + " 项，未处理 " + skipped.size() + " 项，映射 " + warnings.size() + " 项");
                 report.addAll(warnings.stream().map(w -> "  映射: " + w).toList());
                 report.addAll(notes.stream().map(n -> "  已回退/说明: " + n).toList());
                 report.addAll(skipped.stream().map(s -> "  未处理（需人工确认）: " + s).toList());
             }
+        }
+        Path main = legacyDir.resolve("config.yml");
+        if (!migratedArenaGroups.isEmpty() && Files.isRegularFile(main)) {
+            Map<String,Object> values = map(yaml.load(Files.readString(main)));
+            List<String> groups = mergedGroups(values.get("arenaGroups"), migratedArenaGroups.values());
+            values.put("arenaGroups", groups);
+            Files.writeString(main, yaml.dump(values), StandardCharsets.UTF_8);
+            for (var arena : migratedArenaGroups.entrySet()) {
+                String canonical = groups.stream().filter(g -> g.equalsIgnoreCase(arena.getValue())).findFirst().orElse(arena.getValue());
+                if (!canonical.equals(arena.getValue())) {
+                    Map<String,Object> map = map(yaml.load(Files.readString(arena.getKey())));
+                    map.put("group", canonical); Files.writeString(arena.getKey(), yaml.dump(map), StandardCharsets.UTF_8);
+                }
+            }
+            report.add("config.yml: 已登记迁移地图引用的竞技场组 " + groups);
         }
         String text = "来源: " + modernDir + "\n目标插件目录: " + legacyDir + "\n输出: 直接更新目标目录中的对应配置文件\n\n" + String.join("\n", report) + "\n";
         Files.writeString(reportFile, text, StandardCharsets.UTF_8);
@@ -113,6 +141,27 @@ public final class ConfigMigrator {
     }
 
     private static boolean isYaml(Path path) { String name = path.getFileName().toString().toLowerCase(Locale.ROOT); return name.endsWith(".yml") || name.endsWith(".yaml"); }
+
+    /** 与 1.21.11 的 ArenaGroupPolicy 一致，历史 groups 的首个有效值优先。 */
+    private static String readArenaGroup(Map<String,Object> arena) {
+        Object old = arena.get("groups");
+        if (old instanceof List<?> list) {
+            for (Object value : list) if (value instanceof String group && !group.isBlank()) return group.trim();
+        } else if (old instanceof String group) return group.isBlank() ? "Default" : group.trim();
+        Object current = arena.get("group");
+        if (current instanceof String group && !group.isBlank()) return group.trim();
+        Object alias = arena.get("arena-group");
+        return alias instanceof String group && !group.isBlank() ? group.trim() : null;
+    }
+
+    private static List<String> mergedGroups(Object first, Object second) {
+        List<String> result = new ArrayList<>();
+        for (Object source : new Object[]{first, second}) if (source instanceof Collection<?> values) {
+            for (Object value : values) if (value instanceof String group && !group.isBlank()
+                    && result.stream().noneMatch(known -> known.equalsIgnoreCase(group.trim()))) result.add(group.trim());
+        }
+        return result;
+    }
 
     private static void normalizeArena(Map<String,Object> arena, List<String> notes, List<String> warnings) {
         arena.remove("config-version");
@@ -212,7 +261,7 @@ public final class ConfigMigrator {
         }
         Object groups = source.get("arenaGroups");
         if (groups instanceof List<?> list) {
-            target.put("arenaGroups", new ArrayList<>(list));
+            target.put("arenaGroups", mergedGroups(target.get("arenaGroups"), list));
             migrated.add("arenaGroups");
         }
     }

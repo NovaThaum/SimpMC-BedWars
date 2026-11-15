@@ -180,3 +180,19 @@ If you are not a programmer you can help answering people in the [Issues](https:
 - 接受邀请、退出小队及玩家进出后按当前人数与小队重算资格；满员倒计时大于 5 秒时固定压至 5 秒，旧缩时配置不再影响满员规则。分队失败、人数不足、漏分或拆散正常小队时取消开局并保留小队；只有 OP 显式执行 `/bw start debug` 可在当前场次测试单队。
 
 本版本仅支持简体中文，消息文件为 `Languages/messages_zh_cn.yml`，仍可自定义文本。旧 `language`、`disabled-languages` 配置自动清理；其他语言文件保留但不加载，玩家语言偏好不再读写。语言切换命令已移除。
+
+
+### 内置大厅 NPC（2.1.0 起）
+
+无需额外安装 Citizens。内置 NPC 为玩家外观，显示多行彩色悬浮文字，右键随机加入指定竞技场分组；分组必须先在 `config.yml` 的 `arenaGroups` 中配置。使用权限 `bw.npc`（默认 OP），普通玩家点击加入无需该管理权限。
+
+```text
+/bw npc create andrei1058 Solo &9&l单人模式\n&f{players} 人正在游戏
+/bw npc remove
+```
+
+在要放置 NPC 的位置执行创建命令，皮肤名填写正版玩家名。`\n` 分隔悬浮文字，最多 6 行；`&` 表示颜色代码，`{players}` 显示目标分组中的人数。`add` 保留为 `create` 的别名，也支持用 `Solo+Doubles` 指定多个分组。看向 6 格内的 NPC 后执行删除命令。
+
+NPC 位置、皮肤名、分组和文字保存在 `join-npcs.yml`，重启后自动恢复；已获取的签名皮肤会缓存，首次获取需要服务器能连接 Mojang 的皮肤服务，暂不可用时显示默认外观。NPC 仅向同世界、48 格内且不在竞技场或设置会话中的玩家显示。分组人数通过入场、离场等既有事件更新，不增加周期扫描。
+
+原有 Citizens NPC 和配置继续保留，可继续点击加入。新建命令使用内置 NPC；原有 Citizens NPC 也可使用 Citizens 自己的 `/npc remove` 管理。无需把 Citizens 的完整服务或另一个插件嵌入起床 JAR。

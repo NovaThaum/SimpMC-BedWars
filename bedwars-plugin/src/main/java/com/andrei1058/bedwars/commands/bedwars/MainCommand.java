@@ -115,8 +115,8 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
         new RemoveGenerator(this, "removeGenerator");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.SetType(this, "setType");
         new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.setup.Save(this, "save");
-        if (JoinNPC.isCitizensSupport() && BedWars.getServerType() != ServerType.BUNGEE) {
-            new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.NPC(this, "npc");
+        if (BedWars.getServerType() != ServerType.BUNGEE) {
+            new com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.NativeNPC(this);
         }
         new CmdTpStaff(this, "tp");
         new CmdUpgrades(this, "upgradesmenu");

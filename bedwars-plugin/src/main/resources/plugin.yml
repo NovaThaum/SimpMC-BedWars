@@ -6,6 +6,9 @@ main: com.andrei1058.bedwars.BedWars
 softdepend: [Vault,PlaceholderAPI,Citizens,Parties,PartyAndFriends,Spigot-Party-API-PAF]
 #load: STARTUP
 permissions:
+  bw.npc:
+    description: 创建和删除大厅加入游戏 NPC
+    default: op
   bw.command.stopgames:
     description: 暂停本服新对局开局
     default: op

@@ -407,6 +407,11 @@ public class BedWars extends JavaPlugin {
             }
         }
 
+        if (getServerType() != ServerType.BUNGEE) {
+            new com.andrei1058.bedwars.support.npc.NativeJoinNpcs(this);
+            out.info("已启用内置大厅 NPC，无需安装 Citizens。使用 /bw npc create 创建。");
+        }
+
         /* Citizens support */
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (this.getServer().getPluginManager().getPlugin("Citizens") != null) {
@@ -550,6 +555,7 @@ public class BedWars extends JavaPlugin {
 
     public void onDisable() {
         shuttingDown = true;
+        if (com.andrei1058.bedwars.support.npc.NativeJoinNpcs.get() != null) com.andrei1058.bedwars.support.npc.NativeJoinNpcs.get().close();
         if (!serverSoftwareSupport) return;
         if (matchStatsRecorder != null) {
             matchStatsRecorder.close();

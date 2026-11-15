@@ -85,7 +85,7 @@ public class JoinNPC {
         } else {
             //remove npc subCommand
             if (bw.isRegistered()) {
-                bw.getSubCommands().removeIf(sc -> sc.getSubCommandName().equalsIgnoreCase("npc"));
+                bw.getSubCommands().removeIf(sc -> sc instanceof com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive.NPC);
             }
         }
     }
@@ -183,6 +183,7 @@ public class JoinNPC {
      * @param group arena group
      */
     public static void updateNPCs(String group) {
+        com.andrei1058.bedwars.support.npc.NativeJoinNpcs.updateGroup(group);
         String x = String.valueOf(Arena.getPlayers(group));
         for (Map.Entry<ArmorStand, List<String>> e : npcs_holos.entrySet()) {
             if (e.getValue().get(0).equalsIgnoreCase(group)) {

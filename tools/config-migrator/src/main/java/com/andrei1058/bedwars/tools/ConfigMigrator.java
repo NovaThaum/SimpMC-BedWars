@@ -109,6 +109,7 @@ public final class ConfigMigrator {
                         }
                     }
                 } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
+                if (arenaFile) normalizeArenaCoordinates(target, "");
                 Path output = legacyDir.resolve(relative).normalize();
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
                 Files.createDirectories(output.getParent());
@@ -328,10 +329,34 @@ public final class ConfigMigrator {
             Double.parseDouble(parts[0].trim());
             Double.parseDouble(parts[1].trim());
             Double.parseDouble(parts[2].trim());
-            return clean + ",0,0";
+            return clean;
         } catch (NumberFormatException ignored) {
             return null;
         }
+    }
+
+    private static void normalizeArenaCoordinates(Map<String,Object> values, String prefix) {
+        for (var entry : values.entrySet()) {
+            String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof Map<?,?> nested) normalizeArenaCoordinates(map(nested), path);
+            else if (path.matches("(?i)(spectator-loc|waiting\\.(Loc|Pos[^.]+)|generator\\.(Diamond|Emerald)|Team\\.[^.]+\\.(Spawn|Bed|Shop|Upgrade|Iron|Gold|Diamond|Emerald|kill-drops-loc))")) {
+                if (value instanceof String text) entry.setValue(arenaCoordinates(text));
+                else if (value instanceof List<?> list) entry.setValue(list.stream()
+                        .map(v -> v instanceof String text ? arenaCoordinates(text) : v).toList());
+            }
+        }
+    }
+
+    private static String arenaCoordinates(String text) {
+        String clean = text.trim().replace("[", "").replace("]", "");
+        String[] parts = clean.split(",", -1);
+        if (parts.length != 3 && parts.length != 5) return text;
+        try {
+            for (int i = 0; i < 3; i++)
+                if (!Double.isFinite(Double.parseDouble(parts[i].trim()))) return text;
+            return parts[0].trim() + "," + parts[1].trim() + "," + parts[2].trim();
+        } catch (NumberFormatException ignored) { return text; }
     }
 
     private static boolean keyEndsWithColor(String path) {

@@ -85,7 +85,7 @@ public class ConfigManager {
      * Convert a location to an arena location syntax
      */
     public String stringLocationArenaFormat(Location loc) {
-        return loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + (double) loc.getYaw() + "," + (double) loc.getPitch();
+        return loc.getX() + "," + loc.getY() + "," + loc.getZ();
     }
 
     /**
@@ -110,7 +110,7 @@ public class ConfigManager {
      * Save a location for arena use
      */
     public void saveArenaLoc(String path, Location loc) {
-        String data = loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + (double) loc.getYaw() + "," + (double) loc.getPitch();
+        String data = stringLocationArenaFormat(loc);
         yml.set(path, data);
         save();
     }
@@ -133,17 +133,33 @@ public class ConfigManager {
     public Location getArenaLoc(String path) {
         String d = yml.getString(path);
         if (d == null) return null;
-        String[] data = d.replace("[", "").replace("]", "").split(",");
-        return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]), Double.parseDouble(data[1]), Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
+        return convertStringToArenaLocation(d);
     }
 
-    /**
-     * Convert string to arena location syntax
-     */
+    /** 竞技场位置仅使用 x,y,z；兼容旧版五段格式，忽略旧朝向。 */
     public Location convertStringToArenaLocation(String string) {
-        String[] data = string.split(",");
-        return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]), Double.parseDouble(data[1]), Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
+        String[] data = normalizeArenaLocationString(string).split(",");
+        return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]),
+                Double.parseDouble(data[1]), Double.parseDouble(data[2]));
+    }
 
+    /** 保留原始坐标精度，不改变方块中心或高度。 */
+    public static String normalizeArenaLocationString(String value) {
+        if (value == null) throw new IllegalArgumentException("竞技场坐标不能为空");
+        String[] data = value.trim().replace("[", "").replace("]", "").split(",", -1);
+        if (data.length != 3 && data.length != 5)
+            throw new IllegalArgumentException("竞技场坐标需要 x,y,z 或旧版 x,y,z,yaw,pitch: " + value);
+        for (int i = 0; i < 3; i++) {
+            data[i] = data[i].trim();
+            if (!Double.isFinite(Double.parseDouble(data[i])))
+                throw new IllegalArgumentException("竞技场坐标必须为有限数值: " + value);
+        }
+        return data[0] + "," + data[1] + "," + data[2];
+    }
+
+    /** 仅匹配插件管理的位置键，避免改动管理员自定义文本。 */
+    public static boolean isArenaLocationPath(String path) {
+        return path.matches("(?i)(spectator-loc|waiting\\.(Loc|Pos[^.]+)|generator\\.(Diamond|Emerald)|Team\\.[^.]+\\.(Spawn|Bed|Shop|Upgrade|Iron|Gold|Diamond|Emerald|kill-drops-loc))");
     }
 
     /**

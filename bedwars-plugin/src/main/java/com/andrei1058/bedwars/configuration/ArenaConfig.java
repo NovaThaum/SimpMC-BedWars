@@ -41,6 +41,7 @@ public class ArenaConfig extends ConfigManager {
         super(plugin, name, dir);
 
         YamlConfiguration yml = getYml();
+        migrateArenaLocations(yml);
         boolean hadMinPlayers = yml.get("minPlayers") != null;
         Integer legacyMinInTeam = yml.get("minInTeam") == null ? null : yml.getInt("minInTeam");
         yml.options().header(plugin.getName() + " arena configuration file.\n" +
@@ -100,6 +101,23 @@ public class ArenaConfig extends ConfigManager {
         save();
 
         cachedGameOverridables = getGameOverridables();
+    }
+
+    static void migrateArenaLocations(YamlConfiguration yml) {
+        for (String path : new ArrayList<>(yml.getKeys(true))) {
+            if (!isArenaLocationPath(path)) continue;
+            Object value = yml.get(path);
+            if (value instanceof String text) yml.set(path, normalizeArenaLocationString(text));
+            else if (value instanceof List<?> values) {
+                List<String> normalized = new ArrayList<>();
+                for (Object entry : values) {
+                    if (!(entry instanceof String text))
+                        throw new IllegalArgumentException("竞技场坐标列表格式错误: " + path);
+                    normalized.add(normalizeArenaLocationString(text));
+                }
+                yml.set(path, normalized);
+            }
+        }
     }
 
     static void migrateMinimumPlayers(YamlConfiguration yml, boolean hadMinPlayers, Integer legacyMinInTeam) {

@@ -17,6 +17,28 @@ class ConfigMigratorTest {
         assertEquals("custom: retained\n", Files.readString(target.resolve("Languages/messages_en.yml")));
         assertTrue(Files.readString(target.resolve("migration-report.txt")).contains("仅支持简体中文"));
     }
+    @Test void normalizesCoordinateListsForNewAndExistingArenas() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("coords-source/Arenas"));
+        Path target = Files.createDirectories(temp.resolve("coords-target/Arenas"));
+        String arena = "Team:\n  Red:\n    Spawn: '1.25,64.75,-3.5,90,20'\n    Iron:\n      - '1,2,3'\n      - '[4,5,6,180,30]'\n    Gold:\n      - '7,8,9'\ngenerator:\n  Diamond:\n    - '10,11,12,90,0'\ncustom: '1,2,3,90,20'\n";
+        Files.writeString(source.resolve("new.yml"), arena);
+        Files.writeString(source.resolve("existing.yml"), arena);
+        Files.writeString(target.resolve("existing.yml"), arena);
+        ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
+        for (String name : new String[]{"new.yml", "existing.yml"}) {
+            java.util.Map<?,?> result = yaml.load(Files.readString(target.resolve(name)));
+            java.util.Map<?,?> red = (java.util.Map<?,?>)((java.util.Map<?,?>) result.get("Team")).get("Red");
+            assertEquals("1.25,64.75,-3.5", red.get("Spawn"));
+            assertEquals(java.util.List.of("1,2,3", "4,5,6"), red.get("Iron"));
+            assertEquals(java.util.List.of("10,11,12"), ((java.util.Map<?,?>)result.get("generator")).get("Diamond"));
+            assertEquals("1,2,3,90,20", result.get("custom"));
+        }
+        String once = Files.readString(target.resolve("existing.yml"));
+        ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
+        assertEquals(once, Files.readString(target.resolve("existing.yml")));
+    }
+
     @TempDir Path temp;
 
     @Test void mergesOnlyKnownTargetPathsAndReportsLegacyConversions() throws Exception {
@@ -77,7 +99,7 @@ class ConfigMigratorTest {
         ConfigMigrator.main(new String[]{sourceDir.toString(), targetDir.toString()});
         String migrated = Files.readString(targetDir.resolve("Arenas/arena.yml"));
         assertTrue(migrated.contains("team-color: AQUA"));
-        assertTrue(migrated.contains("spawn: 1,2,3,0,0"));
+        assertTrue(migrated.contains("spawn: 1,2,3"));
     }
 
     @Test void mapsArenaGroupsAndLobbyToLegacyConfig() throws Exception {

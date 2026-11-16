@@ -107,7 +107,8 @@ public class ArenaConfig extends ConfigManager {
         for (String path : new ArrayList<>(yml.getKeys(true))) {
             if (!isArenaLocationPath(path)) continue;
             Object value = yml.get(path);
-            if (value instanceof String text) yml.set(path, normalizeArenaLocationString(text));
+            if (value instanceof String text) yml.set(path, isArenaNpcLocationPath(path)
+                    ? normalizeArenaNpcLocationString(text) : normalizeArenaLocationString(text));
             else if (value instanceof List<?> values) {
                 List<String> normalized = new ArrayList<>();
                 for (Object entry : values) {

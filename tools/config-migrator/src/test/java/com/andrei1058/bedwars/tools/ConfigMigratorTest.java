@@ -243,4 +243,82 @@ class ConfigMigratorTest {
         assertEquals(java.util.List.of("Solo"), main.get("arenaGroups"));assertEquals("login", main.get("lobbyServer"));
         assertFalse(Files.readString(target.resolve("migration-report.txt")).contains("group (目标版无对应配置项"));
     }
+    @Test void migratesModernShopMaterialsWithTheirDataAndKeepsCustomPrices() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("material-source"));
+        Path target = Files.createDirectories(temp.resolve("material-target"));
+        Files.writeString(source.resolve("shop.yml"), """
+            settings:
+              empty-slot-material: RED_STAINED_GLASS_PANE
+              empty-slot-data: 0
+            specials:
+              silverfish:
+                material: SNOWBALL
+            wool:
+              material: WHITE_WOOL
+              cost: 37
+              amount: 16
+            pane:
+              material: GREEN_STAINED_GLASS_PANE
+            weapon:
+              material: WOODEN_AXE
+            """);
+        Files.writeString(target.resolve("shop.yml"), """
+            settings:
+              empty-slot-material: STAINED_GLASS_PANE
+              empty-slot-data: 7
+            specials:
+              silverfish:
+                material: SNOW_BALL
+            wool:
+              material: WOOL
+              data: 7
+              cost: 4
+              amount: 16
+            pane:
+              material: STAINED_GLASS_PANE
+              data: 0
+            weapon:
+              material: WOOD_AXE
+            custom: retained
+            """);
+        ConfigMigrator.main(new String[]{source.toString(), target.toString()});
+        java.util.Map<String,Object> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve("shop.yml")));
+        assertEquals("retained", result.get("custom"));
+        assertEquals(14, ((java.util.Map<?,?>)result.get("settings")).get("empty-slot-data"));
+        java.util.Map<?,?> wool = (java.util.Map<?,?>)result.get("wool");
+        assertEquals("WOOL", wool.get("material")); assertEquals(0, wool.get("data")); assertEquals(37, wool.get("cost"));
+        assertEquals(13, ((java.util.Map<?,?>)result.get("pane")).get("data"));
+        assertEquals("WOOD_AXE", ((java.util.Map<?,?>)result.get("weapon")).get("material"));
+        assertEquals("SNOW_BALL", ((java.util.Map<?,?>)((java.util.Map<?,?>)result.get("specials")).get("silverfish")).get("material"));
+    }
+    @Test void runtimeAndStandaloneToolUseIdenticalMaterialMappings() throws Exception {
+        Path runtime = Path.of("../../versionsupport_common/src/main/java/com/andrei1058/bedwars/compat/LegacyMaterials.java");
+        Path standalone = Path.of("src/main/java/com/andrei1058/bedwars/compat/LegacyMaterials.java");
+        assertEquals(Files.readString(runtime), Files.readString(standalone));
+    }
+    @Test void keepsConfiguredShopAndUpgradeFacingInNewAndExistingArenas() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("npc-source/Arenas"));
+        Path target = Files.createDirectories(temp.resolve("npc-target/Arenas"));
+        String arena = "Team:\n  Red:\n    Spawn: '1,2,3,90,10'\n    Shop: '4,5,6,-135,12'\n    Upgrade: '7,8,9,45,0'\n";
+        Files.writeString(source.resolve("new.yml"), arena);
+        Files.writeString(source.resolve("existing.yml"), arena);
+        Files.writeString(target.resolve("existing.yml"), arena);
+        ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
+        for (String file : java.util.List.of("new.yml", "existing.yml")) {
+            java.util.Map<?,?> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve(file)));
+            java.util.Map<?,?> red = (java.util.Map<?,?>)((java.util.Map<?,?>)result.get("Team")).get("Red");
+            assertEquals("1,2,3", red.get("Spawn")); assertEquals("4,5,6,-135,12", red.get("Shop")); assertEquals("7,8,9,45,0", red.get("Upgrade"));
+        }
+    }
+    @Test void preservesTargetNpcFacingWhenModernSourceHasOnlyCoordinates() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("npc-three-source/Arenas"));
+        Path target = Files.createDirectories(temp.resolve("npc-three-target/Arenas"));
+        Files.writeString(source.resolve("arena.yml"), "Team:\n  Red:\n    Shop: '4,5,6'\n");
+        Files.writeString(target.resolve("arena.yml"), "Team:\n  Red:\n    Shop: '1,2,3,-135,12'\n");
+        ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
+        java.util.Map<?,?> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve("arena.yml")));
+        java.util.Map<?,?> team = (java.util.Map<?,?>)result.get("Team");
+        java.util.Map<?,?> red = (java.util.Map<?,?>)team.get("Red");
+        assertEquals("4,5,6,-135,12", red.get("Shop"));
+    }
 }

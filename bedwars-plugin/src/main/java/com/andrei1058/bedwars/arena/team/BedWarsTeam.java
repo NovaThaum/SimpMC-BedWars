@@ -21,6 +21,7 @@
 package com.andrei1058.bedwars.arena.team;
 
 import com.andrei1058.bedwars.BedWars;
+import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.generator.GeneratorType;
 import com.andrei1058.bedwars.api.arena.generator.IGenerator;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
@@ -148,7 +149,7 @@ public class BedWarsTeam implements ITeam {
         TeleportManager.teleportC(p, spawn, PlayerTeleportEvent.TeleportCause.PLUGIN);
         p.setGameMode(GameMode.SURVIVAL);
         p.setCanPickupItems(true);
-        nms.setCollide(p, getArena(), false);
+        nms.setCollide(p, getArena(), true);
         sendDefaultInventory(p, true);
         Bukkit.getPluginManager().callEvent(new PlayerFirstSpawnEvent(p, getArena(), this));
     }
@@ -356,6 +357,7 @@ public class BedWarsTeam implements ITeam {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             getArena().getRespawnSessions().remove(p); //Fixes https://github.com/andrei1058/BedWars1058/issues/669
+            nms.setCollide(p, arena, arena.getStatus() == GameState.playing && arena.isPlayer(p) && !arena.isSpectator(p));
 
             for (Player inGame : arena.getPlayers()) {
                 if (inGame.equals(p)) continue;

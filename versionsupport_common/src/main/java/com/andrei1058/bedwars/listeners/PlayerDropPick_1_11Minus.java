@@ -25,7 +25,6 @@ import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.events.player.PlayerGeneratorCollectEvent;
 import com.andrei1058.bedwars.api.server.ServerType;
-import com.andrei1058.bedwars.support.version.common.VersionCommon;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
@@ -49,7 +48,8 @@ public class PlayerDropPick_1_11Minus implements Listener {
     @SuppressWarnings("deprecation")
     @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
-        if (api.getServerType() == ServerType.MULTIARENA) {
+        IArena a = api.getArenaUtil().getArenaByPlayer(e.getPlayer());
+        if (a == null && api.getServerType() == ServerType.MULTIARENA) {
             //noinspection ConstantConditions
             if (e.getPlayer().getLocation().getWorld().getName().equalsIgnoreCase(api.getLobbyWorld())) {
                 e.setCancelled(true);
@@ -57,7 +57,6 @@ public class PlayerDropPick_1_11Minus implements Listener {
             }
         }
 
-        IArena a = api.getArenaUtil().getArenaByPlayer(e.getPlayer());
         if (a == null) return;
 
         if (!a.isPlayer(e.getPlayer())) {
@@ -80,7 +79,7 @@ public class PlayerDropPick_1_11Minus implements Listener {
             return;
         }
 
-        if (VersionCommon.api.getVersionSupport().isBed(e.getItem().getItemStack().getType())) {
+        if (api.getVersionSupport().isBed(e.getItem().getItemStack().getType())) {
             e.setCancelled(true);
             e.getItem().remove();
         } else if (e.getItem().getItemStack().hasItemMeta()) {
@@ -111,14 +110,14 @@ public class PlayerDropPick_1_11Minus implements Listener {
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
-        if (api.getServerType() == ServerType.MULTIARENA) {
+        IArena a = api.getArenaUtil().getArenaByPlayer(e.getPlayer());
+        if (a == null && api.getServerType() == ServerType.MULTIARENA) {
             //noinspection ConstantConditions
             if (e.getPlayer().getLocation().getWorld().getName().equalsIgnoreCase(api.getLobbyWorld())) {
                 e.setCancelled(true);
                 return;
             }
         }
-        IArena a = api.getArenaUtil().getArenaByPlayer(e.getPlayer());
         if (a == null) return;
 
         if (!a.isPlayer(e.getPlayer())) {

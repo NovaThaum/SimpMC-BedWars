@@ -1132,7 +1132,7 @@ public class Arena implements IArena {
         leaving.removeIf(previous -> previous != null
                 && previous.getUniqueId().equals(p.getUniqueId()));
         players.add(p);
-        nms.setCollide(p, this, false);
+        nms.setCollide(p, this, status == GameState.playing && !isReSpawning(p));
         for (Player on : players) {
             on.sendMessage(ArenaMessages.withArena(getMsg(on, Messages.COMMAND_REJOIN_PLAYER_RECONNECTED), getDisplayName()).replace("{playername}", p.getName()).replace("{player}", p.getDisplayName()).replace("{on}", String.valueOf(getPlayers().size())).replace("{max}", String.valueOf(getMaxPlayers())));
         }
@@ -1611,11 +1611,12 @@ public class Arena implements IArena {
         return false;
     }
 
-    /** Keep every participant non-collidable while managed by an arena. */
+    /** 1.8 的实体接触开关也控制物品和箭矢拾取，正式活动玩家必须开启。 */
     private void updatePlayingCollision(boolean playing) {
         for (Player player : new ArrayList<>(players)) {
             if (player != null) {
-                nms.setCollide(player, this, false);
+                nms.setCollide(player, this, playing && isPlayer(player) && !isSpectator(player)
+                        && !respawnSessions.containsKey(player));
             }
         }
     }

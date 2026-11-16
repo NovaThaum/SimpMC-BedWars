@@ -395,6 +395,8 @@ public class ShopManager extends ConfigManager {
             getYml().addDefault(ConfigPath.SHOP_PATH_CATEGORY_ARMOR + ConfigPath.SHOP_CATEGORY_CONTENT_PATH + ".iron-armor" + "." + ConfigPath.SHOP_CATEGORY_CONTENT_WEIGHT, 1);
         }
 
+        com.andrei1058.bedwars.configuration.LegacyBedItems.migrate(getYml());
+
         //try materials
         try {
             String material = getYml().getString(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_MATERIAL);

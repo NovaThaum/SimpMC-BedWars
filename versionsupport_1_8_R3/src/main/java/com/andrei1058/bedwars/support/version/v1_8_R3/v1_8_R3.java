@@ -488,7 +488,9 @@ public class v1_8_R3 extends VersionSupport {
     public org.bukkit.inventory.ItemStack createItemStack(String material, int amount, short data) {
         org.bukkit.inventory.ItemStack i;
         try {
-            i = new org.bukkit.inventory.ItemStack(org.bukkit.Material.valueOf(material), amount, data);
+            com.andrei1058.bedwars.compat.LegacyMaterials.Item mapped = com.andrei1058.bedwars.compat.LegacyMaterials.resolve(material);
+            i = new org.bukkit.inventory.ItemStack(org.bukkit.Material.valueOf(mapped.material()), amount,
+                    mapped.data() == null ? data : mapped.data().shortValue());
         } catch (Exception ex) {
             getPlugin().getLogger().log(Level.WARNING, material + " is not a valid " + getName() + " material!");
             i = new org.bukkit.inventory.ItemStack(org.bukkit.Material.BEDROCK);

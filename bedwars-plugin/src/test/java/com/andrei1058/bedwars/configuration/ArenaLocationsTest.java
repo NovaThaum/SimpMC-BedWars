@@ -65,4 +65,24 @@ class ArenaLocationsTest {
         for (String bad : List.of("1,2", "1,2,3,4", "NaN,2,3", "Infinity,2,3", "1,,3"))
             assertThrows(IllegalArgumentException.class, () -> ConfigManager.normalizeArenaLocationString(bad));
     }
+    @Test void shopAndUpgradeKeepConfiguredFacingWhileOtherPositionsRemainThreeValues() {
+        Plugin plugin = mock(Plugin.class); when(plugin.getLogger()).thenReturn(Logger.getAnonymousLogger());
+        World world = mock(World.class);
+        try (var bukkit = mockStatic(Bukkit.class)) {
+            bukkit.when(() -> Bukkit.getWorld("arena")).thenReturn(world);
+            ConfigManager config = new ConfigManager(plugin, "arena", temp.toString());
+            for (String path : List.of("Team.Red.Shop", "Team.Red.Upgrade")) {
+                config.saveArenaLoc(path, new Location(world, 1.25, 64.5, 2.75, -135, 12));
+                ArenaConfig.migrateArenaLocations(config.getYml()); config.save(); config.reload();
+                assertEquals(-135, config.getArenaLoc(path).getYaw()); assertEquals(12, config.getArenaLoc(path).getPitch());
+                assertEquals("1.25,64.5,2.75,-135.0,12.0", config.getString(path));
+            }
+            config.getYml().set("Team.Blue.Shop", "4,5,6");
+            ArenaConfig.migrateArenaLocations(config.getYml());
+            assertEquals("4,5,6,0.0,0.0", config.getString("Team.Blue.Shop"));
+            config.saveArenaLoc("Team.Red.Spawn", new Location(world, 1, 2, 3, 80, 12));
+            assertEquals("1.0,2.0,3.0", config.getString("Team.Red.Spawn"));
+        }
+        assertThrows(IllegalArgumentException.class, () -> ConfigManager.normalizeArenaNpcLocationString("1,2,3,NaN,0"));
+    }
 }

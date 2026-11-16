@@ -111,6 +111,7 @@ public class ConfigManager {
      */
     public void saveArenaLoc(String path, Location loc) {
         String data = stringLocationArenaFormat(loc);
+        if (isArenaNpcLocationPath(path)) data += "," + loc.getYaw() + "," + loc.getPitch();
         yml.set(path, data);
         save();
     }
@@ -133,6 +134,11 @@ public class ConfigManager {
     public Location getArenaLoc(String path) {
         String d = yml.getString(path);
         if (d == null) return null;
+        if (isArenaNpcLocationPath(path)) {
+            String[] data = normalizeArenaNpcLocationString(d).split(",");
+            return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]), Double.parseDouble(data[1]),
+                    Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
+        }
         return convertStringToArenaLocation(d);
     }
 
@@ -155,6 +161,23 @@ public class ConfigManager {
                 throw new IllegalArgumentException("竞技场坐标必须为有限数值: " + value);
         }
         return data[0] + "," + data[1] + "," + data[2];
+    }
+
+    /** 商店与升级 NPC 的朝向由竞技场配置控制，三段旧值兼容为零朝向。 */
+    public static boolean isArenaNpcLocationPath(String path) {
+        return path.matches("(?i)Team\\.[^.]+\\.(Shop|Upgrade)");
+    }
+
+    public static String normalizeArenaNpcLocationString(String value) {
+        String xyz = normalizeArenaLocationString(value);
+        String[] data = value.trim().replace("[", "").replace("]", "").split(",", -1);
+        if (data.length == 3) return xyz + ",0.0,0.0";
+        for (int i = 3; i < 5; i++) {
+            data[i] = data[i].trim();
+            if (!Float.isFinite(Float.parseFloat(data[i])))
+                throw new IllegalArgumentException("NPC 朝向必须为有限数值: " + value);
+        }
+        return xyz + "," + data[3] + "," + data[4];
     }
 
     /** 仅匹配插件管理的位置键，避免改动管理员自定义文本。 */

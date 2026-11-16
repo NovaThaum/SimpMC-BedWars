@@ -58,9 +58,9 @@ public class SpecialsListener implements Listener {
         if (b == null) return;
         Location l = b.getLocation();
 
-        if (BedWars.shop.getYml().getBoolean(ConfigPath.SHOP_SPECIAL_SILVERFISH_ENABLE)) {
-            if (!Misc.isProjectile(Material.valueOf(BedWars.shop.getYml().getString(ConfigPath.SHOP_SPECIAL_SILVERFISH_MATERIAL)))) {
-                if (i.getType() == Material.valueOf(BedWars.shop.getYml().getString(ConfigPath.SHOP_SPECIAL_SILVERFISH_MATERIAL))
+        if (BedWars.shop.getYml().getBoolean(ConfigPath.SHOP_SPECIAL_SILVERFISH_ENABLE) && specialMaterial(ConfigPath.SHOP_SPECIAL_SILVERFISH_MATERIAL) != null) {
+            if (!Misc.isProjectile(specialMaterial(ConfigPath.SHOP_SPECIAL_SILVERFISH_MATERIAL))) {
+                if (i.getType() == specialMaterial(ConfigPath.SHOP_SPECIAL_SILVERFISH_MATERIAL)
                         && nms.itemStackDataCompare(i, (short) BedWars.shop.getYml().getInt(ConfigPath.SHOP_SPECIAL_SILVERFISH_DATA))) {
                     e.setCancelled(true);
                     ITeam playerTeam = a.getTeam(p);
@@ -76,9 +76,9 @@ public class SpecialsListener implements Listener {
                 }
             }
         }
-        if (BedWars.shop.getYml().getBoolean(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_ENABLE)) {
-            if (!Misc.isProjectile(Material.valueOf(BedWars.shop.getYml().getString(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_MATERIAL)))) {
-                if (i.getType() == Material.valueOf(BedWars.shop.getYml().getString(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_MATERIAL))
+        if (BedWars.shop.getYml().getBoolean(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_ENABLE) && specialMaterial(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_MATERIAL) != null) {
+            if (!Misc.isProjectile(specialMaterial(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_MATERIAL))) {
+                if (i.getType() == specialMaterial(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_MATERIAL)
                         && nms.itemStackDataCompare(i, (short) BedWars.shop.getYml().getInt(ConfigPath.SHOP_SPECIAL_IRON_GOLEM_DATA))) {
                     e.setCancelled(true);
                     ITeam playerTeam = a.getTeam(p);
@@ -93,5 +93,9 @@ public class SpecialsListener implements Listener {
                 }
             }
         }
+    }
+    private static Material specialMaterial(String path) {
+        String name = BedWars.shop.getYml().getString(path);
+        return name == null ? null : Material.matchMaterial(com.andrei1058.bedwars.compat.LegacyMaterials.resolve(name).material());
     }
 }

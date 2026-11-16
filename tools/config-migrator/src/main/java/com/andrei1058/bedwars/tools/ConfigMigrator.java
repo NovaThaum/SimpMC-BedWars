@@ -1,5 +1,6 @@
 package com.andrei1058.bedwars.tools;
 
+import com.andrei1058.bedwars.compat.LegacyMaterials;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import java.io.*;
@@ -9,12 +10,6 @@ import java.util.*;
 
 /** Merges a modern BedWars YAML file into a legacy 1.8 template without overwriting the source. */
 public final class ConfigMigrator {
-    private static final Map<String, String> MATERIALS = Map.ofEntries(
-            Map.entry("PLAYER_HEAD", "SKULL_ITEM"), Map.entry("SKELETON_SKULL", "SKULL_ITEM"),
-            Map.entry("RED_BED", "BED"), Map.entry("BLUE_BED", "BED"), Map.entry("GREEN_BED", "BED"),
-            Map.entry("YELLOW_BED", "BED"), Map.entry("LIME_CONCRETE", "STAINED_GLASS_PANE"),
-            Map.entry("YELLOW_CONCRETE", "STAINED_GLASS_PANE"), Map.entry("RED_CONCRETE", "STAINED_GLASS_PANE"),
-            Map.entry("BLACK_STAINED_GLASS_PANE", "STAINED_GLASS_PANE"), Map.entry("WOODEN_SWORD", "WOOD_SWORD"));
     private static final Map<String, String> SOUNDS = Map.ofEntries(
             Map.entry("BLOCK_WOOL_STEP", "STEP_WOOL"), Map.entry("BLOCK_WOOD_STEP", "STEP_WOOD"),
             Map.entry("BLOCK_STONE_STEP", "STEP_STONE"), Map.entry("BLOCK_SAND_STEP", "STEP_SAND"),
@@ -109,6 +104,7 @@ public final class ConfigMigrator {
                         }
                     }
                 } else { report.add(relative + ": 跳过，1.8 目录没有对应模板"); continue; }
+                normalizeLegacyItems(target, "", warnings);
                 if (arenaFile) normalizeArenaCoordinates(target, "");
                 Path output = legacyDir.resolve(relative).normalize();
                 if (!output.startsWith(legacyDir)) throw new IllegalArgumentException("配置路径越界: " + relative);
@@ -221,11 +217,11 @@ public final class ConfigMigrator {
                     else skipped.add(path + " (源和目标类型不兼容)");
                 } else {
                     if (addMissingScalars) {
-                        Object converted = convert(value, path, warnings);
+                        Object converted = convertPreservingNpcFacing(value, existing, path, warnings);
                         target.put(entry.getKey(), converted);
                         migrated.add(path + " (使用 1.21.11 值)");
                     } else {
-                        Object converted = convert(value, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
+                        Object converted = convertPreservingNpcFacing(value, existing, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
                     }
                 }
             } else if (addMissingScalars) {
@@ -234,7 +230,22 @@ public final class ConfigMigrator {
                     } else notes.add(path + " (目标版无对应配置项，使用目标版默认值)");
         }
     }
+    private static Object convertPreservingNpcFacing(Object value, Object existing, String path, List<String> warnings) {
+        if (path.matches("(?i)Team\\.[^.]+\\.(Shop|Upgrade)") && value instanceof String source && existing instanceof String target) {
+            String[] src = source.replace("[", "").replace("]", "").split(",", -1);
+            String[] dst = target.replace("[", "").replace("]", "").split(",", -1);
+            if (src.length == 3 && dst.length == 5) return source.replace("[", "").replace("]", "") + "," + dst[3].trim() + "," + dst[4].trim();
+        }
+        return convert(value, path, warnings);
+    }
+
     private static Object convert(Object value, String path, List<String> warnings) {
+        if (path.startsWith("start-items-per-group.") && value instanceof List<?> list)
+            return list.stream().map(item -> {
+                if (!(item instanceof String text)) return item;
+                String[] parts = text.split(",", 2);
+                return LegacyMaterials.resolve(parts[0]).material() + (parts.length == 2 ? "," + parts[1] : "");
+            }).toList();
         if (!(value instanceof String s)) return value;
         String location = legacyLocation(s);
         if (location != null) return location;
@@ -244,9 +255,8 @@ public final class ConfigMigrator {
             return color;
         }
         String key = path.toLowerCase(Locale.ROOT);
-        Map<String,String> table = key.contains("sound") ? SOUNDS
-                : (key.contains("material") || key.endsWith(".item") ? MATERIALS : Collections.emptyMap());
-        String converted = table.getOrDefault(s, s);
+        String converted = key.contains("sound") ? SOUNDS.getOrDefault(s, s)
+                : (key.endsWith("material") || key.endsWith(".item") ? LegacyMaterials.resolve(s).material() : s);
         if (!converted.equals(s)) warnings.add(path + ": " + s + " -> " + converted);
         return converted;
     }
@@ -274,15 +284,16 @@ public final class ConfigMigrator {
                 normalizeLegacyItems(map(nested), path, warnings);
                 continue;
             }
-            if (!entry.getKey().equalsIgnoreCase("material") || !(entry.getValue() instanceof String material)) continue;
-            String legacy = MATERIALS.get(material.toUpperCase(Locale.ROOT));
-            if (legacy == null) continue;
+            if (!entry.getKey().endsWith("material") || !(entry.getValue() instanceof String material)) continue;
+            LegacyMaterials.Item item = LegacyMaterials.resolve(material);
+            String legacy = item.material();
+            if (legacy.equals(material) && item.data() == null) continue;
             entry.setValue(legacy);
             warnings.add(path + ": " + material + " -> " + legacy);
             Map<String,Object> parent = values;
-            int data = legacyData(material);
-            if (data >= 0) {
-                parent.put("data", data);
+            Integer data = item.data();
+            if (data != null) {
+                parent.put(entry.getKey().substring(0, entry.getKey().length() - "material".length()) + "data", data);
                 warnings.add(path + ".data: 自动映射为 " + data);
             }
         }
@@ -298,7 +309,7 @@ public final class ConfigMigrator {
             if (!(targetValue instanceof Map<?,?> targetMap)) continue;
             Map<String,Object> targetSection = map(targetMap);
             Object material = sourceSection.get("material");
-            if (material instanceof String name && MATERIALS.getOrDefault(name.toUpperCase(Locale.ROOT), name)
+            if (material instanceof String name && LegacyMaterials.resolve(name).material()
                     .equalsIgnoreCase(String.valueOf(targetSection.get("material")))
                     && sourceSection.get("data") instanceof Number data && !targetSection.containsKey("data")) {
                 targetSection.put("data", data);
@@ -306,17 +317,6 @@ public final class ConfigMigrator {
             }
             mergeDerivedLegacyItemData(sourceSection, targetSection, path, migrated);
         }
-    }
-
-    private static int legacyData(String material) {
-        return switch (material.toUpperCase(Locale.ROOT)) {
-            case "LIME_CONCRETE" -> 5;
-            case "YELLOW_CONCRETE" -> 4;
-            case "RED_CONCRETE" -> 14;
-            case "RED_BED", "BLUE_BED", "GREEN_BED", "YELLOW_BED" -> 0;
-            case "PLAYER_HEAD" -> 3;
-            default -> -1;
-        };
     }
 
     private static String legacyLocation(String value) {
@@ -339,21 +339,27 @@ public final class ConfigMigrator {
             Object value = entry.getValue();
             if (value instanceof Map<?,?> nested) normalizeArenaCoordinates(map(nested), path);
             else if (path.matches("(?i)(spectator-loc|waiting\\.(Loc|Pos[^.]+)|generator\\.(Diamond|Emerald)|Team\\.[^.]+\\.(Spawn|Bed|Shop|Upgrade|Iron|Gold|Diamond|Emerald|kill-drops-loc))")) {
-                if (value instanceof String text) entry.setValue(arenaCoordinates(text));
+                if (value instanceof String text) entry.setValue(arenaCoordinates(text, path));
                 else if (value instanceof List<?> list) entry.setValue(list.stream()
-                        .map(v -> v instanceof String text ? arenaCoordinates(text) : v).toList());
+                        .map(v -> v instanceof String text ? arenaCoordinates(text, path) : v).toList());
             }
         }
     }
 
-    private static String arenaCoordinates(String text) {
+    private static String arenaCoordinates(String text, String path) {
         String clean = text.trim().replace("[", "").replace("]", "");
         String[] parts = clean.split(",", -1);
         if (parts.length != 3 && parts.length != 5) return text;
         try {
             for (int i = 0; i < 3; i++)
                 if (!Double.isFinite(Double.parseDouble(parts[i].trim()))) return text;
-            return parts[0].trim() + "," + parts[1].trim() + "," + parts[2].trim();
+            String xyz = parts[0].trim() + "," + parts[1].trim() + "," + parts[2].trim();
+            if (path.matches("(?i)Team\\.[^.]+\\.(Shop|Upgrade)")) {
+                if (parts.length == 3) return xyz + ",0.0,0.0";
+                if (!Float.isFinite(Float.parseFloat(parts[3].trim())) || !Float.isFinite(Float.parseFloat(parts[4].trim()))) return text;
+                return xyz + "," + parts[3].trim() + "," + parts[4].trim();
+            }
+            return xyz;
         } catch (NumberFormatException ignored) { return text; }
     }
 

@@ -70,9 +70,11 @@ public class MySQL implements Database {
      *
      * @return true if connected successfully.
      */
-    public boolean connect() {
+    HikariConfig createPoolConfig() {
         HikariConfig hikariConfig = new HikariConfig();
 
+        // 使用插件内置且重定位的驱动，避免 DriverManager 选中服务器的 Connector/J 5.x。
+        hikariConfig.setDriverClassName(com.mysql.cj.jdbc.Driver.class.getName());
         hikariConfig.setPoolName("BedWars1058MySQLPool");
 
         hikariConfig.setMaximumPoolSize(poolSize);
@@ -102,16 +104,20 @@ public class MySQL implements Database {
         // Recover if connection gets interrupted
         hikariConfig.addDataSourceProperty("socketTimeout", String.valueOf(TimeUnit.SECONDS.toMillis(30)));
 
+        return hikariConfig;
+    }
+
+    public boolean connect() {
         try {
-            dataSource = new HikariDataSource(hikariConfig);
+            dataSource = new HikariDataSource(createPoolConfig());
         } catch (RuntimeException exception) {
             BedWars.plugin.getLogger().severe("MySQL connection pool initialization failed: " + exception.getMessage());
             dataSource = null;
             return false;
         }
 
-        try {
-            dataSource.getConnection();
+        try (Connection probe = dataSource.getConnection()) {
+            // 归还启动探针连接，不能永久占用一个连接池名额。
         } catch (SQLException e) {
             e.printStackTrace();
             dataSource.close();

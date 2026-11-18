@@ -1,3 +1,9 @@
+## 3.0.3：MySQL 认证协议不兼容
+
+- 原插件未内置或指定 MySQL 驱动，Hikari 按 JDBC URL 使用服务器的 com.mysql.jdbc 旧驱动，现代认证握手报 Client does not support authentication protocol。
+- 内置 Connector/J 8.4.0，重定位 com.mysql 与 Protobuf；通过实际驱动类的名称显式绑定 Hikari，避免服务器旧驱动优先级干扰。保留现有 SSL/证书策略，不自动开启公钥下载或更改认证方式。
+- 原启动探针 getConnection() 未关闭，永久占用一个池连接；改为 try-with-resources。
+
 ## 3.0.2 修复
 
 - **所有掉落物无法拾取**：1.8 Spigot EntityPlayer.ae() 受 collidesWithEntities 控制，EntityHuman 接触循环仅在 ae() 为 true 时调用掉落物和箭矢的原生拾取。原开局/复活路径持续传 false；现在仅活动参赛玩家启用，等待复活与旁观继续关闭。

@@ -1,3 +1,9 @@
+## 3.0.4：未加载统计导致入服事件异常
+
+- 大厅侧边栏使用会抛异常的 StatsManager.get 并捕获旧缓存引用；改为动态安全查询，缺失时显示加载中，不创建或保存零值统计。
+- SQLite 的 first_play/last_play 可能为空，原加载直接调用 toInstant 导致预登录中断；允许空时间。数据库查询失败向预登录传递错误，禁止把失败查询当作新玩家。
+- 正式登录确认最终 UUID 已有统计缓存，缺失时给出中文重连提示和诊断，不在主线程查数据库。
+
 ## 3.0.3：MySQL 认证协议不兼容
 
 - 原插件未内置或指定 MySQL 驱动，Hikari 按 JDBC URL 使用服务器的 com.mysql.jdbc 旧驱动，现代认证握手报 Client does not support authentication protocol。

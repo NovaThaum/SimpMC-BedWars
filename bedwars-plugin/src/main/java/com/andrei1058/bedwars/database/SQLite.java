@@ -173,8 +173,10 @@ public class SQLite implements Database {
                 statement.setString(1, uuid.toString());
                 try (ResultSet result = statement.executeQuery()) {
                     if (result.next()) {
-                        stats.setFirstPlay(result.getTimestamp("first_play").toInstant());
-                        stats.setLastPlay(result.getTimestamp("last_play").toInstant());
+                        java.sql.Timestamp firstPlay = result.getTimestamp("first_play");
+                        java.sql.Timestamp lastPlay = result.getTimestamp("last_play");
+                        stats.setFirstPlay(firstPlay == null ? null : firstPlay.toInstant());
+                        stats.setLastPlay(lastPlay == null ? null : lastPlay.toInstant());
                         stats.setWins(result.getInt("wins"));
                         stats.setKills(result.getInt("kills"));
                         stats.setFinalKills(result.getInt("final_kills"));
@@ -187,7 +189,7 @@ public class SQLite implements Database {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("无法读取玩家统计：" + uuid, e);
         }
         return stats;
     }

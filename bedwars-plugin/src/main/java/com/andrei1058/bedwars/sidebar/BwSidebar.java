@@ -250,6 +250,25 @@ public class BwSidebar implements ISidebar {
         return tabList.isTabFormattingDisabled();
     }
 
+    static void addLobbyStatsPlaceholders(ConcurrentLinkedQueue<PlaceholderProvider> providers, UUID uuid) {
+        addLobbyStat(providers, uuid, "{kills}", PlayerStats::getKills);
+        addLobbyStat(providers, uuid, "{finalKills}", PlayerStats::getFinalKills);
+        addLobbyStat(providers, uuid, "{beds}", PlayerStats::getBedsDestroyed);
+        addLobbyStat(providers, uuid, "{deaths}", PlayerStats::getDeaths);
+        addLobbyStat(providers, uuid, "{finalDeaths}", PlayerStats::getFinalDeaths);
+        addLobbyStat(providers, uuid, "{wins}", PlayerStats::getWins);
+        addLobbyStat(providers, uuid, "{losses}", PlayerStats::getLosses);
+        addLobbyStat(providers, uuid, "{gamesPlayed}", PlayerStats::getGamesPlayed);
+    }
+
+    private static void addLobbyStat(ConcurrentLinkedQueue<PlaceholderProvider> providers, UUID uuid,
+                                     String placeholder, java.util.function.ToIntFunction<PlayerStats> value) {
+        providers.add(new PlaceholderProvider(placeholder, () -> {
+            PlayerStats stats = BedWars.getStatsManager().getUnsafe(uuid);
+            return stats == null ? "加载中" : String.valueOf(value.applyAsInt(stats));
+        }));
+    }
+
     /**
      * Get placeholders for given player.
      *
@@ -280,34 +299,7 @@ public class BwSidebar implements ISidebar {
             providers.add(new PlaceholderProvider("{on}", () ->
                     String.valueOf(Bukkit.getOnlinePlayers().size()))
             );
-            PlayerStats persistentStats = BedWars.getStatsManager().get(player.getUniqueId());
-            //noinspection ConstantConditions
-            if (null != persistentStats) {
-                providers.add(new PlaceholderProvider("{kills}", () ->
-                        String.valueOf(persistentStats.getKills()))
-                );
-                providers.add(new PlaceholderProvider("{finalKills}", () ->
-                        String.valueOf(persistentStats.getFinalKills()))
-                );
-                providers.add(new PlaceholderProvider("{beds}", () ->
-                        String.valueOf(persistentStats.getBedsDestroyed()))
-                );
-                providers.add(new PlaceholderProvider("{deaths}", () ->
-                        String.valueOf(persistentStats.getDeaths()))
-                );
-                providers.add(new PlaceholderProvider("{finalDeaths}", () ->
-                        String.valueOf(persistentStats.getFinalDeaths()))
-                );
-                providers.add(new PlaceholderProvider("{wins}", () ->
-                        String.valueOf(persistentStats.getWins()))
-                );
-                providers.add(new PlaceholderProvider("{losses}", () ->
-                        String.valueOf(persistentStats.getLosses()))
-                );
-                providers.add(new PlaceholderProvider("{gamesPlayed}", () ->
-                        String.valueOf(persistentStats.getGamesPlayed()))
-                );
-            }
+            addLobbyStatsPlaceholders(providers, player.getUniqueId());
         } else {
             providers.add(new PlaceholderProvider("{on}", () -> arenaPlayerCount(arenaContext)));
             providers.add(new PlaceholderProvider("{max}", () -> String.valueOf(arenaContext.getMaxPlayers())));

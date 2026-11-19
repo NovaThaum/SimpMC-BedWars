@@ -44,22 +44,35 @@ import java.util.UUID;
 
 public class StatsListener implements Listener {
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onAsyncPreLoginEvent(AsyncPlayerPreLoginEvent event) {
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             // Do nothing if login fails
             return;
         }
-        PlayerStats stats = BedWars.getRemoteDatabase().fetchStats(event.getUniqueId());
-        stats.setName(event.getName());
-        BedWars.getStatsManager().put(event.getUniqueId(), stats);
+        try {
+            PlayerStats stats = java.util.Objects.requireNonNull(
+                    BedWars.getRemoteDatabase().fetchStats(event.getUniqueId()), "数据库未返回玩家统计");
+            stats.setName(event.getName());
+            BedWars.getStatsManager().put(event.getUniqueId(), stats);
+        } catch (RuntimeException failure) {
+            BedWars.getStatsManager().remove(event.getUniqueId());
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "统计数据加载失败，请稍后重新连接。");
+            BedWars.plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "无法加载玩家统计：" + event.getUniqueId(), failure);
+        }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerLoginEvent(PlayerLoginEvent event) {
         if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
             // Prevent memory leak if login fails
             BedWars.getStatsManager().remove(event.getPlayer().getUniqueId());
+        } else if (BedWars.getStatsManager().getUnsafe(event.getPlayer().getUniqueId()) == null) {
+            // Never let gameplay save an empty replacement for statistics that failed to load.
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, "统计数据尚未加载，请重新连接；若重复出现请联系管理员。");
+            BedWars.plugin.getLogger().warning("登录时缺少玩家统计缓存：" + event.getPlayer().getUniqueId()
+                    + "，请检查此前的数据库错误及修改登录 UUID 的插件。");
         }
     }
 

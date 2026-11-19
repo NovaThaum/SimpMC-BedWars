@@ -255,7 +255,7 @@ public class MySQL implements Database {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("无法读取玩家统计：" + uuid, e);
         }
         return stats;
     }

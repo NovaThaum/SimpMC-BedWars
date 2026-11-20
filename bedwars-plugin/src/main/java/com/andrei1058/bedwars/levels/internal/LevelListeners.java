@@ -27,8 +27,8 @@ import com.andrei1058.bedwars.api.events.player.PlayerBedBreakEvent;
 import com.andrei1058.bedwars.api.events.player.PlayerKillEvent;
 import com.andrei1058.bedwars.api.events.player.PlayerLeaveArenaEvent;
 import com.andrei1058.bedwars.api.events.player.PlayerXpGainEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.configuration.LevelsConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -81,7 +81,7 @@ public class LevelListeners implements Listener {
                 int xpAmount = LevelsConfig.levels.getInt("xp-rewards.game-win");
                 if (xpAmount > 0){
                     PlayerLevel.getLevelByPlayer(p).addXp(xpAmount, PlayerXpGainEvent.XpSource.GAME_WIN);
-                    p1.sendMessage(Language.getMsg(p1, Messages.XP_REWARD_WIN).replace("{xp}", String.valueOf(xpAmount)));
+                    p1.sendMessage(ChineseMessages.getMsg(p1, Messages.XP_REWARD_WIN).replace("{xp}", String.valueOf(xpAmount)));
                 }
                 ITeam bwt = e.getArena().getExTeam(p1.getUniqueId());
                 if (bwt != null) {
@@ -92,7 +92,7 @@ public class LevelListeners implements Listener {
                             //noinspection deprecation
                             int tr = xpAmountPerTmt * bwt.getMembersCache().size();
                             PlayerLevel.getLevelByPlayer(p).addXp(tr, PlayerXpGainEvent.XpSource.PER_TEAMMATE);
-                            p1.sendMessage(Language.getMsg(p1, "xp-reward-per-teammate").replace("{xp}", String.valueOf(tr)));
+                            p1.sendMessage(ChineseMessages.getMsg(p1, "xp-reward-per-teammate").replace("{xp}", String.valueOf(tr)));
                         }
                     }
                 }
@@ -111,7 +111,7 @@ public class LevelListeners implements Listener {
                             //noinspection deprecation
                             int tr = LevelsConfig.levels.getInt("xp-rewards.per-teammate") * bwt.getMembersCache().size();
                             PlayerLevel.getLevelByPlayer(p).addXp(tr, PlayerXpGainEvent.XpSource.PER_TEAMMATE);
-                            p1.sendMessage(Language.getMsg(p1, Messages.XP_REWARD_PER_TEAMMATE).replace("{xp}", String.valueOf(tr)));
+                            p1.sendMessage(ChineseMessages.getMsg(p1, Messages.XP_REWARD_PER_TEAMMATE).replace("{xp}", String.valueOf(tr)));
                         }
                     }
                 }
@@ -137,7 +137,7 @@ public class LevelListeners implements Listener {
         int bedDestroy = LevelsConfig.levels.getInt("xp-rewards.bed-destroyed");
         if (bedDestroy > 0) {
             PlayerLevel.getLevelByPlayer(player.getUniqueId()).addXp(bedDestroy, PlayerXpGainEvent.XpSource.BED_DESTROYED);
-            player.sendMessage(Language.getMsg(player, Messages.XP_REWARD_BED_DESTROY).replace("{xp}", String.valueOf(bedDestroy)));
+            player.sendMessage(ChineseMessages.getMsg(player, Messages.XP_REWARD_BED_DESTROY).replace("{xp}", String.valueOf(bedDestroy)));
         }
     }
 
@@ -153,12 +153,12 @@ public class LevelListeners implements Listener {
         if (e.getCause ().isFinalKill ()) {
             if (finalKill > 0) {
                 PlayerLevel.getLevelByPlayer(player.getUniqueId()).addXp(finalKill, PlayerXpGainEvent.XpSource.FINAL_KILL);
-                player.sendMessage(Language.getMsg(player, Messages.XP_REWARD_FINAL_KILL).replace("{xp}", String.valueOf(finalKill)));
+                player.sendMessage(ChineseMessages.getMsg(player, Messages.XP_REWARD_FINAL_KILL).replace("{xp}", String.valueOf(finalKill)));
             }
         } else {
             if (regularKill > 0) {
                 PlayerLevel.getLevelByPlayer(player.getUniqueId()).addXp(regularKill, PlayerXpGainEvent.XpSource.REGULAR_KILL);
-                player.sendMessage(Language.getMsg(player, Messages.XP_REWARD_REGULAR_KILL).replace("{xp}", String.valueOf(regularKill)));
+                player.sendMessage(ChineseMessages.getMsg(player, Messages.XP_REWARD_REGULAR_KILL).replace("{xp}", String.valueOf(regularKill)));
             }
         }
     }

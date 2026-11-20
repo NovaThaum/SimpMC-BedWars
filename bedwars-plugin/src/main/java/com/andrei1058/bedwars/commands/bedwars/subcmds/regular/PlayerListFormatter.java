@@ -1,6 +1,6 @@
 package com.andrei1058.bedwars.commands.bedwars.subcmds.regular;
 
-import com.andrei1058.bedwars.language.MatchmakingMessages;
+import com.andrei1058.bedwars.messages.MatchmakingMessages;
 
 import java.util.ArrayList;
 import java.util.Collection;

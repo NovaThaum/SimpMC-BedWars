@@ -24,7 +24,7 @@ import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.stats.DefaultStatistics;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.Misc;
 import org.bukkit.Bukkit;
@@ -42,14 +42,19 @@ public class MainConfig extends ConfigManager {
 
     static void migrateChineseOnly(YamlConfiguration yml) {
         yml.set("language", null);
-        yml.set(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES, null);
+        yml.set("disabled-languages", null);
+    }
+
+    static void migrateFixedFireball(YamlConfiguration yml) {
+        yml.set("fireball", null);
+        if (yml.getDefaults() != null) yml.getDefaults().set("fireball", null);
     }
 
     public MainConfig(Plugin plugin, String name) {
         super(plugin, name, BedWars.plugin.getDataFolder().getPath());
 
         YamlConfiguration yml = getYml();
-        if (yml.isSet("language") || yml.isSet(ConfigPath.GENERAL_CONFIGURATION_DISABLED_LANGUAGES)) {
+        if (yml.isSet("language") || yml.isSet("disabled-languages")) {
             java.nio.file.Path original = new File(plugin.getDataFolder(), name + ".yml").toPath();
             java.nio.file.Path backup = original.resolveSibling(name + ".yml.before-chinese-only.bak");
             try {
@@ -59,8 +64,16 @@ public class MainConfig extends ConfigManager {
             }
         }
         migrateChineseOnly(yml);
-        boolean hadFireballHorizontal = yml.contains(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL);
-        double oldFireballHorizontal = yml.getDouble(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL, Double.NaN);
+        if (yml.isSet("fireball")) {
+            java.nio.file.Path original = new File(plugin.getDataFolder(), name + ".yml").toPath();
+            java.nio.file.Path backup = original.resolveSibling(name + ".yml.before-fixed-fireball.bak");
+            try {
+                if (!java.nio.file.Files.exists(backup)) java.nio.file.Files.copy(original, backup);
+            } catch (IOException ex) {
+                throw new IllegalStateException("无法备份旧火球配置，已停止迁移", ex);
+            }
+        }
+        migrateFixedFireball(yml);
         boolean hadTntEnemyDamage = yml.contains(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS);
         double oldTntEnemyDamage = yml.getDouble(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS, Double.NaN);
         boolean hadSeasonalEffects = yml.contains("seasonal-effects.enabled");
@@ -175,17 +188,6 @@ public class MainConfig extends ConfigManager {
         yml.addDefault(ConfigPath.GENERAL_TNT_AUTO_IGNITE, true);
         yml.addDefault(ConfigPath.GENERAL_TNT_FUSE_TICKS, 45);
 
-        // fireball category
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_EXPLOSION_SIZE, 3);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_SPEED_MULTIPLIER, 10);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_MAKE_FIRE, false);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL, 1.35);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_VERTICAL, 0.65);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_COOLDOWN, 0.5);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_DAMAGE_SELF, 2.0);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_DAMAGE_ENEMY, 2.0);
-        yml.addDefault(ConfigPath.GENERAL_FIREBALL_DAMAGE_TEAMMATES, 0.0);
-        //
         yml.addDefault("database.enable", false);
         yml.addDefault("database.host", "localhost");
         yml.addDefault("database.port", 3306);
@@ -268,9 +270,7 @@ public class MainConfig extends ConfigManager {
         if (!hadSeasonalEffects && !oldHalloweenEnabled) {
             yml.set("seasonal-effects.enabled", false);
         }
-        if (hadFireballHorizontal && Double.compare(oldFireballHorizontal, 1.0D) == 0) {
-            yml.set(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL, 1.35D);
-        }
+
         if (hadTntEnemyDamage && Double.compare(oldTntEnemyDamage, 10.0D) == 0) {
             yml.set(ConfigPath.GENERAL_TNT_JUMP_DAMAGE_OTHERS, 6.0D);
         }
@@ -407,14 +407,14 @@ public class MainConfig extends ConfigManager {
 
         //Finished old configuration conversion
 
-        // Language 构造时已注册唯一的简体中文消息配置。
+        // ChineseMessages 构造时已注册唯一的简体中文消息配置。
 
         BedWars.setDebug(yml.getBoolean("debug"));
-        for (Language language : Language.getLanguages()) {
-            com.andrei1058.bedwars.language.MatchQueryMessages.install(language);
-            com.andrei1058.bedwars.language.MatchmakingMessages.install(language);
-            com.andrei1058.bedwars.language.RecallMessages.install(language);
-        }
+        ChineseMessages language = ChineseMessages.get();
+        com.andrei1058.bedwars.messages.MatchQueryMessages.install(language);
+        com.andrei1058.bedwars.messages.MatchmakingMessages.install(language);
+        com.andrei1058.bedwars.messages.RecallMessages.install(language);
+
         new ConfigManager(plugin, "bukkit", Bukkit.getWorldContainer().getPath()).set("ticks-per.autosave", -1);
 
         Bukkit.spigot().getConfig().set("commands.send-namespaced", false);
@@ -469,7 +469,6 @@ public class MainConfig extends ConfigManager {
             save();
         }
     }
-
 
     /**
      * Add Pre Game Command Item To

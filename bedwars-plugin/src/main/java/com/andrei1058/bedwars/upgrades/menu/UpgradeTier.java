@@ -21,8 +21,8 @@
 package com.andrei1058.bedwars.upgrades.menu;
 
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.upgrades.UpgradeAction;
 import com.andrei1058.bedwars.upgrades.UpgradesManager;
 import com.andrei1058.bedwars.upgrades.upgradeaction.*;
@@ -50,8 +50,8 @@ public class UpgradeTier {
     public UpgradeTier(String parentName, String name, ItemStack displayItem, int cost, Material currency) {
         this.displayItem = BedWars.nms.addCustomData(displayItem, "MCONT_" + parentName);
         this.name = name;
-        Language.saveIfNotExists(Messages.UPGRADES_UPGRADE_TIER_ITEM_NAME.replace("{name}", parentName.replace("upgrade-", "")).replace("{tier}", name), "&cName not set");
-        Language.saveIfNotExists(Messages.UPGRADES_UPGRADE_TIER_ITEM_LORE.replace("{name}", parentName.replace("upgrade-", "")).replace("{tier}", name), Collections.singletonList("&cLore not set"));
+        ChineseMessages.saveIfNotExists(Messages.UPGRADES_UPGRADE_TIER_ITEM_NAME.replace("{name}", parentName.replace("upgrade-", "")).replace("{tier}", name), "&cName not set");
+        ChineseMessages.saveIfNotExists(Messages.UPGRADES_UPGRADE_TIER_ITEM_LORE.replace("{name}", parentName.replace("upgrade-", "")).replace("{tier}", name), Collections.singletonList("&cLore not set"));
         this.cost = cost;
         this.currency = currency;
 

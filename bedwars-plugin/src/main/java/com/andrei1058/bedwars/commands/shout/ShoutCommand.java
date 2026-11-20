@@ -23,8 +23,8 @@ package com.andrei1058.bedwars.commands.shout;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -48,7 +48,7 @@ public class ShoutCommand extends BukkitCommand {
         Player p = (Player) s;
         IArena a = Arena.getArenaByPlayer(p);
         if (a == null || a.isSpectator(p)) {
-            p.sendMessage(Language.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
+            p.sendMessage(ChineseMessages.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
             return true;
         }
         StringBuilder sb = new StringBuilder();

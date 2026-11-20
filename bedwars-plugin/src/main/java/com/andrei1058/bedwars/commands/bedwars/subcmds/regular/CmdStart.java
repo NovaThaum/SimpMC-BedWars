@@ -26,7 +26,7 @@ import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.commands.bedwars.MainCommand;
@@ -37,7 +37,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class CmdStart extends SubCommand {
 
@@ -69,8 +69,8 @@ public class CmdStart extends SubCommand {
         if (a.getStatus() == GameState.playing) return true;
         if (a.getStatus() == GameState.restarting) return true;
         if (!com.andrei1058.bedwars.arena.MatchStartGate.isOpen()) {
-            p.sendMessage(com.andrei1058.bedwars.language.MatchmakingMessages.text(p,
-                    com.andrei1058.bedwars.language.MatchmakingMessages.Key.MATCHES_BLOCKED));
+            p.sendMessage(com.andrei1058.bedwars.messages.MatchmakingMessages.text(p,
+                    com.andrei1058.bedwars.messages.MatchmakingMessages.Key.MATCHES_BLOCKED));
             return true;
         }
         if (a.getStartingTask() == null){

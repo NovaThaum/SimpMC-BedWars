@@ -22,8 +22,8 @@ package com.andrei1058.bedwars.upgrades;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.IArena;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.upgrades.MenuContent;
 import com.andrei1058.bedwars.api.upgrades.UpgradesIndex;
 import com.andrei1058.bedwars.arena.Misc;
@@ -458,13 +458,13 @@ public class UpgradesManager {
                 break;
         }
 
-        return Language.getMsg(p, c);
+        return ChineseMessages.getMsg(p, c);
     }
 
     public static String getCurrencyMsg(Player p, int money, String currency) {
         String c;
         if (currency == null) {
-            return Language.getMsg(p, money == 1 ? Messages.MEANING_VAULT_SINGULAR : Messages.MEANING_VAULT_PLURAL);
+            return ChineseMessages.getMsg(p, money == 1 ? Messages.MEANING_VAULT_SINGULAR : Messages.MEANING_VAULT_PLURAL);
         }
 
         switch (currency.toLowerCase()) {
@@ -485,7 +485,7 @@ public class UpgradesManager {
                 break;
         }
 
-        return Language.getMsg(p, c);
+        return ChineseMessages.getMsg(p, c);
     }
 
     public static String getCurrencyMsg(Player p, int money, Material currency) {
@@ -509,7 +509,7 @@ public class UpgradesManager {
                 break;
         }
 
-        return Language.getMsg(p, c);
+        return ChineseMessages.getMsg(p, c);
     }
 
     public static ChatColor getCurrencyColor(Material currency) {

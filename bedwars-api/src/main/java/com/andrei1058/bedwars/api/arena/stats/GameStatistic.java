@@ -1,6 +1,6 @@
 package com.andrei1058.bedwars.api.arena.stats;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +19,7 @@ public interface GameStatistic<T> extends Comparable<GameStatistic<T>> {
      * Value displayed in tops etc.
      * @param language - message receiver.
      */
-    String getDisplayValue(@Nullable Language language);
+    String getDisplayValue(@Nullable ChineseMessages language);
 
     /**
      * Comparison for tops.

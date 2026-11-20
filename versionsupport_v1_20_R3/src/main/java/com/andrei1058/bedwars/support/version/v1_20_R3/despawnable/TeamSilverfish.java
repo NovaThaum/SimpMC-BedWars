@@ -1,8 +1,8 @@
 package com.andrei1058.bedwars.support.version.v1_20_R3.despawnable;
 
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import net.minecraft.world.entity.ai.goal.PathfinderGoalFloat;
 import net.minecraft.world.entity.ai.goal.PathfinderGoalMeleeAttack;
@@ -27,7 +27,7 @@ public class TeamSilverfish extends DespawnableProvider<Silverfish> {
 
     @Override
     String getDisplayName(@NotNull DespawnableAttributes attr, @NotNull ITeam team) {
-        Language lang = Language.getDefaultLanguage();
+        ChineseMessages lang = ChineseMessages.get();
         return lang.m(Messages.SHOP_UTILITY_NPC_SILVERFISH_NAME).replace("{despawn}", String.valueOf(attr.despawnSeconds())
                 .replace("{health}", StringUtils.repeat(lang.m(Messages.FORMATTING_DESPAWNABLE_UTILITY_NPC_HEALTH) + " ", 10))
                 .replace("{TeamColor}", team.getColor().chat().toString())

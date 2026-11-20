@@ -23,8 +23,8 @@ package com.andrei1058.bedwars.commands.bedwars;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.commands.bedwars.subcmds.regular.*;
@@ -48,7 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class MainCommand extends BukkitCommand implements ParentCommand {
 
@@ -165,7 +165,7 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
             if (s instanceof Player) {
                 s.sendMessage(getMsg((Player) s, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
             } else {
-                s.sendMessage(Language.getDefaultLanguage().m(Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
+                s.sendMessage(ChineseMessages.get().m(Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
             }
         }
         return true;
@@ -226,7 +226,6 @@ public class MainCommand extends BukkitCommand implements ParentCommand {
         }
         return null;
     }
-
 
     @Override
     public List<SubCommand> getSubCommands() {

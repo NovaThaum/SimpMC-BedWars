@@ -13,7 +13,7 @@ package com.andrei1058.bedwars.lobbysocket;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.Bukkit;
 
 import java.util.UUID;
@@ -47,17 +47,17 @@ public final class LoadedUser {
     private static final ConcurrentHashMap<UUID, LoadedUser> loaded =
             new ConcurrentHashMap<UUID, LoadedUser>();
 
-    public LoadedUser(String uuid, String arenaIdentifier, String langIso,
+    public LoadedUser(String uuid, String arenaIdentifier,
                       String partyOwnerOrSpectateTarget) {
-        this(uuid, arenaIdentifier, langIso, partyOwnerOrSpectateTarget, "", "AUTO", "");
+        this(uuid, arenaIdentifier, partyOwnerOrSpectateTarget, "", "AUTO", "");
     }
 
-    public LoadedUser(String uuid, String arenaIdentifier, String langIso,
+    public LoadedUser(String uuid, String arenaIdentifier,
                       String partyOwnerOrSpectateTarget, String requestId) {
-        this(uuid, arenaIdentifier, langIso, partyOwnerOrSpectateTarget, requestId, "AUTO", "");
+        this(uuid, arenaIdentifier, partyOwnerOrSpectateTarget, requestId, "AUTO", "");
     }
 
-    public LoadedUser(String uuid, String arenaIdentifier, String langIso,
+    public LoadedUser(String uuid, String arenaIdentifier,
                       String partyOwnerOrSpectateTarget, String requestId,
                       String joinMode, String rejoinReservationId) {
         if (Bukkit.getWorld(arenaIdentifier) == null) {
@@ -130,10 +130,6 @@ public final class LoadedUser {
         if (!PreloadRequestPolicy.matches(requestId, cancellationRequestId)) return false;
         destroy(reason);
         return true;
-    }
-
-    public Language getLanguage() {
-        return Language.getDefaultLanguage();
     }
 
     public static LoadedUser getPreLoaded(UUID uuid) {

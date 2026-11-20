@@ -22,8 +22,8 @@ package com.andrei1058.bedwars.shop.main;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.shop.ShopCache;
 import com.andrei1058.bedwars.shop.ShopManager;
 import org.bukkit.Bukkit;
@@ -83,7 +83,6 @@ public class ShopCategory {
                 yml.get(path + ConfigPath.SHOP_CATEGORY_ITEM_AMOUNT) == null ? 1 : yml.getInt(path + ConfigPath.SHOP_CATEGORY_ITEM_AMOUNT),
                 (short) (yml.get(path + ConfigPath.SHOP_CATEGORY_ITEM_DATA) == null ? 0 : yml.getInt(path + ConfigPath.SHOP_CATEGORY_ITEM_DATA)));
 
-
         if (yml.get(path + ConfigPath.SHOP_CATEGORY_ITEM_ENCHANTED) != null) {
             if (yml.getBoolean(path + ConfigPath.SHOP_CATEGORY_ITEM_ENCHANTED)) {
                 itemStack = ShopManager.enchantItem(itemStack);
@@ -122,7 +121,7 @@ public class ShopCategory {
         if (player.getOpenInventory().getTopInventory() == null) return;
         ShopIndex.indexViewers.remove(player.getUniqueId());
 
-        Inventory inv = Bukkit.createInventory(null, index.getInvSize(), Language.getMsg(player, invNamePath));
+        Inventory inv = Bukkit.createInventory(null, index.getInvSize(), ChineseMessages.getMsg(player, invNamePath));
 
         inv.setItem(index.getQuickBuyButton().getSlot(), index.getQuickBuyButton().getItemStack(player));
 
@@ -153,8 +152,8 @@ public class ShopCategory {
         ItemStack i = itemStack.clone();
         ItemMeta im = i.getItemMeta();
         if (im != null) {
-            im.setDisplayName(Language.getMsg(player, itemNamePath));
-            im.setLore(Language.getList(player, itemLorePath));
+            im.setDisplayName(ChineseMessages.getMsg(player, itemNamePath));
+            im.setLore(ChineseMessages.getList(player, itemLorePath));
             i.setItemMeta(im);
         }
         return i;

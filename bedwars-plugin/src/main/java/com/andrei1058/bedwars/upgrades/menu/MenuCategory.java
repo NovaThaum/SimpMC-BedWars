@@ -22,8 +22,8 @@ package com.andrei1058.bedwars.upgrades.menu;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.upgrades.MenuContent;
 import com.andrei1058.bedwars.upgrades.UpgradesManager;
 import org.bukkit.Bukkit;
@@ -48,9 +48,9 @@ public class MenuCategory implements MenuContent {
     public MenuCategory(String name, ItemStack displayItem) {
         this.name = name;
         this.displayItem = BedWars.nms.addCustomData(displayItem, "MCONT_" + name);
-        Language.saveIfNotExists(Messages.UPGRADES_CATEGORY_GUI_NAME_PATH + name.replace("category-", ""), "&8" + name);
-        Language.saveIfNotExists(Messages.UPGRADES_CATEGORY_ITEM_NAME_PATH + name.replace("category-", ""), "&cName not set");
-        Language.saveIfNotExists(Messages.UPGRADES_CATEGORY_ITEM_LORE_PATH + name.replace("category-", ""), Collections.singletonList("&cLore not set"));
+        ChineseMessages.saveIfNotExists(Messages.UPGRADES_CATEGORY_GUI_NAME_PATH + name.replace("category-", ""), "&8" + name);
+        ChineseMessages.saveIfNotExists(Messages.UPGRADES_CATEGORY_ITEM_NAME_PATH + name.replace("category-", ""), "&cName not set");
+        ChineseMessages.saveIfNotExists(Messages.UPGRADES_CATEGORY_ITEM_LORE_PATH + name.replace("category-", ""), Collections.singletonList("&cLore not set"));
     }
 
     /**
@@ -71,8 +71,8 @@ public class MenuCategory implements MenuContent {
         ItemStack i = new ItemStack(displayItem);
         ItemMeta im = i.getItemMeta();
         if (im != null) {
-            im.setDisplayName(Language.getMsg(player, Messages.UPGRADES_CATEGORY_ITEM_NAME_PATH + name.replace("category-", "")));
-            List<String> lore = Language.getList(player, Messages.UPGRADES_CATEGORY_ITEM_LORE_PATH + name.replace("category-", ""));
+            im.setDisplayName(ChineseMessages.getMsg(player, Messages.UPGRADES_CATEGORY_ITEM_NAME_PATH + name.replace("category-", "")));
+            List<String> lore = ChineseMessages.getList(player, Messages.UPGRADES_CATEGORY_ITEM_LORE_PATH + name.replace("category-", ""));
 
             if (name.equalsIgnoreCase("traps")) {
                 int queueLimit = UpgradesManager.getConfiguration().getInt(team.getArena().getGroup().toLowerCase() + "-upgrades-settings.trap-queue-limit");
@@ -81,7 +81,7 @@ public class MenuCategory implements MenuContent {
                 }
                 if (queueLimit == team.getActiveTraps().size()) {
                     lore.add("");
-                    lore.add(Language.getMsg(player, Messages.UPGRADES_TRAP_QUEUE_LIMIT));
+                    lore.add(ChineseMessages.getMsg(player, Messages.UPGRADES_TRAP_QUEUE_LIMIT));
                 }
             }
             im.setLore(lore);
@@ -103,11 +103,11 @@ public class MenuCategory implements MenuContent {
                 queueLimit = UpgradesManager.getConfiguration().getInt("default-upgrades-settings.trap-queue-limit");
             }
             if (queueLimit <= team.getActiveTraps().size()){
-                player.sendMessage(Language.getMsg(player, Messages.UPGRADES_TRAP_QUEUE_LIMIT));
+                player.sendMessage(ChineseMessages.getMsg(player, Messages.UPGRADES_TRAP_QUEUE_LIMIT));
                 return;
             }
         }
-        Inventory inv = Bukkit.createInventory(null, 45, Language.getMsg(player, Messages.UPGRADES_CATEGORY_GUI_NAME_PATH + name.replace("category-", "")));
+        Inventory inv = Bukkit.createInventory(null, 45, ChineseMessages.getMsg(player, Messages.UPGRADES_CATEGORY_GUI_NAME_PATH + name.replace("category-", "")));
         for (Map.Entry<Integer, MenuContent> entry : menuContentBySlot.entrySet()) {
             inv.setItem(entry.getKey(), entry.getValue().getDisplayItem(player, team));
         }

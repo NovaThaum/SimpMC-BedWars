@@ -27,8 +27,8 @@ import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.entity.Despawnable;
 import com.andrei1058.bedwars.api.events.player.PlayerKillEvent;
 import com.andrei1058.bedwars.api.exceptions.InvalidEffectException;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import com.andrei1058.bedwars.support.version.common.VersionCommon;
 import net.minecraft.server.v1_8_R3.*;
@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 @Deprecated
 @SuppressWarnings("unused")
@@ -284,22 +284,18 @@ public class v1_8_R3 extends VersionSupport {
 
         spawnVillager(l);
 
-        for (Player p : players) {
-            String[] nume = getMsg(p, name1).split(",");
+        {
+            String[] nume = ChineseMessages.get().m(name1).split(",");
             if (nume.length == 1) {
                 ArmorStand a = createArmorStand(nume[0], l.clone().add(0, 1.85, 0));
-                new ShopHolo(Language.getPlayerLanguage(p).getIso(), a, null, l, arena);
+                new ShopHolo(a, null, l, arena);
             } else {
                 ArmorStand a = createArmorStand(nume[0], l.clone().add(0, 2.1, 0));
                 ArmorStand b = createArmorStand(nume[1], l.clone().add(0, 1.85, 0));
-                new ShopHolo(Language.getPlayerLanguage(p).getIso(), a, b, l, arena);
+                new ShopHolo(a, b, l, arena);
             }
         }
-        for (ShopHolo sh : ShopHolo.getShopHolo()) {
-            if (sh.getA() == arena) {
-                sh.update();
-            }
-        }
+
     }
 
     @Override
@@ -736,6 +732,31 @@ public class v1_8_R3 extends VersionSupport {
     @Override
     public String getMainLevel() {
         return ((DedicatedServer) MinecraftServer.getServer()).propertyManager.properties.getProperty("level-name");
+    }
+
+    @Override
+    public Fireball setFireballAcceleration(Fireball fireball, Vector acceleration) {
+        EntityFireball fb = ((CraftFireball) fireball).getHandle();
+        fb.dirX = acceleration.getX(); fb.dirY = acceleration.getY(); fb.dirZ = acceleration.getZ();
+        return fireball;
+    }
+
+    @Override
+    public void damageFireball(Player target, Fireball fireball, double damage, boolean attributed) {
+        EntityPlayer victim = ((CraftPlayer) target).getHandle();
+        net.minecraft.server.v1_8_R3.Entity source = attributed && fireball.getShooter() instanceof Player
+                ? ((CraftPlayer) fireball.getShooter()).getHandle() : null;
+        net.minecraft.server.v1_8_R3.Explosion explosion = new net.minecraft.server.v1_8_R3.Explosion(
+                victim.world, source, fireball.getLocation().getX(), fireball.getLocation().getY(),
+                fireball.getLocation().getZ(), 3.25F, false, false);
+        net.minecraft.server.v1_8_R3.Entity previous = org.bukkit.craftbukkit.v1_8_R3.event.CraftEventFactory.entityDamage;
+        try {
+            org.bukkit.craftbukkit.v1_8_R3.event.CraftEventFactory.entityDamage = attributed
+                    ? ((CraftFireball) fireball).getHandle() : null;
+            victim.damageEntity(net.minecraft.server.v1_8_R3.DamageSource.explosion(explosion), (float) damage);
+        } finally {
+            org.bukkit.craftbukkit.v1_8_R3.event.CraftEventFactory.entityDamage = previous;
+        }
     }
 
     @Override

@@ -23,8 +23,8 @@ package com.andrei1058.bedwars.arena;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.configuration.Sounds;
 import com.andrei1058.bedwars.listeners.arenaselector.ArenaSelectorListener;
 import org.bukkit.Bukkit;
@@ -104,14 +104,13 @@ public class ArenaGUI {
                 i.setItemMeta(im);
             }
 
-
             ItemMeta im = i.getItemMeta();
-            im.setDisplayName(Language.getMsg(p, Messages.ARENA_GUI_ARENA_CONTENT_NAME).replace("{name}", arenas.get(arenaKey).getDisplayName()).replace("{map_name}", arenas.get(arenaKey).getArenaName()));
+            im.setDisplayName(ChineseMessages.getMsg(p, Messages.ARENA_GUI_ARENA_CONTENT_NAME).replace("{name}", arenas.get(arenaKey).getDisplayName()).replace("{map_name}", arenas.get(arenaKey).getArenaName()));
             List<String> lore = new ArrayList<>();
-            for (String s : Language.getList(p, Messages.ARENA_GUI_ARENA_CONTENT_LORE)) {
+            for (String s : ChineseMessages.getList(p, Messages.ARENA_GUI_ARENA_CONTENT_LORE)) {
                 if (!(s.contains("{group}") && arenas.get(arenaKey).getGroup().equalsIgnoreCase("default"))) {
                     lore.add(s.replace("{on}", String.valueOf(arena != null ? arena == arenas.get(arenaKey) ? players : arenas.get(arenaKey).getPlayers().size() : arenas.get(arenaKey).getPlayers().size())).replace("{max}",
-                                    String.valueOf(arenas.get(arenaKey).getMaxPlayers())).replace("{status}", arenas.get(arenaKey).getDisplayStatus(Language.getPlayerLanguage(p)))
+                                    String.valueOf(arenas.get(arenaKey).getMaxPlayers())).replace("{status}", arenas.get(arenaKey).getDisplayStatus(ChineseMessages.get()))
                             .replace("{group}", arenas.get(arenaKey).getDisplayGroup(p)));
                 }
             }
@@ -131,7 +130,7 @@ public class ArenaGUI {
         if (size % 9 != 0) size = 27;
         if (size > 54) size = 54;
         ArenaSelectorHolder ash = new ArenaSelectorHolder(group);
-        Inventory inv = Bukkit.createInventory(ash, size, Language.getMsg(p, Messages.ARENA_GUI_INV_NAME));
+        Inventory inv = Bukkit.createInventory(ash, size, ChineseMessages.getMsg(p, Messages.ARENA_GUI_INV_NAME));
         //ash.setInv(inv);
 
         String skippedSlotMaterial = BedWars.config.getString(ConfigPath.GENERAL_CONFIGURATION_ARENA_SELECTOR_STATUS_MATERIAL.replace("%path%", "skipped-slot"));
@@ -143,7 +142,7 @@ public class ArenaGUI {
             assert im != null;
             im.setDisplayName(ChatColor.translateAlternateColorCodes(
                     '&',
-                    Language.getMsg(p, Messages.ARENA_GUI_SKIPPED_ITEM_NAME)
+                    ChineseMessages.getMsg(p, Messages.ARENA_GUI_SKIPPED_ITEM_NAME)
                             .replaceAll(
                                     "\\{serverIp}",
                                     BedWars.config.getString(ConfigPath.GENERAL_CONFIG_PLACEHOLDERS_REPLACEMENTS_SERVER_IP)
@@ -154,7 +153,7 @@ public class ArenaGUI {
                             )
             ));
             List<String> lore = new ArrayList<>();
-            for (String line : Language.getList(p, Messages.ARENA_GUI_SKIPPED_ITEM_LORE)) {
+            for (String line : ChineseMessages.getList(p, Messages.ARENA_GUI_SKIPPED_ITEM_LORE)) {
                 line = line
                         .replaceAll(
                                 "\\{serverIp}",

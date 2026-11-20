@@ -23,9 +23,15 @@ class MainConfigRestartMigrationTest {
     }
 
     @Test
-    void acceptsOnlyRealLanguageFiles() {
-        assertEquals("zh_cn", com.andrei1058.bedwars.api.language.Language.isoFromFileName("messages_zh_cn.yml"));
-        assertNull(com.andrei1058.bedwars.api.language.Language.isoFromFileName("messages_zh_cn.yml.bak"));
-        assertNull(com.andrei1058.bedwars.api.language.Language.isoFromFileName("messages_zh_cn.backup.yml"));
+    void fixedFireballMigrationRemovesValuesAndDefaultsButKeepsOtherSettings() {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("fireball.speed-multiplier", 99);
+        config.addDefault("fireball.cooldown", 20);
+        config.set("lobbyServer", "login");
+        MainConfig.migrateFixedFireball(config);
+        assertNull(config.get("fireball"));
+        assertEquals("login", config.getString("lobbyServer"));
+        MainConfig.migrateFixedFireball(config);
+        assertNull(config.get("fireball"));
     }
 }

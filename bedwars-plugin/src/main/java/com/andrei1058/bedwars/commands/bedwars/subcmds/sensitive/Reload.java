@@ -23,7 +23,7 @@ package com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive;
 import com.andrei1058.bedwars.api.BedWars;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.arena.SetupSession;
@@ -53,10 +53,10 @@ public class Reload extends SubCommand {
         } else {
             if (!MainCommand.isLobbySet(null)) return true;
         }
-        for (Language l : Language.getLanguages()){
-            l.reload();
-            s.sendMessage("§6 ▪ §7"+l.getLangName()+" reloaded!");
-        }
+        ChineseMessages l = ChineseMessages.get();
+        l.reload();
+        s.sendMessage("§6 ▪ §7中文消息已重新加载。");
+
         return true;
     }
 

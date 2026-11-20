@@ -43,8 +43,8 @@ import com.andrei1058.bedwars.api.events.player.PlayerReJoinEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaDisableEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaEnableEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaRestartEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.region.Region;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.sidebar.ISidebar;
@@ -100,7 +100,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.*;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.*;
 import static com.andrei1058.bedwars.arena.upgrades.BaseListener.isOnABase;
 
 @SuppressWarnings("WeakerAccess")
@@ -113,7 +113,6 @@ public class Arena implements IArena {
     private static int gamesBeforeRestart = config.getInt(ConfigPath.GENERAL_CONFIGURATION_BUNGEE_MODE_GAMES_BEFORE_RESTART);
     public static HashMap<UUID, Integer> afkCheck = new HashMap<>();
     public static HashMap<UUID, Integer> magicMilk = new HashMap<>();
-
 
     private List<Player> players = new ArrayList<>();
     private List<Player> spectators = new ArrayList<>();
@@ -158,7 +157,6 @@ public class Arena implements IArena {
     private static final HashMap<Player, Location> playerLocation = new HashMap<>();
 
     private final GameStatsManager gameStats = new GameStatsManager(this);
-
 
     /* ARENA TASKS */
     private StartingTask startingTask = null;
@@ -238,7 +236,6 @@ public class Arena implements IArena {
             }
         }
 
-
         if (!BedWars.getAPI().getRestoreAdapter().isWorld(name)) {
             if (p != null) p.sendMessage(ChatColor.RED + "There isn't any map called " + name);
             plugin.getLogger().log(Level.WARNING, "There isn't any map called " + name);
@@ -281,7 +278,7 @@ public class Arena implements IArena {
         if (error) return;
         yKillHeight = yml.getInt(ConfigPath.ARENA_Y_LEVEL_KILL);
         addToEnableQueue(this);
-        Language.saveIfNotExists(Messages.ARENA_DISPLAY_GROUP_PATH + getGroup().toLowerCase(), String.valueOf(getGroup().charAt(0)).toUpperCase() + group.substring(1).toLowerCase());
+        ChineseMessages.saveIfNotExists(Messages.ARENA_DISPLAY_GROUP_PATH + getGroup().toLowerCase(), String.valueOf(getGroup().charAt(0)).toUpperCase() + group.substring(1).toLowerCase());
     }
 
     /**
@@ -399,7 +396,6 @@ public class Arena implements IArena {
         upgradeEmeraldsCount = getGeneratorsCfg().getInt(getGeneratorsCfg().getYml().get(getGroup() + "." + ConfigPath.GENERATOR_EMERALD_TIER_II_START) == null ?
                 "Default." + ConfigPath.GENERATOR_EMERALD_TIER_II_START : getGroup() + "." + ConfigPath.GENERATOR_EMERALD_TIER_II_START);
         plugin.getLogger().info("Load done: " + getArenaName());
-
 
         // entity tracking range - player
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File("spigot.yml"));
@@ -666,7 +662,6 @@ public class Arena implements IArena {
                 }
                 synchronizeRespawnVisibility(p);
 
-
                 if (!playerBefore) {
                     if (staffTeleport == null) {
                         TeleportManager.teleportC(p, getSpectatorLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
@@ -692,21 +687,7 @@ public class Arena implements IArena {
 
             p.sendMessage(ArenaMessages.withArena(getMsg(p, Messages.COMMAND_JOIN_SPECTATOR_MSG), getDisplayName()));
 
-            /* update generator holograms for spectators */
-            String iso = Language.getPlayerLanguage(p).getIso();
-            for (IGenerator o : getOreGenerators()) {
-                o.updateHolograms(p, iso);
-            }
-            for (ITeam t : getTeams()) {
-                for (IGenerator o : t.getGenerators()) {
-                    o.updateHolograms(p, iso);
-                }
-            }
-            for (ShopHolo sh : ShopHolo.getShopHolo()) {
-                if (sh.getA() == this) {
-                    sh.updateForPlayer(p, iso);
-                }
-            }
+
 
         } else {
             p.sendMessage(getMsg(p, Messages.COMMAND_JOIN_SPECTATOR_DENIED_MSG));
@@ -807,11 +788,11 @@ public class Arena implements IArena {
                     if (!team.isBedDestroyed()) {
                         for (Player p2 : this.getPlayers()) {
                             p2.sendMessage(getMsg(p2, Messages.TEAM_ELIMINATED_CHAT).replace("{TeamColor}", team.getColor().chat().toString())
-                                    .replace("{TeamName}", team.getDisplayName(Language.getPlayerLanguage(p2))));
+                                    .replace("{TeamName}", team.getDisplayName()));
                         }
                         for (Player p2 : this.getSpectators()) {
                             p2.sendMessage(getMsg(p2, Messages.TEAM_ELIMINATED_CHAT).replace("{TeamColor}", team.getColor().chat().toString())
-                                    .replace("{TeamName}", team.getDisplayName(Language.getPlayerLanguage(p2))));
+                                    .replace("{TeamName}", team.getDisplayName()));
                         }
                     }
                 }
@@ -837,31 +818,31 @@ public class Arena implements IArena {
                     }
 
                     PlayerKillEvent event = new PlayerKillEvent(this, p, team, lastDamager, killerTeam,
-                            player -> Language.getMsg(player, message), cause
+                            player -> ChineseMessages.getMsg(player, message), cause
                     );
                     Bukkit.getPluginManager().callEvent(event);
 
                     if (null != event.getMessage()) {
                         for (Player inGame : getPlayers()) {
-                            Language lang = Language.getPlayerLanguage(inGame);
+                            ChineseMessages lang = ChineseMessages.get();
                             inGame.sendMessage(event.getMessage().apply(inGame)
-                                    .replace("{PlayerTeamName}", team.getDisplayName(lang))
+                                    .replace("{PlayerTeamName}", team.getDisplayName())
                                     .replace("{PlayerColor}", team.getColor().chat().toString()).replace("{PlayerName}", p.getDisplayName())
                                     .replace("{KillerColor}", killerTeam.getColor().chat().toString())
                                     .replace("{KillerName}", lastDamager.getDisplayName())
-                                    .replace("{KillerTeamName}", killerTeam.getDisplayName(lang)));
+                                    .replace("{KillerTeamName}", killerTeam.getDisplayName()));
                         }
                     }
 
                     if (null != event.getMessage()) {
                         for (Player inGame : getSpectators()) {
-                            Language lang = Language.getPlayerLanguage(inGame);
+                            ChineseMessages lang = ChineseMessages.get();
                             inGame.sendMessage(event.getMessage().apply(inGame)
-                                    .replace("{PlayerTeamName}", team.getDisplayName(lang))
+                                    .replace("{PlayerTeamName}", team.getDisplayName())
                                     .replace("{PlayerColor}", team.getColor().chat().toString()).replace("{PlayerName}", p.getDisplayName())
                                     .replace("{KillerColor}", killerTeam.getColor().chat().toString())
                                     .replace("{KillerName}", lastDamager.getDisplayName())
-                                    .replace("{KillerTeamName}", killerTeam.getDisplayName(lang)));
+                                    .replace("{KillerTeamName}", killerTeam.getDisplayName()));
                         }
                     }
                     List<ItemStack> disconnectDrops = new ArrayList<>(Arrays.asList(p.getInventory().getContents()));
@@ -1267,7 +1248,7 @@ public class Arena implements IArena {
      * Get the display status for an arena.
      * A message that can be used on signs etc.
      */
-    public String getDisplayStatus(Language lang) {
+    public String getDisplayStatus(ChineseMessages lang) {
         String s = "";
         switch (status) {
             case waiting:
@@ -1288,11 +1269,11 @@ public class Arena implements IArena {
 
     @Override
     public String getDisplayGroup(Player player) {
-        return getPlayerLanguage(player).m(Messages.ARENA_DISPLAY_GROUP_PATH + getGroup().toLowerCase());
+        return ChineseMessages.get().m(Messages.ARENA_DISPLAY_GROUP_PATH + getGroup().toLowerCase());
     }
 
     @Override
-    public String getDisplayGroup(@NotNull Language language) {
+    public String getDisplayGroup(@NotNull ChineseMessages language) {
         return language.m(Messages.ARENA_DISPLAY_GROUP_PATH + getGroup().toLowerCase());
     }
 
@@ -1496,7 +1477,7 @@ public class Arena implements IArena {
         // if countdown cancelled
         if (this.status == GameState.starting && status == GameState.waiting) {
             for (Player player : getPlayers()) {
-                Language playerLang = Language.getPlayerLanguage(player);
+                ChineseMessages playerLang = ChineseMessages.get();
                 nms.sendTitle(player, playerLang.m(Messages.ARENA_STATUS_START_COUNTDOWN_CANCELLED_TITLE), playerLang.m(Messages.ARENA_STATUS_START_COUNTDOWN_CANCELLED_SUB_TITLE), 0, 40, 10);
             }
         }
@@ -1691,7 +1672,6 @@ public class Arena implements IArena {
         return status;
     }
 
-
     /**
      * Refresh signs.
      */
@@ -1708,7 +1688,7 @@ public class Arena implements IArena {
                 if (getPlayers() == null) continue;
                 s.setLine(line, string.replace("[on]", String.valueOf(getPlayers().size()))
                         .replace("[max]", String.valueOf(getMaxPlayers())).replace("[arena]", getDisplayName())
-                        .replace("[status]", getDisplayStatus(Language.getDefaultLanguage()))
+                        .replace("[status]", getDisplayStatus(ChineseMessages.get()))
                         .replace("[type]", String.valueOf(getMaxInTeam())));
                 line++;
             }
@@ -2009,13 +1989,13 @@ public class Arena implements IArena {
 
                         for (Player receiver : receivers) {
 
-                            Language playerLang = Language.getPlayerLanguage(receiver);
+                            ChineseMessages playerLang = ChineseMessages.get();
 
                             String winnerTeamChat = playerLang.m(Messages.GAME_END_TEAM_WON_CHAT);
                             // check if message disabled
                             if (null != winnerTeamChat && !winnerTeamChat.trim().isEmpty()) {
                                 receiver.sendMessage(winnerTeamChat.replace("{TeamColor}", winner.getColor().chat().toString())
-                                        .replace("{TeamName}", winner.getDisplayName(playerLang)));
+                                        .replace("{TeamName}", winner.getDisplayName()));
                             }
 
                             if (winner.getMembers().contains(receiver) || winner.wasMember(receiver.getUniqueId())) {
@@ -2040,7 +2020,7 @@ public class Arena implements IArena {
                                 }
 
                                 msg = msg.replace("{winnerFormat}", getMaxInTeam() > 1 ? playerLang.m(Messages.FORMATTING_TEAM_WINNER_FORMAT).replace("{members}", winners.toString()) : playerLang.m(Messages.FORMATTING_SOLO_WINNER_FORMAT).replace("{members}", winners.toString()))
-                                        .replace("{TeamColor}", winner.getColor().chat().toString()).replace("{TeamName}", winner.getDisplayName(playerLang));
+                                        .replace("{TeamColor}", winner.getColor().chat().toString()).replace("{TeamName}", winner.getDisplayName());
 
                                 receiver.sendMessage(SupportPAPI.getSupportPAPI().replace(receiver, msg));
                             }
@@ -2090,7 +2070,6 @@ public class Arena implements IArena {
     @Deprecated
     public void addPlayerDeath(Player player) {
     }
-
 
     /**
      * Set next event for the arena.
@@ -2450,7 +2429,6 @@ public class Arena implements IArena {
         }
     }
 
-
     public static int getGamesBeforeRestart() {
         return gamesBeforeRestart;
     }
@@ -2724,12 +2702,11 @@ public class Arena implements IArena {
     public ITeamAssigner getTeamAssigner() {
         return teamAssigner;
     }
-        
+
     @Override
     public int getDiamondTier() {
         return diamondTier;
     }
-
 
     @Override
     public int getEmeraldTier() {

@@ -29,8 +29,8 @@ import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
 import com.andrei1058.bedwars.api.events.player.PlayerBedBreakEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.region.Region;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.util.BlastProtectionUtil;
@@ -69,7 +69,7 @@ import java.io.File;
 import java.util.*;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class BreakPlace implements Listener {
 
@@ -101,7 +101,6 @@ public class BreakPlace implements Listener {
             if (Arena.getArenaByIdentifier(e.getBlock().getWorld().getName()) != null) e.setCancelled(true);
         }
     }
-
 
     @EventHandler(ignoreCancelled = true)
     public void onBurn(@NotNull BlockBurnEvent event) {
@@ -336,7 +335,7 @@ public class BreakPlace implements Listener {
                                                 if (breakEvent.getMessage() != null) {
                                                     on.sendMessage(breakEvent.getMessage().apply(on)
                                                             .replace("{TeamColor}", t.getColor().chat().toString())
-                                                            .replace("{TeamName}", t.getDisplayName(Language.getPlayerLanguage(on)))
+                                                            .replace("{TeamName}", t.getDisplayName())
                                                             .replace("{PlayerColor}", a.getTeam(p).getColor().chat().toString())
                                                             .replace("{PlayerName}", p.getDisplayName())
                                                             .replace("{PlayerNameUnformatted}", p.getName()));
@@ -413,7 +412,7 @@ public class BreakPlace implements Listener {
                     int line = 0;
                     for (String string : BedWars.signs.getList("format")) {
                         e.setLine(line, string.replace("[on]", String.valueOf(a.getPlayers().size())).replace("[max]",
-                                        String.valueOf(a.getMaxPlayers())).replace("[arena]", a.getDisplayName()).replace("[status]", a.getDisplayStatus(Language.getDefaultLanguage()))
+                                        String.valueOf(a.getMaxPlayers())).replace("[arena]", a.getDisplayName()).replace("[status]", a.getDisplayStatus(ChineseMessages.get()))
                                 .replace("[type]", String.valueOf(a.getMaxInTeam())));
                         line++;
                     }

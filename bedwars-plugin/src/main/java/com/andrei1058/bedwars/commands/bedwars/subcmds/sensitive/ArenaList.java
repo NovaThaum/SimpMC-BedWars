@@ -23,7 +23,7 @@ package com.andrei1058.bedwars.commands.bedwars.subcmds.sensitive;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.arena.SetupSession;
@@ -60,7 +60,6 @@ public class ArenaList extends SubCommand {
         if (s instanceof ConsoleCommandSender) return false;
         Player p = (Player) s;
 
-
         int page = 1;
         if (args.length >= 1) {
             try {
@@ -88,7 +87,7 @@ public class ArenaList extends SubCommand {
         int limit = Math.min(arenas.size(), start + ARENAS_PER_PAGE);
 
         arenas.subList(start, limit).forEach(arena -> {
-            String gameState = arena.getDisplayStatus(Language.getPlayerLanguage(p));
+            String gameState = arena.getDisplayStatus(ChineseMessages.get());
             String msg = color(
                     "ID: &e" + arena.getWorldName() +
                             " &fG: &e" + arena.getDisplayGroup(p) +
@@ -96,7 +95,6 @@ public class ArenaList extends SubCommand {
                             " &fS: " + gameState +
                             " &fWl: &e" + (Bukkit.getWorld(arena.getWorldName()) != null)
             );
-
 
             p.sendMessage(msg);
         });

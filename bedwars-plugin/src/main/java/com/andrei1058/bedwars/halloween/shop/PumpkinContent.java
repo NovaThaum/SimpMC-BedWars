@@ -23,7 +23,7 @@ package com.andrei1058.bedwars.halloween.shop;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.shop.IBuyItem;
 import com.andrei1058.bedwars.api.arena.shop.IContentTier;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.shop.ShopCache;
 import com.andrei1058.bedwars.shop.main.CategoryContent;
 import com.andrei1058.bedwars.shop.main.ShopCategory;
@@ -37,7 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class PumpkinContent extends CategoryContent {
 
@@ -94,7 +94,6 @@ public class PumpkinContent extends CategoryContent {
     public boolean isPermanent() {
         return false;
     }
-
 
     @Override
     public ItemStack getItemStack(Player player) {

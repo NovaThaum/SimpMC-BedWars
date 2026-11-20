@@ -1,12 +1,12 @@
 package com.andrei1058.bedwars.arena.team;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.entity.Player;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Language-file defaults for the pre-game squad interface and commands. */
+/** ChineseMessages-file defaults for the pre-game squad interface and commands. */
 public final class PreGameSquadMessages {
     private static final String ROOT = "pre-game-squad.";
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
@@ -52,21 +52,21 @@ public final class PreGameSquadMessages {
 
     private PreGameSquadMessages() { }
 
-    public static void installLanguageFallbacks() {
-        for (Language language : Language.getLanguages()) {
-            boolean changed = false;
-            for (Map.Entry<String, String> entry : DEFAULTS.entrySet()) {
-                String path = ROOT + entry.getKey();
-                if (!language.exists(path)) {
-                    language.set(path, entry.getValue());
-                    changed = true;
-                }
+    public static void installMessageDefaults() {
+        ChineseMessages language = ChineseMessages.get();
+        boolean changed = false;
+        for (Map.Entry<String, String> entry : DEFAULTS.entrySet()) {
+            String path = ROOT + entry.getKey();
+            if (!language.exists(path)) {
+                language.set(path, entry.getValue());
+                changed = true;
             }
-            if (changed) language.save();
         }
+        if (changed) language.save();
+
     }
 
     public static String get(Player player, String key) {
-        return Language.getMsg(player, ROOT + key);
+        return ChineseMessages.getMsg(player, ROOT + key);
     }
 }

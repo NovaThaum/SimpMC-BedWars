@@ -6,6 +6,19 @@ import java.nio.file.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigMigratorTest {
+    @org.junit.jupiter.api.Test
+    void doesNotReintroduceFixedFireballConfiguration() throws Exception {
+        Path root = java.nio.file.Files.createTempDirectory("fixed-fireball-migration");
+        Path source = java.nio.file.Files.createDirectory(root.resolve("source"));
+        Path target = java.nio.file.Files.createDirectory(root.resolve("target"));
+        java.nio.file.Files.writeString(source.resolve("config.yml"), "fireball:\n  speed-multiplier: 99\nlobbyServer: login\n");
+        java.nio.file.Files.writeString(target.resolve("config.yml"), "fireball:\n  speed-multiplier: 10\nlobbyServer: hub\n");
+        ConfigMigrator.main(new String[]{source.toString(), target.toString()});
+        String migrated = java.nio.file.Files.readString(target.resolve("config.yml"));
+        org.junit.jupiter.api.Assertions.assertFalse(migrated.contains("fireball"));
+        org.junit.jupiter.api.Assertions.assertTrue(migrated.contains("lobbyServer: login"));
+        org.junit.jupiter.api.Assertions.assertTrue(java.nio.file.Files.readString(source.resolve("config.yml")).contains("speed-multiplier: 99"));
+    }
     @Test void ignoresOtherLanguagesWithoutChangingTheirExistingFiles() throws Exception {
         Path source = Files.createDirectories(temp.resolve("chinese-only-source"));
         Path target = Files.createDirectories(temp.resolve("chinese-only-target"));

@@ -22,7 +22,7 @@ package com.andrei1058.bedwars.shop.main;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.events.shop.ShopOpenEvent;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.shop.ShopCache;
 import com.andrei1058.bedwars.shop.quickbuy.PlayerQuickBuyCache;
@@ -46,7 +46,6 @@ public class ShopIndex {
     public ItemStack separatorSelected, separatorStandard;
 
     public static List<UUID> indexViewers = new ArrayList<>();
-
 
     /**
      * Create a shop index
@@ -84,7 +83,7 @@ public class ShopIndex {
             if (event.isCancelled()) return;
         }
 
-        Inventory inv = Bukkit.createInventory(null, invSize, Language.getMsg(player, getNamePath()));
+        Inventory inv = Bukkit.createInventory(null, invSize, ChineseMessages.getMsg(player, getNamePath()));
 
         inv.setItem(getQuickBuyButton().getSlot(), getQuickBuyButton().getItemStack(player));
 
@@ -106,7 +105,6 @@ public class ShopIndex {
         }
     }
 
-
     /**
      * Add shop separator between categories and items
      */
@@ -114,8 +112,8 @@ public class ShopIndex {
         ItemStack i = separatorStandard.clone();
         ItemMeta im = i.getItemMeta();
         if (im != null) {
-            im.setDisplayName(Language.getMsg(player, separatorNamePath));
-            im.setLore(Language.getList(player, separatorLorePath));
+            im.setDisplayName(ChineseMessages.getMsg(player, separatorNamePath));
+            im.setLore(ChineseMessages.getList(player, separatorLorePath));
             i.setItemMeta(im);
         }
 
@@ -131,8 +129,8 @@ public class ShopIndex {
         ItemStack i = separatorSelected.clone();
         ItemMeta im = i.getItemMeta();
         if (im != null) {
-            im.setDisplayName(Language.getMsg(player, separatorNamePath));
-            im.setLore(Language.getList(player, separatorLorePath));
+            im.setDisplayName(ChineseMessages.getMsg(player, separatorNamePath));
+            im.setLore(ChineseMessages.getList(player, separatorLorePath));
             i.setItemMeta(im);
         }
         return i;

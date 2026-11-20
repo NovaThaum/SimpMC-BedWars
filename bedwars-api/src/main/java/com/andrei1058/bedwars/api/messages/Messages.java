@@ -18,7 +18,7 @@
  * Contact e-mail: andrew.dascalu@gmail.com
  */
 
-package com.andrei1058.bedwars.api.language;
+package com.andrei1058.bedwars.api.messages;
 
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
 
@@ -48,12 +48,6 @@ public class Messages {
      * General commands reply
      */
     public static String COMMAND_MAIN = "cmd-main-list";
-    public static String COMMAND_LANG_LIST_HEADER = "cmd-lang-list-header";
-    public static String COMMAND_LANG_LIST_FORMAT = "cmd-lang-list-format";
-    public static String COMMAND_LANG_USAGE = "cmd-lang-usage";
-    public static String COMMAND_LANG_SELECTED_NOT_EXIST = "cmd-lang-not-exist";
-    public static String COMMAND_LANG_SELECTED_SUCCESSFULLY = "cmd-lang-set";
-    public static String COMMAND_LANG_USAGE_DENIED = "cmd-lang-not-set";
     public static String COMMAND_JOIN_USAGE = "cmd-join-usage";
     public static String COMMAND_JOIN_GROUP_OR_ARENA_NOT_FOUND = "cmd-join-not-found";
     public static String COMMAND_JOIN_DENIED_IS_FULL = "cmd-join-arena-full";
@@ -248,7 +242,6 @@ public class Messages {
     public static String FORMATTING_SB_TAB_RESTARTING_WIN2_PREFIX = FORMATTING_SB_TAB_BASE+".restarting.winner-dead.prefix";
     public static String FORMATTING_SB_TAB_RESTARTING_WIN2_SUFFIX = FORMATTING_SB_TAB_BASE+".restarting.winner-dead.suffix";
 
-
     // TAB RESTARTING FOR LOSERS
     public static String FORMATTING_SB_TAB_RESTARTING_ELM_HEADER = FORMATTING_SB_TAB_BASE+".restarting.loser.header";
     public static String FORMATTING_SB_TAB_RESTARTING_ELM_FOOTER = FORMATTING_SB_TAB_BASE+".restarting.loser.footer";
@@ -399,7 +392,6 @@ public class Messages {
     public static String BED_HOLOGRAM_DESTROYED = "bed-hologram-destroyed";
     public static String TEAM_ELIMINATED_CHAT = "team-eliminated";
 
-
     /**
      * Upgrades/ Shop
      */
@@ -475,8 +467,6 @@ public class Messages {
     /* Arena waiting Items Messages */
     public static final String GENERAL_CONFIGURATION_WAITING_ITEMS_NAME = ConfigPath.GENERAL_CONFIGURATION_PRE_GAME_ITEMS_PATH + "-%path%-name";
     public static final String GENERAL_CONFIGURATION_WAITING_ITEMS_LORE = ConfigPath.GENERAL_CONFIGURATION_PRE_GAME_ITEMS_PATH + "-%path%-lore";
-
-
 
     // DEPRECATIONS FOR REMOVAL
 

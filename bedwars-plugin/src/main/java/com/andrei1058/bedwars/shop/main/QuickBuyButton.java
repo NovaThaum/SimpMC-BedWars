@@ -20,7 +20,7 @@
 
 package com.andrei1058.bedwars.shop.main;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -34,8 +34,8 @@ public class QuickBuyButton {
     /**
      * Create a new quick buy button
      *
-     * @param namePath  Language name path
-     * @param lorePath  Language lore path.
+     * @param namePath  ChineseMessages name path
+     * @param lorePath  ChineseMessages lore path.
      * @param slot      Item slot in inventory
      * @param itemStack Button ItemStack preview
      */
@@ -53,8 +53,8 @@ public class QuickBuyButton {
         ItemStack i = itemStack.clone();
         ItemMeta im = i.getItemMeta();
         if (im != null) {
-            im.setDisplayName(Language.getMsg(player, namePath));
-            im.setLore(Language.getList(player, lorePath));
+            im.setDisplayName(ChineseMessages.getMsg(player, namePath));
+            im.setLore(ChineseMessages.getList(player, lorePath));
             i.setItemMeta(im);
         }
         return i;

@@ -1,6 +1,6 @@
-package com.andrei1058.bedwars.language;
+package com.andrei1058.bedwars.messages;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -16,12 +16,12 @@ public final class RecallMessages {
         final String path; final String fallback;
         Key(String path, String fallback) { this.path = path; this.fallback = fallback; }
     }
-    public static void install(Language language) {
+    public static void install(ChineseMessages language) {
         for (Key key : Key.values()) language.getYml().addDefault(key.path, key.fallback);
         language.save();
     }
     public static String text(Player player, Key key) {
-        Language language = Language.getPlayerLanguage(player);
+        ChineseMessages language = ChineseMessages.get();
         return ChatColor.translateAlternateColorCodes('&', language == null ? key.fallback
                 : language.getYml().getString(key.path, key.fallback));
     }

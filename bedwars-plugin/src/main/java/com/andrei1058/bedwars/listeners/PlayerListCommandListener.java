@@ -3,7 +3,7 @@ package com.andrei1058.bedwars.listeners;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.commands.bedwars.subcmds.regular.PlayerListFormatter;
-import com.andrei1058.bedwars.language.MatchmakingMessages;
+import com.andrei1058.bedwars.messages.MatchmakingMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

@@ -1,6 +1,6 @@
-package com.andrei1058.bedwars.language;
+package com.andrei1058.bedwars.messages;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -60,9 +60,7 @@ public final class MatchQueryMessages {
         OUTCOME_LOSS("cmd-match-query-outcome-loss", "失败"),
         OUTCOME_ABANDONED("cmd-match-query-outcome-abandoned", "中途离开"),
         OUTCOME_DISCONNECTED("cmd-match-query-outcome-disconnected", "掉线"),
-        OUTCOME_UNSETTLED("cmd-match-query-outcome-unsettled", "未结算"),
-        LANG_PLAYER_ONLY("cmd-lang-player-only", "&c只有玩家可以使用语言切换命令。"),
-        LANG_CHANGE_CANCELLED("cmd-lang-change-cancelled", "&c语言切换被其他插件取消。");
+        OUTCOME_UNSETTLED("cmd-match-query-outcome-unsettled", "未结算");
 
         private final String path;
         private final String chinese;
@@ -73,7 +71,7 @@ public final class MatchQueryMessages {
         }
     }
 
-    public static void install(Language language) {
+    public static void install(ChineseMessages language) {
         for (Key key : Key.values()) {
             language.getYml().addDefault(key.path, key.chinese);
         }
@@ -82,8 +80,7 @@ public final class MatchQueryMessages {
     }
 
     public static Snapshot forSender(CommandSender sender) {
-        Language language = sender instanceof Player
-                ? Language.getPlayerLanguage((Player) sender) : Language.getDefaultLanguage();
+        ChineseMessages language = ChineseMessages.get();
         EnumMap<Key, String> templates = new EnumMap<>(Key.class);
         for (Key key : Key.values()) templates.put(key, language.m(key.path));
         return new Snapshot(templates);
@@ -96,12 +93,11 @@ public final class MatchQueryMessages {
             case "history": key = Key.HISTORY_DESCRIPTION; break;
             default: key = Key.RECORD_DESCRIPTION;
         }
-        Language language = sender instanceof Player
-                ? Language.getPlayerLanguage((Player) sender) : Language.getDefaultLanguage();
+        ChineseMessages language = ChineseMessages.get();
         return language == null ? key.chinese : language.m(key.path);
     }
 
-    public static Snapshot defaults(boolean chinese) {
+    public static Snapshot defaults() {
         EnumMap<Key, String> templates = new EnumMap<>(Key.class);
         for (Key key : Key.values()) templates.put(key, key.chinese);
         return new Snapshot(templates);

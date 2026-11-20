@@ -20,7 +20,7 @@
 
 package com.andrei1058.bedwars.support.party;
 
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.party.Party;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class Internal implements Party {
     private static List<Internal.Party> parites = new ArrayList<>();

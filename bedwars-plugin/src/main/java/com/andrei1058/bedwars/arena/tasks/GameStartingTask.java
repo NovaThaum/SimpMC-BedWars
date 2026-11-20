@@ -28,8 +28,8 @@ import com.andrei1058.bedwars.api.arena.generator.GeneratorType;
 import com.andrei1058.bedwars.api.arena.generator.IGenerator;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.tasks.StartingTask;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.team.BedWarsTeam;
@@ -43,8 +43,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 
 import static com.andrei1058.bedwars.BedWars.nms;
-import static com.andrei1058.bedwars.api.language.Language.getList;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getList;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class GameStartingTask implements Runnable, StartingTask {
 
@@ -61,7 +61,6 @@ public class GameStartingTask implements Runnable, StartingTask {
         if (arena.getMaxPlayers() > 0 && arena.getPlayers().size() >= arena.getMaxPlayers() && countdown > 5) countdown = 5;
         task = Bukkit.getScheduler().runTaskTimer(BedWars.plugin, this, 0, 20L);
     }
-
 
     /**
      * Get countdown value
@@ -150,7 +149,6 @@ public class GameStartingTask implements Runnable, StartingTask {
             //Lobby removal
             BedWars.getAPI().getRestoreAdapter().onLobbyRemoval(arena);
 
-
             task.cancel();
             getArena().changeStatus(GameState.playing);
 
@@ -176,8 +174,8 @@ public class GameStartingTask implements Runnable, StartingTask {
                 Sounds.playSound(ConfigPath.SOUNDS_COUNTDOWN_TICK, getArena().getPlayers());
             }
             for (Player player : getArena().getPlayers()) {
-                Language playerLang = Language.getPlayerLanguage(player);
-                String[] titleSubtitle = Language.getCountDownTitle(playerLang, getCountdown());
+                ChineseMessages playerLang = ChineseMessages.get();
+                String[] titleSubtitle = ChineseMessages.getCountDownTitle(playerLang, getCountdown());
                 nms.sendTitle(player, titleSubtitle[0], titleSubtitle[1], 0, 20, 10);
                 player.sendMessage(getMsg(player, Messages.ARENA_STATUS_START_COUNTDOWN_CHAT).replace("{time}", String.valueOf(getCountdown())));
             }

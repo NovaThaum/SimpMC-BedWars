@@ -3,16 +3,16 @@ package com.andrei1058.bedwars.commands.bedwars.subcmds.regular;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.stats.MatchHistory;
 import com.andrei1058.bedwars.api.stats.MatchInfo;
 import com.andrei1058.bedwars.api.stats.MatchPlayerResult;
 import com.andrei1058.bedwars.api.stats.PlayerMatchTotals;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.commands.bedwars.MainCommand;
-import com.andrei1058.bedwars.language.MatchQueryMessages;
-import com.andrei1058.bedwars.language.MatchQueryMessages.Key;
-import com.andrei1058.bedwars.language.MatchQueryMessages.Snapshot;
+import com.andrei1058.bedwars.messages.MatchQueryMessages;
+import com.andrei1058.bedwars.messages.MatchQueryMessages.Key;
+import com.andrei1058.bedwars.messages.MatchQueryMessages.Snapshot;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -258,7 +258,7 @@ public final class CmdMatchQuery extends SubCommand {
     }
 
     static int pageOffset(String text) {
-        return pageOffset(text, MatchQueryMessages.defaults(true));
+        return pageOffset(text, MatchQueryMessages.defaults());
     }
 
     private static int pageOffset(String text, Snapshot messages) {

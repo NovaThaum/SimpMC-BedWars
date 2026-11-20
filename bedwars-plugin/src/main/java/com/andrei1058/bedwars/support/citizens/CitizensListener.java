@@ -22,7 +22,7 @@ package com.andrei1058.bedwars.support.citizens;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.configuration.Sounds;
@@ -37,7 +37,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class CitizensListener implements Listener {
 

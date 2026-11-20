@@ -18,12 +18,12 @@
  * Contact e-mail: andrew.dascalu@gmail.com
  */
 
-package com.andrei1058.bedwars.language;
+package com.andrei1058.bedwars.messages;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import java.util.List;
 
 import static com.andrei1058.bedwars.BedWars.mainCmd;
 
-public class SimplifiedChinese extends Language {
+public class SimplifiedChinese extends ChineseMessages {
 
     static void migrateTowerShopTranslation(YamlConfiguration yml) {
         String namePath = Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY).replace("%content%", "tower");
@@ -50,7 +50,7 @@ public class SimplifiedChinese extends Language {
     }
 
     public SimplifiedChinese() {
-        super(BedWars.plugin, "zh_cn");
+        super(BedWars.plugin);
 
         YamlConfiguration yml = getYml();
         removeLanguageSelectionMessages(yml);
@@ -713,7 +713,6 @@ public class SimplifiedChinese extends Language {
                 "&e{serverIp}")
         );
 
-
         // End of Sidebar
 
         // start of TAB
@@ -962,7 +961,6 @@ public class SimplifiedChinese extends Language {
         yml.addDefault(Messages.SHOP_LORE_STATUS_ARMOR, "&a已装备！");
         yml.addDefault(Messages.SHOP_LORE_QUICK_ADD, "&bShift+点击 来添加快速购买");
         yml.addDefault(Messages.SHOP_LORE_QUICK_REMOVE, "&bShift+点击 来从快速购买中移除！");
-
 
         addCategoryMessages(yml, ConfigPath.SHOP_PATH_CATEGORY_BLOCKS, "&8方块", "&a方块", Collections.singletonList("&e点击查看！"));
 

@@ -1,6 +1,6 @@
 package com.andrei1058.bedwars.api.arena.stats;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,5 +26,5 @@ public interface GameStatisticProvider<T extends GameStatistic<?>> {
      * Display value for undetermined values.
      * @param language desired translation.
      */
-    String getVoidReplacement(@Nullable Language language);
+    String getVoidReplacement(@Nullable ChineseMessages language);
 }

@@ -1,6 +1,6 @@
-package com.andrei1058.bedwars.language;
+package com.andrei1058.bedwars.messages;
 
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -33,20 +33,18 @@ public final class MatchmakingMessages {
             this.chinese = chinese;
         }
     }
-    public static void install(Language language) {
+    public static void install(ChineseMessages language) {
         for (Key key : Key.values()) language.getYml().addDefault(key.path, key.chinese);
         language.save();
     }
     public static String text(CommandSender sender, Key key) {
-        Language language = sender instanceof Player
-                ? Language.getPlayerLanguage((Player) sender) : Language.getDefaultLanguage();
+        ChineseMessages language = ChineseMessages.get();
         String template = language == null ? key.fallback : language.getYml().getString(key.path, key.fallback);
         return ChatColor.translateAlternateColorCodes('&', template);
     }
 
     public static Snapshot forSender(CommandSender sender) {
-        Language language = sender instanceof Player
-                ? Language.getPlayerLanguage((Player) sender) : Language.getDefaultLanguage();
+        ChineseMessages language = ChineseMessages.get();
         EnumMap<Key, String> values = new EnumMap<>(Key.class);
         for (Key key : Key.values()) {
             values.put(key, language == null ? key.fallback : language.m(key.path));
@@ -66,7 +64,7 @@ public final class MatchmakingMessages {
         }
     }
 
-    public static Snapshot defaults(boolean chinese) {
+    public static Snapshot defaults() {
         EnumMap<Key, String> values = new EnumMap<>(Key.class);
         for (Key key : Key.values()) values.put(key, key.chinese);
         return new Snapshot(values);

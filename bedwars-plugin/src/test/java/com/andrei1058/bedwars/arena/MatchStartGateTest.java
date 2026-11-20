@@ -121,11 +121,11 @@ class MatchStartGateTest {
         }
     }
     @Test void messageDefaultsPreserveAdministratorOverrides() {
-        com.andrei1058.bedwars.api.language.Language language = mock(com.andrei1058.bedwars.api.language.Language.class);
+        com.andrei1058.bedwars.api.messages.ChineseMessages language = mock(com.andrei1058.bedwars.api.messages.ChineseMessages.class);
         org.bukkit.configuration.file.YamlConfiguration yaml = new org.bukkit.configuration.file.YamlConfiguration();
         yaml.set("cmd-matchmaking-blocked", "&c维护中，请稍候");
         when(language.getYml()).thenReturn(yaml);
-        com.andrei1058.bedwars.language.MatchmakingMessages.install(language);
+        com.andrei1058.bedwars.messages.MatchmakingMessages.install(language);
         assertEquals("&c维护中，请稍候", yaml.getString("cmd-matchmaking-blocked"));
         assertEquals("&a已恢复新对局。", yaml.getString("cmd-matchmaking-resumed"));
         verify(language).save();

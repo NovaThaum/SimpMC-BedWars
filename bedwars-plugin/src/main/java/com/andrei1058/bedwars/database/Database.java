@@ -91,16 +91,6 @@ public interface Database {
     void setLevelData(UUID player, int level, int xp, String displayName, int nextCost);
 
     /**
-     * Set a player language.
-     */
-    void setLanguage(UUID player, String iso);
-
-    /**
-     * Get a player language.
-     */
-    String getLanguage(UUID player);
-
-    /**
      * @param updateSlots key is slot id and value is the element.
      */
     void pushQuickBuyChanges(HashMap<Integer, String> updateSlots, UUID uuid, List<QuickBuyElement> elementList);

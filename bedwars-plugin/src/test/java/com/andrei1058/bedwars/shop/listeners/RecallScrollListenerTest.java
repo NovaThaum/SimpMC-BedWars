@@ -3,7 +3,7 @@ package com.andrei1058.bedwars.shop.listeners;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.*;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import com.andrei1058.bedwars.arena.*;
 import com.andrei1058.bedwars.configuration.MainConfig;
@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RecallScrollListenerTest {
     MainConfig original; VersionSupport nms; MockedStatic<Arena> arenas;
-    MockedStatic<Bukkit> bukkit; MockedStatic<Language> language; MockedStatic<SafeSpawnResolver> safe;
+    MockedStatic<Bukkit> bukkit; MockedStatic<ChineseMessages> language; MockedStatic<SafeSpawnResolver> safe;
     Player player; IArena arena; ITeam team; PlayerInventory inventory; ItemStack[] contents;
     ItemStack scroll; World world; Location spawn; RecallScrollListener listener; BukkitTask task;
     @BeforeEach void setup() {
         original=BedWars.config; BedWars.config=mock(MainConfig.class); nms=BedWars.nms;
         BedWars.nms=mock(VersionSupport.class);
-        arenas=mockStatic(Arena.class); bukkit=mockStatic(Bukkit.class); language=mockStatic(Language.class); safe=mockStatic(SafeSpawnResolver.class);
+        arenas=mockStatic(Arena.class); bukkit=mockStatic(Bukkit.class); language=mockStatic(ChineseMessages.class); safe=mockStatic(SafeSpawnResolver.class);
         player=mock(Player.class); arena=mock(IArena.class); team=mock(ITeam.class); world=mock(World.class);
         inventory=mock(PlayerInventory.class); contents=new ItemStack[36]; scroll=new ItemStack(Material.PAPER,2); contents[4]=scroll;
         when(player.getInventory()).thenReturn(inventory); when(player.getUniqueId()).thenReturn(UUID.randomUUID());
@@ -94,10 +94,10 @@ class RecallScrollListenerTest {
         verify(player,never()).teleport(any(Location.class),any(PlayerTeleportEvent.TeleportCause.class)); assertEquals(2,contents[4].getAmount());
     }
     @Test void languageOverridesSurviveInstallation() {
-        Language lang=mock(Language.class); var yaml=new org.bukkit.configuration.file.YamlConfiguration();
+        ChineseMessages lang=mock(ChineseMessages.class); var yaml=new org.bukkit.configuration.file.YamlConfiguration();
         yaml.set("recall-scroll.completed","&a自定义完成"); when(lang.getYml()).thenReturn(yaml);
-        com.andrei1058.bedwars.language.RecallMessages.install(lang);
-        language.when(() -> Language.getPlayerLanguage(player)).thenReturn(lang);
-        assertEquals("§a自定义完成",com.andrei1058.bedwars.language.RecallMessages.text(player,com.andrei1058.bedwars.language.RecallMessages.Key.COMPLETED));
+        com.andrei1058.bedwars.messages.RecallMessages.install(lang);
+        language.when(() -> ChineseMessages.get()).thenReturn(lang);
+        assertEquals("§a自定义完成",com.andrei1058.bedwars.messages.RecallMessages.text(player,com.andrei1058.bedwars.messages.RecallMessages.Key.COMPLETED));
     }
 }

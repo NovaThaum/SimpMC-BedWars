@@ -97,7 +97,6 @@ public abstract class VersionSupport {
      */
     public abstract void hideEntity(Entity e, Player p);
 
-
     /**
      * Check if item-stack is armor
      */
@@ -418,7 +417,6 @@ public abstract class VersionSupport {
         return despawnables;
     }
 
-
     public static String getName() {
         return name2;
     }
@@ -455,6 +453,10 @@ public abstract class VersionSupport {
      * @param vector   fireball direction to normalize.
      * @return modified fireball.
      */
+    public abstract Fireball setFireballAcceleration(Fireball fireball, Vector acceleration);
+
+    public abstract void damageFireball(Player target, Fireball fireball, double damage, boolean attributed);
+
     public abstract Fireball setFireballDirection(Fireball fireball, Vector vector);
 
     public abstract void playRedStoneDot(Player player);

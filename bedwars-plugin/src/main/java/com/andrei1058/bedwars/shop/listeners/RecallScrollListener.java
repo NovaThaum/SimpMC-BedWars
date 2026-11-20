@@ -6,7 +6,7 @@ import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.SafeSpawnResolver;
-import com.andrei1058.bedwars.language.RecallMessages;
+import com.andrei1058.bedwars.messages.RecallMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;

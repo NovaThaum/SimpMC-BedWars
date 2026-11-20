@@ -20,8 +20,8 @@
 
 package com.andrei1058.bedwars.support.version.v1_16_R3;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.support.version.common.VersionCommon;
 import net.minecraft.server.v1_16_R3.*;
 import org.apache.commons.lang.StringUtils;
@@ -79,9 +79,9 @@ public class Silverfish extends EntitySilverfish {
         ((CraftLivingEntity)customEnt.getBukkitEntity()).setRemoveWhenFarAway(false);
         customEnt.setCustomNameVisible(true);
         mcWorld.addEntity(customEnt, CreatureSpawnEvent.SpawnReason.CUSTOM);
-        customEnt.getBukkitEntity().setCustomName(Language.getDefaultLanguage().m(Messages.SHOP_UTILITY_NPC_SILVERFISH_NAME)
+        customEnt.getBukkitEntity().setCustomName(ChineseMessages.get().m(Messages.SHOP_UTILITY_NPC_SILVERFISH_NAME)
                 .replace("{despawn}", String.valueOf(despawn)
-                        .replace("{health}", StringUtils.repeat(Language.getDefaultLanguage().m(Messages.FORMATTING_DESPAWNABLE_UTILITY_NPC_HEALTH)+" ", 10))
+                        .replace("{health}", StringUtils.repeat(ChineseMessages.get().m(Messages.FORMATTING_DESPAWNABLE_UTILITY_NPC_HEALTH)+" ", 10))
                         .replace("{TeamColor}", team.getColor().chat().toString())));
         return (LivingEntity) customEnt.getBukkitEntity();
     }

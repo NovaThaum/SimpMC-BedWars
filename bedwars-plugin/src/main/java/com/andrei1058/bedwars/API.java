@@ -25,7 +25,7 @@ import com.andrei1058.bedwars.api.arena.shop.IContentTier;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.events.player.PlayerAfkEvent;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.arena.team.PreGameSquad;
 import com.andrei1058.bedwars.api.party.Party;
 import com.andrei1058.bedwars.arena.team.PreGameSquadManager;
@@ -393,8 +393,8 @@ public class API implements com.andrei1058.bedwars.api.BedWars {
     }
 
     @Override
-    public Language getDefaultLang() {
-        return Language.getDefaultLanguage();
+    public ChineseMessages getMessages() {
+        return ChineseMessages.get();
     }
 
     @Override
@@ -418,25 +418,9 @@ public class API implements com.andrei1058.bedwars.api.BedWars {
     }
 
     @Override
-    public Language getLanguageByIso(String isoCode) {
-        return Language.getLang(isoCode);
-    }
-
-    @Override
-    public Language getPlayerLanguage(Player player) {
-        return Language.getPlayerLanguage(player);
-    }
-
-    @Override
-    public String getLangIso(Player p) {
-        return Language.getPlayerLanguage(p).getIso();
-    }
-
-    @Override
     public File getAddonsPath() {
         return new File(BedWars.plugin.getDataFolder(), "Addons");
     }
-
 
     private static final ScoreboardUtil scoreboardUtil = new ScoreboardUtil() {
 

@@ -11,7 +11,7 @@
 package com.andrei1058.bedwars.lobbysocket;
 
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
@@ -392,12 +392,11 @@ public final class ArenaSocket {
             }
             final String uuid = bounded(json, "uuid", 64);
             final String arenaIdentifier = bounded(json, "arena_identifier", 256);
-            final String language = Language.SIMPLIFIED_CHINESE_ISO;
             final String target = bounded(json, "target", 128);
             final String joinMode = bounded(json, "join_mode", 16).toUpperCase(Locale.ROOT);
             final String requestId = bounded(json, "request_id", 128);
             final String reservationId = bounded(json, "reservation_id", 128);
-            if (isBlank(uuid) || isBlank(arenaIdentifier) || isBlank(language)
+            if (isBlank(uuid) || isBlank(arenaIdentifier)
                     || (!joinMode.isEmpty() && !"AUTO".equals(joinMode)
                     && !"PLAYER".equals(joinMode) && !"SPECTATOR".equals(joinMode)
                     && !"REJOIN".equals(joinMode))) {
@@ -436,7 +435,7 @@ public final class ArenaSocket {
                     if (accepted) {
                         LoadedUser previous = LoadedUser.getPreLoaded(requestedUuid);
                         if (previous != null) previous.destroy("重复预加载");
-                        new LoadedUser(uuid, arenaIdentifier, language, target, requestId,
+                        new LoadedUser(uuid, arenaIdentifier, target, requestId,
                                 joinMode, reservationId);
                         accepted = LoadedUser.isPreLoaded(requestedUuid);
                     }

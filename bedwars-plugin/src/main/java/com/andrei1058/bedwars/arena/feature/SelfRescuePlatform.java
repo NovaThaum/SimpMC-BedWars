@@ -9,8 +9,8 @@ import com.andrei1058.bedwars.api.events.gameplay.GameStateChangeEvent;
 import com.andrei1058.bedwars.api.events.player.PlayerLeaveArenaEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaDisableEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaRestartEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -208,19 +208,19 @@ public final class SelfRescuePlatform implements Listener {
         return instance != null && instance.preventVoidKill(player, arena, location);
     }
 
-    public static void installLanguageFallbacks() {
+    public static void installMessageDefaults() {
         String namePath = Messages.SHOP_CONTENT_TIER_ITEM_NAME
                 .replace("%category%", ConfigPath.SHOP_PATH_CATEGORY_UTILITY)
                 .replace("%content%", "self-rescue-platform");
-        for (Language language : Language.getLanguages()) {
-            if (language.exists(namePath)) continue;
-            Language.addContentMessages(language.getYml(), "self-rescue-platform", ConfigPath.SHOP_PATH_CATEGORY_UTILITY,
-                    "{color}自救平台", Arrays.asList("&7花费：{cost} {currency}", "",
-                            "&7生成临时史莱姆平台", "&7并保护救援落地。", "",
-                            "{quick_buy}", "{buy_status}"));
-            language.getYml().options().copyDefaults(true);
-            language.save();
-        }
+        ChineseMessages language = ChineseMessages.get();
+        if (language.exists(namePath)) return;
+        ChineseMessages.addContentMessages(language.getYml(), "self-rescue-platform", ConfigPath.SHOP_PATH_CATEGORY_UTILITY,
+                "{color}自救平台", Arrays.asList("&7花费：{cost} {currency}", "",
+                        "&7生成临时史莱姆平台", "&7并保护救援落地。", "",
+                        "{quick_buy}", "{buy_status}"));
+        language.getYml().options().copyDefaults(true);
+        language.save();
+
     }
 
     public static void localizeItem(Player player, ItemStack item) {
@@ -230,7 +230,7 @@ public final class SelfRescuePlatform implements Listener {
                 .replace("%content%", "self-rescue-platform");
         org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                Language.getMsg(player, path).replace("{color}", "&b").replace("{tier}", "")));
+                ChineseMessages.getMsg(player, path).replace("{color}", "&b").replace("{tier}", "")));
         item.setItemMeta(meta);
     }
 

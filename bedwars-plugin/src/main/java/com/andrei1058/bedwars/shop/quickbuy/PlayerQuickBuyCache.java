@@ -22,8 +22,8 @@ package com.andrei1058.bedwars.shop.quickbuy;
 
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.shop.ShopCache;
 import com.andrei1058.bedwars.shop.ShopManager;
 import com.andrei1058.bedwars.shop.main.CategoryContent;
@@ -67,7 +67,6 @@ public class PlayerQuickBuyCache {
         task = new QuickBuyTask(player.getUniqueId());
         quickBuyCaches.put(this.player, this);
     }
-
 
     /**
      * Add the player's preferences to the given inventory.
@@ -121,8 +120,8 @@ public class PlayerQuickBuyCache {
         ItemStack i = emptyItem.clone();
         ItemMeta im = i.getItemMeta();
         if (im != null) {
-            im.setDisplayName(Language.getMsg(player, emptyItemNamePath));
-            im.setLore(Language.getList(player, emptyItemLorePath));
+            im.setDisplayName(ChineseMessages.getMsg(player, emptyItemNamePath));
+            im.setLore(ChineseMessages.getList(player, emptyItemLorePath));
             i.setItemMeta(im);
         }
         return i;

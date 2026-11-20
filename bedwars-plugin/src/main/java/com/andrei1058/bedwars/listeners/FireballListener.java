@@ -1,12 +1,11 @@
 package com.andrei1058.bedwars.listeners;
 
 import com.andrei1058.bedwars.api.arena.IArena;
-import com.andrei1058.bedwars.api.configuration.ConfigPath;
+import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.LastHit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,9 +17,12 @@ import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
-import static com.andrei1058.bedwars.BedWars.config;
+import static com.andrei1058.bedwars.BedWars.nms;
 
 public class FireballListener implements Listener {
 
@@ -35,111 +37,96 @@ public class FireballListener implements Listener {
 
     private final double damageSelf;
     private final double damageEnemy;
-    private final double damageTeammates;
+    private final Set<DamageKey> activeCustomExplosions = new HashSet<>();
 
     public FireballListener() {
-        this.fireballExplosionSize = normalizeExplosionSize(
-                config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_EXPLOSION_SIZE));
-        this.fireballMakeFire = config.getYml().getBoolean(ConfigPath.GENERAL_FIREBALL_MAKE_FIRE);
-        this.fireballHorizontal = boundedFiniteNonNegative(
-                config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_HORIZONTAL));
-        this.fireballVertical = boundedFiniteNonNegative(
-                config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_KNOCKBACK_VERTICAL));
-
-        this.damageSelf = config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_DAMAGE_SELF);
-        this.damageEnemy = config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_DAMAGE_ENEMY);
-        this.damageTeammates = config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_DAMAGE_TEAMMATES);
+        this.fireballExplosionSize = FireballSettings.EXPLOSION_SIZE;
+        this.fireballMakeFire = false;
+        this.fireballHorizontal = FireballSettings.HORIZONTAL_KNOCKBACK;
+        this.fireballVertical = FireballSettings.VERTICAL_KNOCKBACK;
+        this.damageSelf = FireballSettings.SELF_DAMAGE;
+        this.damageEnemy = FireballSettings.ENEMY_DAMAGE;
     }
 
     @EventHandler
     public void fireballExplode(EntityExplodeEvent e) {
-        if(!(e.getEntity() instanceof Fireball)) return;
+        if (!(e.getEntity() instanceof Fireball fireball)) return;
         if (e.isCancelled()) return;
-        Fireball fireball = (Fireball) e.getEntity();
         Location location = e.getLocation();
 
         ProjectileSource projectileSource = fireball.getShooter();
-        if(!(projectileSource instanceof Player)) return;
-        Player source = (Player) projectileSource;
+        if (!(projectileSource instanceof Player source)) return;
 
         IArena arena = Arena.getArenaByPlayer(source);
         if (arena == null || !arena.isPlayer(source)) return;
+        ITeam sourceTeam = arena.getTeam(source);
 
-        if (!hasWorld(location)) return;
         World world = location.getWorld();
-        Collection<Entity> nearbyEntities = world
-                .getNearbyEntities(location, fireballExplosionSize, fireballExplosionSize, fireballExplosionSize);
-        for(Entity entity : nearbyEntities) {
-            if(!(entity instanceof Player)) continue;
-            Player player = (Player) entity;
-            if(Arena.getArenaByPlayer(player) != arena || !arena.isPlayer(player)) continue;
+        if (world == null) return;
+        Vector explosionPosition = location.toVector();
+        Collection<org.bukkit.entity.Entity> nearbyPlayers = world.getNearbyEntities(location,
+                fireballExplosionSize, fireballExplosionSize, fireballExplosionSize);
+        long hitTime = System.currentTimeMillis();
+        for (org.bukkit.entity.Entity entity : nearbyPlayers) {
+            if (!(entity instanceof Player player)) continue;
+            if (Arena.getArenaByPlayer(player) != arena || !arena.isPlayer(player)) continue;
+            Vector playerPosition = player.getLocation().toVector();
+            if (!isWithinExplosionRadius(explosionPosition, playerPosition, fireballExplosionSize)) continue;
 
-
-            Vector playerVector = player.getLocation().toVector();
-            if (!isWithinExplosionRadius(location.toVector(), playerVector, fireballExplosionSize)) continue;
-            player.setVelocity(calculateKnockback(location.toVector(), playerVector,
+            player.setVelocity(calculateKnockback(explosionPosition, playerPosition,
                     fireballHorizontal, fireballVertical));
 
-            LastHit lh = LastHit.getLastHit(player);
-            if (lh != null) {
-                lh.setDamager(source);
-                lh.setTime(System.currentTimeMillis());
-            } else {
-                new LastHit(player, source, System.currentTimeMillis());
+            boolean self = player.equals(source);
+            boolean teammate = sourceTeam != null && sourceTeam.equals(arena.getTeam(player));
+            if (shouldCreditShooter(self, teammate)) {
+                LastHit hit = LastHit.getLastHit(player);
+                if (hit == null) new LastHit(player, source, hitTime);
+                else { hit.setDamager(source); hit.setTime(hitTime); }
             }
 
-            if(player.equals(source)) {
-                if(damageSelf > 0) {
-                    player.damage(damageSelf); // damage shooter
+            if (self) {
+                if (damageSelf > 0) {
+                    nms.damageFireball(player, fireball, damageSelf, false); // damage shooter without kill credit
                 }
-            } else if(arena.getTeam(player).equals(arena.getTeam(source))) {
-                if(damageTeammates > 0) {
-                    player.damage(damageTeammates); // damage teammates
-                }
-            } else {
-                if(damageEnemy > 0) {
-                    player.damage(damageEnemy); // damage enemies
-                }
+            } else if (shouldDamageTarget(self, teammate) && damageEnemy > 0) {
+                damageEnemy(player, fireball);
             }
         }
     }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void fireballDirectHit(EntityDamageByEntityEvent e) {
-        if(!(e.getDamager() instanceof Fireball)) return;
-        if(!(e.getEntity() instanceof Player)) return;
-
-        Fireball fireball = (Fireball) e.getDamager();
-        ProjectileSource shooter = fireball.getShooter();
-        if (!(shooter instanceof Player)) return;
-
-        Player source = (Player) shooter;
-        Player target = (Player) e.getEntity();
-        IArena sourceArena = Arena.getArenaByPlayer(source);
-        IArena targetArena = Arena.getArenaByPlayer(target);
-        if (!shouldCancelDirectHit(true,
-                sourceArena != null,
-                sourceArena != null && sourceArena == targetArena,
-                sourceArena != null && sourceArena.isPlayer(source),
-                targetArena != null && targetArena.isPlayer(target))) return;
+        if (!(e.getDamager() instanceof Fireball fireball)) return;
+        if (!(e.getEntity() instanceof Player target)) return;
+        // The custom area damage also names the fireball as its direct entity.
+        // Only its synchronous, explicitly marked damage call is allowed through;
+        // the projectile's native contact and native explosion damage stay cancelled.
+        DamageKey damageKey = new DamageKey(fireball.getUniqueId(), target.getUniqueId());
+        boolean explosionDamage = e.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_EXPLOSION;
+        if (!shouldCancelDirectHit(explosionDamage, activeCustomExplosions.contains(damageKey))) return;
+        if (!(fireball.getShooter() instanceof Player source)) return;
+        IArena arena = Arena.getArenaByPlayer(source);
+        if (arena == null || Arena.getArenaByPlayer(target) != arena) return;
 
         e.setCancelled(true);
     }
 
     @EventHandler
     public void fireballPrime(ExplosionPrimeEvent e) {
-        if(!(e.getEntity() instanceof Fireball)) return;
-        ProjectileSource shooter = ((Fireball)e.getEntity()).getShooter();
-        if(!(shooter instanceof Player)) return;
-        Player player = (Player) shooter;
+        if (!(e.getEntity() instanceof Fireball fireball)) return;
+        ProjectileSource shooter = fireball.getShooter();
+        if (!(shooter instanceof Player player)) return;
 
-        if(Arena.getArenaByPlayer(player) == null) return;
+        IArena arena = Arena.getArenaByPlayer(player);
+        if (arena == null || !arena.isPlayer(player)) return;
 
         e.setFire(fireballMakeFire);
+        e.setRadius((float) fireballExplosionSize);
     }
 
     static Vector calculateKnockback(Vector explosion, Vector player, double horizontal, double vertical) {
-        double safeHorizontal = boundedFiniteNonNegative(horizontal);
-        double safeVertical = boundedFiniteNonNegative(vertical);
+        double safeHorizontal = boundedFiniteNonNegative(horizontal, 0D, MAX_FIREBALL_KNOCKBACK);
+        double safeVertical = boundedFiniteNonNegative(vertical, 0D, MAX_FIREBALL_KNOCKBACK);
         Vector towardExplosion = explosion.clone().subtract(player);
         double lengthSquared = towardExplosion.lengthSquared();
         if (!Double.isFinite(lengthSquared) || lengthSquared <= 1.0E-12D) {
@@ -154,7 +141,11 @@ public class FireballListener implements Listener {
         return knockback.setY(y);
     }
 
-    /** Keep configured horizontal fireball strength independent of vertical distance. */
+    /**
+     * Push the player away along the horizontal plane only, so the configured
+     * horizontal strength is delivered in full regardless of how far above or
+     * below the explosion the player stands.
+     */
     private static Vector horizontalKnockback(Vector explosion, Vector player, double horizontal) {
         Vector away = new Vector(player.getX() - explosion.getX(), 0D, player.getZ() - explosion.getZ());
         double lengthSquared = away.lengthSquared();
@@ -172,27 +163,37 @@ public class FireballListener implements Listener {
         return Double.isFinite(distanceSquared) && distanceSquared <= radiusSquared;
     }
 
-    static boolean shouldCancelDirectHit(boolean shooterIsPlayer,
-                                         boolean sourceArenaPresent,
-                                         boolean sameArena,
-                                         boolean sourceIsActivePlayer,
-                                         boolean targetIsActivePlayer) {
-        return shooterIsPlayer && sourceArenaPresent && sameArena
-                && sourceIsActivePlayer && targetIsActivePlayer;
-    }
-
-    static boolean hasWorld(Location location) {
-        return location != null && location.getWorld() != null;
-    }
-
     static double normalizeExplosionSize(double value) {
-        return Double.isFinite(value)
-                ? Math.min(MAX_FIREBALL_EXPLOSION_SIZE, Math.max(MIN_FIREBALL_EXPLOSION_SIZE, value))
-                : MIN_FIREBALL_EXPLOSION_SIZE;
+        return boundedFiniteNonNegative(value, MIN_FIREBALL_EXPLOSION_SIZE, MAX_FIREBALL_EXPLOSION_SIZE);
     }
 
-    private static double boundedFiniteNonNegative(double value) {
-        return Double.isFinite(value) ? Math.min(MAX_FIREBALL_KNOCKBACK, Math.max(0D, value)) : 0D;
+    private static double boundedFiniteNonNegative(double value, double minimum, double maximum) {
+        return Double.isFinite(value) ? Math.min(maximum, Math.max(minimum, value)) : minimum;
+    }
+
+    static boolean shouldCreditShooter(boolean self, boolean teammate) {
+        return !self && !teammate;
+    }
+
+    static boolean shouldDamageTarget(boolean self, boolean teammate) {
+        return !self && !teammate;
+    }
+
+    static boolean shouldCancelDirectHit(boolean explosionDamage, boolean activeCustomExplosion) {
+        return !explosionDamage || !activeCustomExplosion;
+    }
+
+    private void damageEnemy(Player target, Fireball fireball) {
+        DamageKey damageKey = new DamageKey(fireball.getUniqueId(), target.getUniqueId());
+        boolean firstSettlement = activeCustomExplosions.add(damageKey);
+        try {
+            nms.damageFireball(target, fireball, damageEnemy, true);
+        } finally {
+            if (firstSettlement) activeCustomExplosions.remove(damageKey);
+        }
+    }
+
+    private record DamageKey(UUID fireball, UUID target) {
     }
 
 }

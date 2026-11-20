@@ -1,7 +1,7 @@
 package com.andrei1058.bedwars.metrics;
 
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.support.citizens.JoinNPC;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
@@ -19,7 +19,6 @@ public class MetricsManager {
 
         // base metrics
         metrics.addCustomChart(new SimplePie("server_type", () -> BedWars.getServerType().toString()));
-        metrics.addCustomChart(new SimplePie("default_language", () -> Language.getDefaultLanguage().getIso()));
         metrics.addCustomChart(new SimplePie("auto_scale", () -> String.valueOf(BedWars.autoscale)));
         metrics.addCustomChart(new SimplePie("party_adapter", () -> BedWars.getParty().getClass().getName()));
         metrics.addCustomChart(new SimplePie("chat_adapter", () -> BedWars.getChatSupport().getClass().getName()));

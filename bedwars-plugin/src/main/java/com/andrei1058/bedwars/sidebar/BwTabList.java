@@ -25,8 +25,8 @@ import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.spigot.sidebar.PlayerTab;
 import com.andrei1058.spigot.sidebar.Sidebar;
@@ -130,7 +130,7 @@ public class BwTabList {
             return;
         }
 
-        List<String> animation = Language.getList(sidebar.getPlayer(), Messages.FORMATTING_SCOREBOARD_HEALTH);
+        List<String> animation = ChineseMessages.getList(sidebar.getPlayer(), Messages.FORMATTING_SCOREBOARD_HEALTH);
         if (animation.isEmpty()) return;
         SidebarLine line;
         if (animation.size() > 1) {
@@ -352,7 +352,7 @@ public class BwTabList {
 
     @NotNull
     private SidebarLine getTabText(String path, Player targetPlayer, @Nullable HashMap<String, String> replacements) {
-        List<String> strings = Language.getList(sidebar.getPlayer(), path);
+        List<String> strings = ChineseMessages.getList(sidebar.getPlayer(), path);
         if (strings.isEmpty()) {
             return new SidebarLine() {
                 @NotNull
@@ -364,7 +364,7 @@ public class BwTabList {
         }
 
         strings = new ArrayList<>();
-        for (String string : Language.getList(sidebar.getPlayer(), path)) {
+        for (String string : ChineseMessages.getList(sidebar.getPlayer(), path)) {
             String parsed = string.replace("{vPrefix}", BedWars.getChatSupport().getPrefix(targetPlayer))
                     .replace("{vSuffix}", BedWars.getChatSupport().getSuffix(targetPlayer));
 
@@ -440,7 +440,6 @@ public class BwTabList {
         return id;
     }
 
-
     private boolean hasPlayerIdentifier(@NotNull String id) {
         for (String string : playerTabIdentifier.values()) {
             if (string.equals(id)) {
@@ -482,7 +481,7 @@ public class BwTabList {
 
     @NotNull HashMap<String, String> getTeamReplacements(@Nullable ITeam team) {
         HashMap<String, String> replacements = new HashMap<>();
-        String displayName = null == team ? "" : team.getDisplayName(Language.getPlayerLanguage(sidebar.getPlayer()));
+        String displayName = null == team ? "" : team.getDisplayName();
         replacements.put("{teamName}", displayName);
         replacements.put("{teamLetter}", null == team ? "" : team.getColor().chat() + (displayName.substring(0, 1)));
         replacements.put("{teamColor}", null == team ? "" : team.getColor().chat().toString());

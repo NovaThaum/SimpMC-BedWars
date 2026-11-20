@@ -6,8 +6,8 @@ import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.stats.DefaultStatistics;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.sidebar.ISidebar;
 import com.andrei1058.bedwars.arena.Arena;
@@ -27,10 +27,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.*;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.*;
 
 public class BwSidebar implements ISidebar {
-
 
     private static final SidebarLine EMPTY_TITLE = new SidebarLine() {
         @Override
@@ -130,7 +129,7 @@ public class BwSidebar implements ISidebar {
         LinkedList<SidebarLine> lines = new LinkedList<>();
 
         int teamCount = 0;
-        Language language = Language.getPlayerLanguage(player);
+        ChineseMessages language = ChineseMessages.get();
         String genericTeamFormat = language.m(Messages.FORMATTING_SCOREBOARD_TEAM_GENERIC);
 
         StatisticsOrdered.StringParser statParser = null == topStatistics ? null : topStatistics.newParser();
@@ -145,7 +144,7 @@ public class BwSidebar implements ISidebar {
                 if (line.trim().equals("{team}")) {
                     if (arena.getTeams().size() > teamCount) {
                         ITeam team = arena.getTeams().get(teamCount++);
-                        String teamName = team.getDisplayName(language);
+                        String teamName = team.getDisplayName();
                         String teamLetter = String.valueOf(!teamName.isEmpty() ? teamName.charAt(0) : "");
 
                         line = genericTeamFormat
@@ -172,7 +171,7 @@ public class BwSidebar implements ISidebar {
 
                 for (ITeam currentTeam : arena.getTeams()) {
                     final ChatColor color = currentTeam.getColor().chat();
-                    final String teamName = currentTeam.getDisplayName(language);
+                    final String teamName = currentTeam.getDisplayName();
                     final String teamLetter = String.valueOf(!teamName.isEmpty() ? teamName.charAt(0) : "");
 
                     // Static team placeholders
@@ -180,7 +179,6 @@ public class BwSidebar implements ISidebar {
                             .replace("{Team" + currentTeam.getName() + "Color}", color.toString())
                             .replace("{Team" + currentTeam.getName() + "Name}", teamName)
                             .replace("{Team" + currentTeam.getName() + "Letter}", teamLetter);
-
 
                     boolean isMember = currentTeam.isMember(getPlayer()) || currentTeam.wasMember(getPlayer().getUniqueId());
                     if (isMember) {
@@ -191,7 +189,7 @@ public class BwSidebar implements ISidebar {
                     }
                 }
                 if (arena.getWinner() != null) {
-                    String winnerDisplayName = arena.getWinner().getDisplayName(Language.getPlayerLanguage(getPlayer()));
+                    String winnerDisplayName = arena.getWinner().getDisplayName();
                     line = line
                             .replace(
                                     "{winnerTeamName}",
@@ -306,7 +304,7 @@ public class BwSidebar implements ISidebar {
             providers.add(new PlaceholderProvider("{nextEvent}", () -> getNextEventName(arenaContext)));
 
             if (arenaContext.isSpectator(player)) {
-                Language lang = getPlayerLanguage(player);
+                ChineseMessages lang = ChineseMessages.get();
                 String targetFormat = lang.m(Messages.FORMAT_SPECTATOR_TARGET);
 
                 providers.add(new PlaceholderProvider("{spectatorTarget}", () -> {
@@ -322,7 +320,7 @@ public class BwSidebar implements ISidebar {
                     return targetFormat.replace("{targetTeamColor}", targetTeam.getColor().chat().toString())
                             .replace("{targetDisplayName}", target.getDisplayName())
                             .replace("{targetName}", target.getDisplayName())
-                            .replace("{targetTeamName}", targetTeam.getDisplayName(lang));
+                            .replace("{targetTeamName}", targetTeam.getDisplayName());
                 }));
             }
 
@@ -494,7 +492,7 @@ public class BwSidebar implements ISidebar {
             return;
         }
 
-        Language lang = Language.getPlayerLanguage(player);
+        ChineseMessages lang = ChineseMessages.get();
 
         String headerPath;
         String footerPath;

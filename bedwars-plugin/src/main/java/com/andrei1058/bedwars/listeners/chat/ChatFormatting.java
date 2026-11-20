@@ -25,8 +25,8 @@ import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.commands.shout.ShoutCommand;
@@ -42,8 +42,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
-import static com.andrei1058.bedwars.api.language.Language.getPlayerLanguage;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.get;
 
 public class ChatFormatting implements Listener {
 
@@ -63,7 +63,7 @@ public class ChatFormatting implements Listener {
             e.setMessage(ChatColor.translateAlternateColorCodes('&', e.getMessage()));
         }
 
-        Language language = getPlayerLanguage(p);
+        ChineseMessages language = ChineseMessages.get();
 
         // handle lobby world for multi arena
         if (getServerType() == ServerType.MULTIARENA && p.getWorld().getName().equalsIgnoreCase(BedWars.getLobbyWorld())) {
@@ -95,7 +95,7 @@ public class ChatFormatting implements Listener {
             if (isShouting(msg, language)) {
                 if (!(p.hasPermission(Permissions.PERMISSION_SHOUT_COMMAND) || p.hasPermission(Permissions.PERMISSION_ALL))) {
                     e.setCancelled(true);
-                    p.sendMessage(Language.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
+                    p.sendMessage(ChineseMessages.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
                     return;
                 }
                 if (ShoutCommand.isShoutCooldown(p)) {
@@ -147,7 +147,7 @@ public class ChatFormatting implements Listener {
         if (team != null) {
             String teamFormat = getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_TEAM)
                     .replace("{TeamColor}", team.getColor().chat() + "")
-                    .replace("{TeamName}", team.getDisplayName(Language.getPlayerLanguage(player)).toUpperCase());
+                    .replace("{TeamName}", team.getDisplayName().toUpperCase());
             content = content.replace("{team}", teamFormat);
         }
         return SupportPAPI.getSupportPAPI().replace(player, content).replace("{message}", "%2$s");
@@ -157,12 +157,12 @@ public class ChatFormatting implements Listener {
         return format.replace("{team} ", "").replace("{team}", "");
     }
 
-    private static boolean isShouting(String msg, Language lang) {
+    private static boolean isShouting(String msg, ChineseMessages lang) {
         return msg.startsWith("!") || msg.startsWith("shout") ||
                 msg.startsWith("SHOUT") || msg.startsWith(lang.m(Messages.MEANING_SHOUT));
     }
 
-    private static String clearShout(String msg, Language lang) {
+    private static String clearShout(String msg, ChineseMessages lang) {
         if (msg.startsWith("!")) msg = msg.replaceFirst("!", "");
         if (msg.startsWith("SHOUT")) msg = msg.replaceFirst("SHOUT", "");
         if (msg.startsWith("shout")) msg = msg.replaceFirst("shout", "");

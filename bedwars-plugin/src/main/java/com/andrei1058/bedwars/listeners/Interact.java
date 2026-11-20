@@ -24,7 +24,7 @@ import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.configuration.Sounds;
@@ -56,20 +56,9 @@ import org.bukkit.util.Vector;
 import java.util.Map;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class Interact implements Listener {
-
-    private final double fireballSpeedMultiplier;
-    private final double fireballCooldown;
-    private final float fireballExplosionSize;
-
-    public Interact() {
-        this.fireballSpeedMultiplier = config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_SPEED_MULTIPLIER);
-        this.fireballCooldown = config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_COOLDOWN);
-        this.fireballExplosionSize = (float) FireballListener.normalizeExplosionSize(
-                config.getYml().getDouble(ConfigPath.GENERAL_FIREBALL_EXPLOSION_SIZE));
-    }
 
     @EventHandler
     /* Handle custom items with commands on them */
@@ -225,15 +214,24 @@ public class Interact implements Listener {
 
                         e.setCancelled(true);
 
-                        if(System.currentTimeMillis() - a.getFireballCooldowns().getOrDefault(p.getUniqueId(), 0L) > (fireballCooldown*1000)) {
-                            a.getFireballCooldowns().put(p.getUniqueId(), System.currentTimeMillis());
-                            Fireball fb = p.launchProjectile(Fireball.class);
+                        long now = System.currentTimeMillis();
+                        if (FireballLaunchPhysics.cooldownElapsed(now,
+                                a.getFireballCooldowns().getOrDefault(p.getUniqueId(), 0L), FireballSettings.COOLDOWN)) {
+                            a.getFireballCooldowns().put(p.getUniqueId(), now);
                             Vector direction = p.getEyeLocation().getDirection();
-                            fb = nms.setFireballDirection(fb, direction);
-                            fb.setVelocity(fb.getDirection().multiply(fireballSpeedMultiplier));
-                            //fb.setIsIncendiary(false); // apparently this on <12 makes the fireball not explode on hit. wtf bukkit?
-                            fb.setYield(fireballExplosionSize);
+                            boolean sneaking = p.isSneaking();
+                            Vector velocity = FireballLaunchPhysics.launchVelocity(direction,
+                                    FireballSettings.SPEED_MULTIPLIER, sneaking, FireballSettings.SNEAK_SPEED_MULTIPLIER);
+                            Fireball fb = p.launchProjectile(Fireball.class, velocity);
+                            nms.setFireballAcceleration(fb, FireballLaunchPhysics.launchAcceleration(direction,
+                                    sneaking, FireballSettings.SNEAK_ACCELERATION_MULTIPLIER));
+                            fb.setVelocity(velocity);
+                            if (sneaking) p.setVelocity(p.getVelocity().add(
+                                    FireballLaunchPhysics.sneakRecoil(velocity, FireballSettings.SNEAK_RECOIL)));
+                            fb.setYield((float) FireballSettings.EXPLOSION_SIZE);
                             fb.setMetadata("bw1058", new FixedMetadataValue(plugin, "ceva"));
+                            FireballFlightTracker.start(plugin, fb, FireballLaunchPhysics.randomFlightDistance(
+                                    200D, 300D, java.util.concurrent.ThreadLocalRandom.current()));
                             nms.minusAmount(p, inHand, 1);
                         }
 
@@ -242,8 +240,6 @@ public class Interact implements Listener {
             }
         }
     }
-
-
 
     @EventHandler
     public void disableItemFrameRotation(PlayerInteractEntityEvent e) {

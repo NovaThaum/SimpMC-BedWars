@@ -23,7 +23,7 @@ package com.andrei1058.bedwars.listeners;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.LastHit;
@@ -60,7 +60,6 @@ public class QuitAndTeleportListener implements Listener {
         }
 
         //Save preferred language
-
 
         if (getServerType() != ServerType.SHARED) {
             e.setQuitMessage(null);

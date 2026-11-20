@@ -4,7 +4,7 @@ import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.stats.Incrementable;
 import com.andrei1058.bedwars.api.arena.stats.GameStatistic;
 import com.andrei1058.bedwars.api.arena.stats.GameStatisticProvider;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +17,7 @@ public abstract class GenericStatistic implements GameStatisticProvider<GenericS
     }
 
     @Override
-    public String getVoidReplacement(@Nullable Language language) {
+    public String getVoidReplacement(@Nullable ChineseMessages language) {
         return "0";
     }
 
@@ -35,7 +35,7 @@ public abstract class GenericStatistic implements GameStatisticProvider<GenericS
         }
 
         @Override
-        public String getDisplayValue(Language language) {
+        public String getDisplayValue(ChineseMessages language) {
             return String.valueOf(getValue());
         }
 

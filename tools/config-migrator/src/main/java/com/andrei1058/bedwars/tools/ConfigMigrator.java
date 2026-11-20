@@ -66,6 +66,9 @@ public final class ConfigMigrator {
                         notes.add("config-version 已忽略，由目标插件管理");
                     boolean mainConfig = relative.getNameCount() == 1 && "config.yml".equalsIgnoreCase(relative.getFileName().toString());
                     if (mainConfig) {
+                        if (transferableSource.remove("fireball") != null || target.containsKey("fireball"))
+                            notes.add("火球参数已固定为 1.21.11 平衡，不迁移手动设置");
+                        target.remove("fireball");
                         transferableSource.remove("language");
                         transferableSource.remove("disabled-languages");
                         target.remove("language");

@@ -21,7 +21,7 @@
 package com.andrei1058.bedwars.database;
 
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.shop.quickbuy.QuickBuyElement;
 import com.andrei1058.bedwars.stats.PlayerStats;
 
@@ -340,16 +340,6 @@ public class SQLite implements Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void setLanguage(UUID player, String iso) {
-        // 已移除玩家语言偏好，保留兼容入口但不读写数据库。
-    }
-
-    @Override
-    public String getLanguage(UUID player) {
-        return Language.SIMPLIFIED_CHINESE_ISO;
     }
 
     @Override

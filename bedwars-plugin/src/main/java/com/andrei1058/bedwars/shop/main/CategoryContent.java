@@ -27,8 +27,8 @@ import com.andrei1058.bedwars.api.arena.shop.ICategoryContent;
 import com.andrei1058.bedwars.api.arena.shop.IContentTier;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
 import com.andrei1058.bedwars.api.events.shop.ShopBuyEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.configuration.Sounds;
 import com.andrei1058.bedwars.shop.ShopCache;
@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.andrei1058.bedwars.BedWars.nms;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 @SuppressWarnings("WeakerAccess")
 public class CategoryContent implements ICategoryContent {
@@ -117,16 +117,15 @@ public class CategoryContent implements ICategoryContent {
         }
 
         itemNamePath = Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", categoryName).replace("%content%", contentName);
-        for (Language lang : Language.getLanguages()) {
-            if (!lang.exists(itemNamePath)) {
-                lang.set(itemNamePath, "&cName not set");
-            }
+        ChineseMessages lang = ChineseMessages.get();
+        if (!lang.exists(itemNamePath)) {
+            lang.set(itemNamePath, "&c未设置名称");
         }
+
         itemLorePath = Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", categoryName).replace("%content%", contentName);
-        for (Language lang : Language.getLanguages()) {
-            if (!lang.exists(itemLorePath)) {
-                lang.set(itemLorePath, "&cLore not set");
-            }
+        ChineseMessages loreMessages = ChineseMessages.get();
+        if (!loreMessages.exists(itemLorePath)) {
+            loreMessages.set(itemLorePath, "&c未设置说明");
         }
 
         identifier = path;
@@ -204,7 +203,6 @@ public class CategoryContent implements ICategoryContent {
         //upgrade if possible
         shopCache.upgradeCachedItem(this, slot);
 
-
         //give items
         giveItems(player, shopCache, Arena.getArenaByPlayer(player), purchases);
 
@@ -212,7 +210,7 @@ public class CategoryContent implements ICategoryContent {
         Sounds.playSound(ConfigPath.SOUNDS_BOUGHT, player);
 
         //send purchase msg
-        if (itemNamePath == null || Language.getPlayerLanguage(player).getYml().get(itemNamePath) == null) {
+        if (itemNamePath == null || ChineseMessages.get().getYml().get(itemNamePath) == null) {
             ItemStack displayItem = ct.getItemStack();
             if (displayItem.getItemMeta() != null && displayItem.getItemMeta().hasDisplayName()) {
                 player.sendMessage(getMsg(player, Messages.SHOP_NEW_PURCHASE).replace("{item}", displayItem.getItemMeta().getDisplayName()));
@@ -220,7 +218,6 @@ public class CategoryContent implements ICategoryContent {
         } else {
             player.sendMessage(getMsg(player, Messages.SHOP_NEW_PURCHASE).replace("{item}", ChatColor.stripColor(getMsg(player, itemNamePath))).replace("{color}", "").replace("{tier}", ""));
         }
-
 
         shopCache.setCategoryWeight(father, effectiveWeight);
     }
@@ -307,11 +304,10 @@ public class CategoryContent implements ICategoryContent {
                 buyStatus = getMsg(player, Messages.SHOP_LORE_STATUS_CAN_BUY);
             }
 
-
             im.setDisplayName(getMsg(player, itemNamePath).replace("{color}", color).replace("{tier}", tier));
 
             List<String> lore = new ArrayList<>();
-            for (String s : Language.getList(player, itemLorePath)) {
+            for (String s : ChineseMessages.getList(player, itemLorePath)) {
                 if (s.contains("{quick_buy}")) {
                     if (hasQuick) {
                         if (ShopIndex.getIndexViewers().contains(player.getUniqueId())) {
@@ -456,7 +452,6 @@ public class CategoryContent implements ICategoryContent {
         }
         return s;
     }
-
 
     /**
      * Take money from player on buy

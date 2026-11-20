@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.configuration.Sounds;
 import java.nio.file.Path;
@@ -32,7 +32,7 @@ class NativeJoinNpcsClickTest {
     try (var b = mockStatic(Bukkit.class);
         var a = mockStatic(Arena.class);
         var sounds = mockStatic(Sounds.class);
-        var language = mockStatic(Language.class)) {
+        var language = mockStatic(ChineseMessages.class)) {
       b.when(Bukkit::getPluginManager).thenReturn(mock(PluginManager.class));
       NativeJoinNpcs manager = new NativeJoinNpcs(plugin, List::of);
       World w = mock(World.class);

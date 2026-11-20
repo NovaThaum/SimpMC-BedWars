@@ -22,7 +22,7 @@ package com.andrei1058.bedwars.api.arena.team;
 
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.generator.IGenerator;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.upgrades.EnemyBaseEnterTrap;
 import org.bukkit.Location;
 import org.bukkit.enchantments.Enchantment;
@@ -56,9 +56,9 @@ public interface ITeam {
     /**
      * Get team display name.
      *
-     * @param language get the display name in target language.
+     * 获取队伍的中文显示名。
      */
-    String getDisplayName(Language language);
+    String getDisplayName();
 
     /**
      * Check if is member.
@@ -110,7 +110,6 @@ public interface ITeam {
      * Get enchantments to be applied on armors.
      */
     List<TeamEnchant> getArmorsEnchantments();
-
 
     /**
      * Get team current size.

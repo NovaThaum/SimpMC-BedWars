@@ -25,8 +25,8 @@ import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.tasks.ReJoinTask;
 import com.andrei1058.bedwars.configuration.Sounds;
 import com.andrei1058.bedwars.lobbysocket.ArenaSocket;
@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class ReJoin {
 
@@ -181,7 +181,7 @@ public class ReJoin {
         }
 
         Sounds.playSound("rejoin-allowed", player);
-        player.sendMessage(ArenaMessages.withArena(Language.getMsg(player, Messages.REJOIN_ALLOWED), getArena().getDisplayName()));
+        player.sendMessage(ArenaMessages.withArena(ChineseMessages.getMsg(player, Messages.REJOIN_ALLOWED), getArena().getDisplayName()));
 
         return true;
     }
@@ -234,11 +234,11 @@ public class ReJoin {
             bwt.setBedDestroyed(true);
             for (Player p2 : arena.getPlayers()) {
                 p2.sendMessage(getMsg(p2, Messages.TEAM_ELIMINATED_CHAT).replace("{TeamColor}", bwt.getColor().chat().toString())
-                        .replace("{TeamName}", bwt.getDisplayName(Language.getPlayerLanguage(p2))));
+                        .replace("{TeamName}", bwt.getDisplayName()));
             }
             for (Player p2 : arena.getSpectators()) {
                 p2.sendMessage(getMsg(p2, Messages.TEAM_ELIMINATED_CHAT).replace("{TeamColor}", bwt.getColor().chat().toString())
-                        .replace("{TeamName}", bwt.getDisplayName(Language.getPlayerLanguage(p2))));
+                        .replace("{TeamName}", bwt.getDisplayName()));
             }
             arena.checkWinner();
         }

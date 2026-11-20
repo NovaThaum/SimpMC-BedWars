@@ -1,4 +1,4 @@
-package com.andrei1058.bedwars.language;
+package com.andrei1058.bedwars.messages;
 
 import com.andrei1058.bedwars.commands.bedwars.subcmds.regular.PlayerListFormatter;
 import org.junit.jupiter.api.Test;

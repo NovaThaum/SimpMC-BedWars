@@ -1,8 +1,8 @@
-package com.andrei1058.bedwars.language;
+package com.andrei1058.bedwars.messages;
 
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,7 @@ class ShopTranslationMigrationTest {
         yml.set(oldName, "{color}自定义塔");
         yml.set(oldLore, List.of("自定义说明"));
 
-        Language.migrateLegacyTowerShopItem(yml);
+        ChineseMessages.migrateLegacyTowerShopItem(yml);
 
         assertEquals("{color}自定义塔", yml.getString(newName));
         assertEquals(List.of("自定义说明"), yml.getStringList(newLore));

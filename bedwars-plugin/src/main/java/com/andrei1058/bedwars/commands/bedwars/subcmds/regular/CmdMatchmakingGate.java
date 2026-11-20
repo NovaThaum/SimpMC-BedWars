@@ -7,7 +7,7 @@ import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.MatchStartGate;
 import com.andrei1058.bedwars.commands.bedwars.MainCommand;
-import com.andrei1058.bedwars.language.MatchmakingMessages;
+import com.andrei1058.bedwars.messages.MatchmakingMessages;
 import org.bukkit.command.CommandSender;
 import java.util.Collections;
 import java.util.List;

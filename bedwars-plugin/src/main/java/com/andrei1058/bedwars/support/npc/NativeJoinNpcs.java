@@ -3,8 +3,8 @@ package com.andrei1058.bedwars.support.npc;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.events.player.PlayerJoinArenaEvent;
 import com.andrei1058.bedwars.api.events.player.PlayerLeaveArenaEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.configuration.Sounds;
@@ -358,7 +358,7 @@ public final class NativeJoinNpcs implements Listener {
     if (last != null && now - last < 500_000_000L) return;
     clicked.put(p.getUniqueId(), now);
     if (!Arena.joinRandomFromGroup(p, d.group())) {
-      p.sendMessage(Language.getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
+      p.sendMessage(ChineseMessages.getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
       Sounds.playSound("join-denied", p);
     } else Sounds.playSound("join-allowed", p);
     sync(p);

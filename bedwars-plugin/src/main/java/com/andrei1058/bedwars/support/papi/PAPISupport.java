@@ -24,8 +24,8 @@ import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.commands.shout.ShoutCommand;
 import com.andrei1058.bedwars.stats.PlayerStats;
@@ -38,7 +38,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class PAPISupport extends PlaceholderExpansion {
 
@@ -73,10 +73,10 @@ public class PAPISupport extends PlaceholderExpansion {
         if (s.startsWith("arena_status_")) {
             IArena a = Arena.getArenaByName(s.replace("arena_status_", ""));
             if (a == null) {
-                return player == null ? Language.getDefaultLanguage().m(Messages.ARENA_STATUS_RESTARTING_NAME) :
-                        Language.getMsg(player, Messages.ARENA_STATUS_RESTARTING_NAME);
+                return player == null ? ChineseMessages.get().m(Messages.ARENA_STATUS_RESTARTING_NAME) :
+                        ChineseMessages.getMsg(player, Messages.ARENA_STATUS_RESTARTING_NAME);
             }
-            return a.getDisplayStatus(Language.getDefaultLanguage());
+            return a.getDisplayStatus(ChineseMessages.get());
         }
 
         if (s.startsWith("arena_count_")) {
@@ -179,18 +179,18 @@ public class PAPISupport extends PlaceholderExpansion {
             case "player_team":
                 if (a != null) {
                     if (ShoutCommand.isShout(player)) {
-                        response += Language.getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_SHOUT);
+                        response += ChineseMessages.getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_SHOUT);
                     }
                     if (a.isPlayer(player)) {
                         if (a.getStatus() == GameState.playing) {
                             ITeam bwt = a.getTeam(player);
                             if (bwt != null) {
-                                response += Language.getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_TEAM).replace("{TeamName}",
-                                        bwt.getDisplayName(Language.getPlayerLanguage(player))).replace("{TeamColor}", String.valueOf(bwt.getColor().chat()));
+                                response += ChineseMessages.getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_TEAM).replace("{TeamName}",
+                                        bwt.getDisplayName()).replace("{TeamColor}", String.valueOf(bwt.getColor().chat()));
                             }
                         }
                     } else {
-                        response += Language.getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_SPECTATOR);
+                        response += ChineseMessages.getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_SPECTATOR);
                     }
                 }
                 break;

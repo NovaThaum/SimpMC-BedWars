@@ -20,8 +20,8 @@
 
 package com.andrei1058.bedwars.commands.rejoin;
 
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.arena.ReJoin;
 import com.andrei1058.bedwars.configuration.Permissions;
 import com.andrei1058.bedwars.configuration.Sounds;
@@ -46,20 +46,20 @@ public class RejoinCommand extends BukkitCommand {
         Player p = (Player) s;
 
         if (!p.hasPermission(Permissions.PERMISSION_REJOIN)) {
-            p.sendMessage(Language.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
+            p.sendMessage(ChineseMessages.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
             return true;
         }
 
         ReJoin rj = ReJoin.getPlayer(p);
 
         if (rj == null) {
-            p.sendMessage(Language.getMsg(p, Messages.REJOIN_NO_ARENA));
+            p.sendMessage(ChineseMessages.getMsg(p, Messages.REJOIN_NO_ARENA));
             Sounds.playSound("rejoin-denied", p);
             return true;
         }
 
         if (!rj.reJoin(p)) {
-            p.sendMessage(Language.getMsg(p, Messages.REJOIN_DENIED));
+            p.sendMessage(ChineseMessages.getMsg(p, Messages.REJOIN_DENIED));
             Sounds.playSound("rejoin-denied", p);
         }
         return true;

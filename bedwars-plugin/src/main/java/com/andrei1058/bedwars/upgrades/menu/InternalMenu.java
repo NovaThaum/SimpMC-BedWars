@@ -23,8 +23,8 @@ package com.andrei1058.bedwars.upgrades.menu;
 import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.upgrades.EnemyBaseEnterTrap;
 import com.andrei1058.bedwars.api.upgrades.MenuContent;
 import com.andrei1058.bedwars.api.upgrades.TeamUpgrade;
@@ -51,7 +51,7 @@ public class InternalMenu implements UpgradesIndex {
      */
     public InternalMenu(String groupName) {
         this.name = groupName.toLowerCase();
-        Language.saveIfNotExists(Messages.UPGRADES_MENU_GUI_NAME_PATH + groupName.toLowerCase(), "&8Upgrades & Traps");
+        ChineseMessages.saveIfNotExists(Messages.UPGRADES_MENU_GUI_NAME_PATH + groupName.toLowerCase(), "&8Upgrades & Traps");
     }
 
     @Override
@@ -62,7 +62,7 @@ public class InternalMenu implements UpgradesIndex {
         ITeam team = a.getTeam(player);
         if (team == null) return;
         if (!BedWars.getAPI().getArenaUtil().isPlaying(player)) return;
-        Inventory inv = Bukkit.createInventory(null, 45, Language.getMsg(player, Messages.UPGRADES_MENU_GUI_NAME_PATH + name));
+        Inventory inv = Bukkit.createInventory(null, 45, ChineseMessages.getMsg(player, Messages.UPGRADES_MENU_GUI_NAME_PATH + name));
         for (Map.Entry<Integer, MenuContent> entry : menuContentBySlot.entrySet()) {
             inv.setItem(entry.getKey(), entry.getValue().getDisplayItem(player, team));
         }

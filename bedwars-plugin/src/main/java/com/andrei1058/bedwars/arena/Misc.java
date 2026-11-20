@@ -27,7 +27,7 @@ import com.andrei1058.bedwars.api.arena.generator.IGenerator;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
 import com.andrei1058.bedwars.api.exceptions.InvalidMaterialException;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.region.Region;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.configuration.Sounds;
@@ -61,8 +61,8 @@ import java.util.List;
 import java.util.Random;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.getList;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getList;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 
 public class Misc {
 
@@ -97,7 +97,6 @@ public class Misc {
         }
         forceKick(p, arena, notAbandon);
     }
-
 
     /**
      * Connect a player to a VC/Bungee server through the standard plugin
@@ -162,7 +161,6 @@ public class Misc {
         fw.setFireworkMeta(meta);
         fw.setVelocity(p.getEyeLocation().getDirection());
     }
-
 
     @SuppressWarnings("unused")
     public static void launchFirework(Location l) {

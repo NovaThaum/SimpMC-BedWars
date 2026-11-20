@@ -23,7 +23,7 @@ package com.andrei1058.bedwars;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.levels.Level;
 import com.andrei1058.bedwars.api.party.Party;
 import com.andrei1058.bedwars.api.server.RestoreAdapter;
@@ -51,7 +51,7 @@ import com.andrei1058.bedwars.configuration.*;
 import com.andrei1058.bedwars.database.Database;
 import com.andrei1058.bedwars.database.SQLite;
 import com.andrei1058.bedwars.seasonal.SeasonalEffects;
-import com.andrei1058.bedwars.language.*;
+import com.andrei1058.bedwars.messages.*;
 import com.andrei1058.bedwars.levels.internal.InternalLevel;
 import com.andrei1058.bedwars.levels.internal.LevelListeners;
 import com.andrei1058.bedwars.listeners.*;
@@ -197,10 +197,10 @@ public class BedWars extends JavaPlugin {
 
         this.getLogger().info("Loading support for paper/spigot: " + version);
 
-        // Setup languages
+        // 初始化唯一的中文消息配置。
         new SimplifiedChinese();
-        SelfRescuePlatform.installLanguageFallbacks();
-        com.andrei1058.bedwars.arena.team.PreGameSquadMessages.installLanguageFallbacks();
+        SelfRescuePlatform.installMessageDefaults();
+        com.andrei1058.bedwars.arena.team.PreGameSquadMessages.installMessageDefaults();
 
         config = new MainConfig(this, "config");
 
@@ -436,8 +436,8 @@ public class BedWars extends JavaPlugin {
             }
         }, 5L);
 
-        /* Save messages for stats gui items if custom items added, for each language */
-        Language.setupCustomStatsMessages();
+        /* 为自定义统计物品补齐中文消息。 */
+        ChineseMessages.setupCustomStatsMessages();
 
         /* PlaceholderAPI Support */
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -509,10 +509,9 @@ public class BedWars extends JavaPlugin {
         shop = new ShopManager();
 
         //Leave this code at the end of the enable method
-        for (Language l : Language.getLanguages()) {
-            l.setupUnSetCategories();
-            Language.addDefaultMessagesCommandItems(l);
-        }
+        ChineseMessages l = ChineseMessages.get();
+        l.setupUnSetCategories();
+        ChineseMessages.addDefaultMessagesCommandItems(l);
 
         LevelsConfig.init();
 

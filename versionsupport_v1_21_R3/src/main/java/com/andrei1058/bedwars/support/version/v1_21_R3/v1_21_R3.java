@@ -6,8 +6,8 @@ import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.entity.Despawnable;
 import com.andrei1058.bedwars.api.events.player.PlayerKillEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import com.andrei1058.bedwars.support.version.common.VersionCommon;
 import org.bukkit.Bukkit;
@@ -182,14 +182,14 @@ public class v1_21_R3 extends VersionSupport {
         villager.setSilent(true);
 
         for (Player player : players) {
-            String[] name = Language.getMsg(player, name1).split(",");
+            String[] name = ChineseMessages.getMsg(player, name1).split(",");
             if (name.length == 1) {
                 ArmorStand armorStand = createArmorStand(name[0], location.clone().add(0, 1.85, 0));
-                new ShopHolo(Language.getPlayerLanguage(player).getIso(), armorStand, null, location, arena);
+                new ShopHolo(armorStand, null, location, arena);
             } else {
                 ArmorStand first = createArmorStand(name[0], location.clone().add(0, 2.1, 0));
                 ArmorStand second = createArmorStand(name[1], location.clone().add(0, 1.85, 0));
-                new ShopHolo(Language.getPlayerLanguage(player).getIso(), first, second, location, arena);
+                new ShopHolo(first, second, location, arena);
             }
         }
 

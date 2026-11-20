@@ -25,7 +25,7 @@ import com.andrei1058.bedwars.api.arena.stats.GameStatsHolder;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.arena.team.ITeamAssigner;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.region.Region;
 import com.andrei1058.bedwars.api.tasks.PlayingTask;
 import com.andrei1058.bedwars.api.tasks.RestartingTask;
@@ -171,7 +171,6 @@ public interface IArena {
      */
     ConcurrentHashMap<Player, Integer> getRespawnSessions();
 
-
     /**
      * Disable spectator collisions.
      *
@@ -245,7 +244,7 @@ public interface IArena {
      * Get the display status for an arena.
      * A message that can be used on signs etc.
      */
-    String getDisplayStatus(Language lang);
+    String getDisplayStatus(ChineseMessages lang);
 
     /**
      * Get arena display group for given player.
@@ -260,7 +259,7 @@ public interface IArena {
      * @return translated group.
      */
     @SuppressWarnings("unused")
-    String getDisplayGroup(Language language);
+    String getDisplayGroup(ChineseMessages language);
 
     List<ITeam> getTeams();
 
@@ -380,7 +379,6 @@ public interface IArena {
      */
     @Deprecated
     void addPlayerBedDestroyed(Player p);
-
 
     /**
      * Get arena by player name.
@@ -575,7 +573,6 @@ public interface IArena {
     void setTeamAssigner(ITeamAssigner teamAssigner);
 
     List<Player> getLeavingPlayers();
-
 
     /**
      * Check if breaking map is allowed, otherwise only placed blocks are allowed.

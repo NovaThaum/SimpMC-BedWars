@@ -33,6 +33,12 @@ jobs:
           test -f "$plugin_path"
           grep -Fx "version: ${version}" < <(unzip -p "$plugin_path" plugin.yml)
           grep -Fx "main: com.andrei1058.bedwars.BedWars" < <(unzip -p "$plugin_path" plugin.yml)
+          entries="$(unzip -Z1 "$plugin_path")"
+          grep -Fx 'com/andrei1058/bedwars/api/messages/ChineseMessages.class' <<< "$entries"
+          if grep -E '^com/andrei1058/bedwars/(api/)?language/|PlayerLangChangeEvent\.class$|messages_(en|fr|de|es|ru)' <<< "$entries"; then
+            echo '发布包不得包含旧 i18n 类或外语消息资源'
+            exit 1
+          fi
 
       - name: Upload plugin jar
         uses: actions/upload-artifact@v4

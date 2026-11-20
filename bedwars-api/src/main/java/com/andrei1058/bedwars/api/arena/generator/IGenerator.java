@@ -33,9 +33,9 @@ public interface IGenerator {
 
     /**
      * Get holograms associated to this generator.
-     * Language iso, Hologram instance.
+     * ChineseMessages iso, Hologram instance.
      */
-    HashMap<String, IGenHolo> getLanguageHolograms();
+    java.util.List<IGenHolo> getHolograms();
 
     /**
      * Disable a generator and destroy its data.
@@ -93,13 +93,6 @@ public interface IGenerator {
      * Get generator ore.
      */
     ItemStack getOre();
-
-    /**
-     * This will hide generator holograms with a different iso.
-     *
-     * @param iso player language iso.
-     */
-    void updateHolograms(Player p, String iso);
 
     /**
      * Enable generator rotation.

@@ -4,8 +4,8 @@ import com.andrei1058.bedwars.api.BedWars;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.arena.SetupSession;
-import com.andrei1058.bedwars.language.MatchmakingMessages;
-import com.andrei1058.bedwars.language.MatchQueryMessages;
+import com.andrei1058.bedwars.messages.MatchmakingMessages;
+import com.andrei1058.bedwars.messages.MatchQueryMessages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

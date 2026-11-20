@@ -31,8 +31,8 @@ import com.andrei1058.bedwars.api.entity.Despawnable;
 import com.andrei1058.bedwars.api.events.player.PlayerInvisibilityPotionEvent;
 import com.andrei1058.bedwars.api.events.player.PlayerKillEvent;
 import com.andrei1058.bedwars.api.events.team.TeamEliminatedEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.feature.EnemyTrackerCompass;
@@ -69,7 +69,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.andrei1058.bedwars.BedWars.*;
-import static com.andrei1058.bedwars.api.language.Language.getMsg;
+import static com.andrei1058.bedwars.api.messages.ChineseMessages.getMsg;
 import static com.andrei1058.bedwars.arena.LastHit.getLastHit;
 
 public class DamageDeathMove implements Listener {
@@ -150,12 +150,12 @@ public class DamageDeathMove implements Listener {
 
         // projectile hit message #696, #711
         ITeam team = a.getTeam(p);
-        Language lang = Language.getPlayerLanguage(damager);
+        ChineseMessages lang = ChineseMessages.get();
         if (lang.m(Messages.PLAYER_HIT_BOW).isEmpty()) return;
         String message = lang.m(Messages.PLAYER_HIT_BOW)
                 .replace("{amount}", new DecimalFormat("00.#").format(((Player) e.getEntity()).getHealth() - e.getFinalDamage()))
                 .replace("{TeamColor}", team.getColor().chat().toString())
-                .replace("{TeamName}", team.getDisplayName(lang))
+                .replace("{TeamName}", team.getDisplayName())
                 .replace("{PlayerName}", playerNameWithReset(p));
         damager.sendMessage(message);
     }
@@ -492,7 +492,7 @@ public class DamageDeathMove implements Listener {
             String finalMessage = message;
 
             PlayerKillEvent playerKillEvent = new PlayerKillEvent(a, victim, victimsTeam, killer, killersTeam,
-                    player -> Language.getMsg(player, finalMessage), cause
+                    player -> ChineseMessages.getMsg(player, finalMessage), cause
             );
             Bukkit.getPluginManager().callEvent(playerKillEvent);
 
@@ -502,31 +502,31 @@ public class DamageDeathMove implements Listener {
 
             if (null != playerKillEvent.getMessage()) {
                 for (Player on : a.getPlayers()) {
-                    Language lang = Language.getPlayerLanguage(on);
+                    ChineseMessages lang = ChineseMessages.get();
                     on.sendMessage(playerKillEvent.getMessage().apply(on).
                             replace("{PlayerColor}", victimsTeam.getColor().chat().toString())
                             .replace("{PlayerName}", playerNameWithReset(victim))
                             .replace("{PlayerNameUnformatted}", victim.getName())
-                            .replace("{PlayerTeamName}", victimsTeam.getDisplayName(lang))
+                            .replace("{PlayerTeamName}", victimsTeam.getDisplayName())
                             .replace("{KillerColor}", killersTeam == null ? "" : killersTeam.getColor().chat().toString())
                             .replace("{KillerName}", playerNameWithReset(killer))
                             .replace("{KillerNameUnformatted}", killer == null ? "" : killer.getName())
-                            .replace("{KillerTeamName}", killersTeam == null ? "" : killersTeam.getDisplayName(lang)));
+                            .replace("{KillerTeamName}", killersTeam == null ? "" : killersTeam.getDisplayName()));
                 }
             }
 
             if (null != playerKillEvent.getMessage()) {
                 for (Player on : a.getSpectators()) {
-                    Language lang = Language.getPlayerLanguage(on);
+                    ChineseMessages lang = ChineseMessages.get();
                     on.sendMessage(playerKillEvent.getMessage().apply(on).
                             replace("{PlayerColor}", victimsTeam.getColor().chat().toString())
                             .replace("{PlayerName}", playerNameWithReset(victim))
                             .replace("{PlayerNameUnformatted}", victim.getName())
                             .replace("{KillerColor}", killersTeam == null ? "" : killersTeam.getColor().chat().toString())
-                            .replace("{PlayerTeamName}", victimsTeam.getDisplayName(lang))
+                            .replace("{PlayerTeamName}", victimsTeam.getDisplayName())
                             .replace("{KillerName}", playerNameWithReset(killer))
                             .replace("{KillerNameUnformatted}", killer == null ? "" : killer.getName())
-                            .replace("{KillerTeamName}", killersTeam == null ? "" : killersTeam.getDisplayName(lang)));
+                            .replace("{KillerTeamName}", killersTeam == null ? "" : killersTeam.getDisplayName()));
                 }
             }
 
@@ -544,7 +544,6 @@ public class DamageDeathMove implements Listener {
             if (lastHit != null) {
                 lastHit.setDamager(null);
             }
-
 
             if (victimsTeam.isBedDestroyed() && victimsTeam.getSize() == 1 && a.getConfig().getBoolean(ConfigPath.ARENA_DISABLE_GENERATOR_FOR_EMPTY_TEAMS)) {
                 for (IGenerator g : victimsTeam.getGenerators()) {
@@ -574,20 +573,7 @@ public class DamageDeathMove implements Listener {
         } else {
             if (a.isSpectator(e.getPlayer())) {
                 e.setRespawnLocation(a.getSpectatorLocation());
-                String iso = Language.getPlayerLanguage(e.getPlayer()).getIso();
-                for (IGenerator o : a.getOreGenerators()) {
-                    o.updateHolograms(e.getPlayer(), iso);
-                }
-                for (ITeam t : a.getTeams()) {
-                    for (IGenerator o : t.getGenerators()) {
-                        o.updateHolograms(e.getPlayer(), iso);
-                    }
-                }
-                for (ShopHolo sh : ShopHolo.getShopHolo()) {
-                    if (sh.getA() == a) {
-                        sh.updateForPlayer(e.getPlayer(), iso);
-                    }
-                }
+
                 a.sendSpectatorCommandItems(e.getPlayer());
                 return;
             }
@@ -608,7 +594,7 @@ public class DamageDeathMove implements Listener {
                 if (t.getMembers().isEmpty()) {
                     Bukkit.getPluginManager().callEvent(new TeamEliminatedEvent(a, t));
                     for (Player p : a.getWorld().getPlayers()) {
-                        p.sendMessage(getMsg(p, Messages.TEAM_ELIMINATED_CHAT).replace("{TeamColor}", t.getColor().chat().toString()).replace("{TeamName}", t.getDisplayName(Language.getPlayerLanguage(p))));
+                        p.sendMessage(getMsg(p, Messages.TEAM_ELIMINATED_CHAT).replace("{TeamColor}", t.getColor().chat().toString()).replace("{TeamName}", t.getDisplayName()));
                     }
                     Bukkit.getScheduler().runTaskLater(plugin, a::checkWinner, 40L);
                 }
@@ -649,21 +635,7 @@ public class DamageDeathMove implements Listener {
                     !e.getFrom().getChunk().getWorld().equals(e.getTo().getChunk().getWorld())
             ) {
 
-                /* update armor-stands hidden by nms */
-                String iso = Language.getPlayerLanguage(e.getPlayer()).getIso();
-                for (IGenerator o : a.getOreGenerators()) {
-                    o.updateHolograms(e.getPlayer(), iso);
-                }
-                for (ITeam t : a.getTeams()) {
-                    for (IGenerator o : t.getGenerators()) {
-                        o.updateHolograms(e.getPlayer(), iso);
-                    }
-                }
-                for (ShopHolo sh : ShopHolo.getShopHolo()) {
-                    if (sh.getA() == a) {
-                        sh.updateForPlayer(e.getPlayer(), iso);
-                    }
-                }
+
 
                 // hide armor for those with invisibility potions
                 if (!a.getShowTime().isEmpty()) {

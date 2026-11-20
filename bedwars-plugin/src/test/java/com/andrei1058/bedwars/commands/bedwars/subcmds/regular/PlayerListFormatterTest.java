@@ -1,6 +1,6 @@
 package com.andrei1058.bedwars.commands.bedwars.subcmds.regular;
 
-import com.andrei1058.bedwars.language.MatchmakingMessages;
+import com.andrei1058.bedwars.messages.MatchmakingMessages;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -32,7 +32,7 @@ class PlayerListFormatterTest {
                 Entry::name, Entry::arena);
 
         List<String> lines = PlayerListFormatter.format(groups, 2, 100,
-                MatchmakingMessages.defaults(true));
+                MatchmakingMessages.defaults());
 
         assertEquals("&6在线玩家 &8» &f当前有 2 位玩家在线，可容纳最大在线人数为 100 位玩家。", lines.get(0));
         assertEquals("&a大厅 &8» &falice", lines.get(1));

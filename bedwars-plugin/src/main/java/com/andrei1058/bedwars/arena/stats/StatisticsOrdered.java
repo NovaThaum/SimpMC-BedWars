@@ -5,7 +5,7 @@ import com.andrei1058.bedwars.api.arena.stats.GameStatisticProvider;
 import com.andrei1058.bedwars.api.arena.stats.PlayerGameStats;
 import com.andrei1058.bedwars.api.arena.stats.GameStatistic;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +47,7 @@ public class StatisticsOrdered {
          * @param string           string to be placeholder replaced.
          * @param emptyReplacement replace empty top position with this string.
          */
-        public @Nullable String parseString(String string, @Nullable Language lang, String emptyReplacement) {
+        public @Nullable String parseString(String string, @Nullable ChineseMessages lang, String emptyReplacement) {
             if (null == arena.getStatsHolder()) {
                 return null;
             }
@@ -119,7 +119,7 @@ public class StatisticsOrdered {
             string = string.replace("{topPlayerName}", stats.getUsername())
                     .replace("{topPlayerDisplayName}", stats.getDisplayPlayer())
                     .replace("{topTeamColor}", null == team ? "" : team.getColor().chat().toString())
-                    .replace("{topTeamName}", null == team ? "" : team.getDisplayName(lang))
+                    .replace("{topTeamName}", null == team ? "" : team.getDisplayName())
                     .replace("{topValue}", "{topValue-"+orderBy+"}");
 
             for (String registered : arena.getStatsHolder().getRegistered()) {

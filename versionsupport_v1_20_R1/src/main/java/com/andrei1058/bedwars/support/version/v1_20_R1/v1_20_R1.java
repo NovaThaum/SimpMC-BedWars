@@ -6,8 +6,8 @@ import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.entity.Despawnable;
 import com.andrei1058.bedwars.api.events.player.PlayerKillEvent;
-import com.andrei1058.bedwars.api.language.Language;
-import com.andrei1058.bedwars.api.language.Messages;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.server.VersionSupport;
 import com.andrei1058.bedwars.support.version.common.VersionCommon;
 import com.andrei1058.bedwars.support.version.v1_20_R1.despawnable.DespawnableAttributes;
@@ -242,21 +242,17 @@ public class v1_20_R1 extends VersionSupport {
         vlg.setSilent(true);
 
         for (Player p : players) {
-            String[] name = Language.getMsg(p, name1).split(",");
+            String[] name = ChineseMessages.getMsg(p, name1).split(",");
             if (name.length == 1) {
                 ArmorStand a = createArmorStand(name[0], l.clone().add(0, 1.85, 0));
-                new ShopHolo(Language.getPlayerLanguage(p).getIso(), a, null, l, arena);
+                new ShopHolo(a, null, l, arena);
             } else {
                 ArmorStand a = createArmorStand(name[0], l.clone().add(0, 2.1, 0));
                 ArmorStand b = createArmorStand(name[1], l.clone().add(0, 1.85, 0));
-                new ShopHolo(Language.getPlayerLanguage(p).getIso(), a, b, l, arena);
+                new ShopHolo(a, b, l, arena);
             }
         }
-        for (ShopHolo sh : ShopHolo.getShopHolo()) {
-            if (sh.getA() == arena) {
-                sh.update();
-            }
-        }
+
     }
 
     @Override

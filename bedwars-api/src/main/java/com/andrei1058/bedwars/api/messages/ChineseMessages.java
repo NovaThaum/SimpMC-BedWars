@@ -18,7 +18,7 @@
  * Contact e-mail: andrew.dascalu@gmail.com
  */
 
-package com.andrei1058.bedwars.api.language;
+package com.andrei1058.bedwars.api.messages;
 
 import com.andrei1058.bedwars.api.BedWars;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
@@ -32,24 +32,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class Language extends ConfigManager {
+public class ChineseMessages extends ConfigManager {
 
-    public static final String SIMPLIFIED_CHINESE_ISO = "zh_cn";
-
-    private final String iso;
     private String prefix = "";
     private static String prefixStatic = "";
-    private static Language defaultLanguage;
+    private static ChineseMessages instance;
     private String serverIp;
 
-    private static String requireChineseIso(String iso) {
-        if (!isSimplifiedChineseIso(iso)) throw new IllegalArgumentException("仅支持简体中文 zh_cn");
-        return SIMPLIFIED_CHINESE_ISO;
-    }
-
-    public Language(Plugin plugin, String iso) {
-        super(plugin, "messages_" + requireChineseIso(iso), plugin.getDataFolder().getPath() + "/Languages");
-        this.iso = SIMPLIFIED_CHINESE_ISO;
+    public ChineseMessages(Plugin plugin) {
+        super(plugin, "messages_zh_cn", plugin.getDataFolder().getPath() + "/Languages");
         migrateLegacyTowerShopItem(getYml());
 
         // replace old placeholders
@@ -102,12 +93,9 @@ public class Language extends ConfigManager {
             getYml().set("scoreboard", null);
         }
 
-        defaultLanguage = this;
+        instance = this;
     }
 
-    /**
-     * Set chat prefix.
-     */
     public void setPrefix(String prefix) {
         this.prefix = prefix;
     }
@@ -116,11 +104,8 @@ public class Language extends ConfigManager {
         prefixStatic = prefix;
     }
 
-    /**
-     * Get scoreboard strings.
-     */
     public static List<String> getScoreboard(Player player, String path, String alternative) {
-        Language language = getPlayerLanguage(player);
+        ChineseMessages language = get();
         if (language.exists(path)) {
             return language.l(path);
         } else {
@@ -139,47 +124,20 @@ public class Language extends ConfigManager {
         return language.l(alternative);
     }
 
-    /**
-     * Get language display name.
-     */
-    public String getLangName() {
-        return getYml().getString("name");
-    }
-
-    /**
-     * Get message in player's language.
-     */
     public static String getMsg(Player player, String path) {
         if (player == null) {
-            return getDefaultLanguage().m(path);
+            return get().m(path);
         }
-        return getDefaultLanguage()
+        return get()
                 .m(path).replace("{prefix}", (prefixStatic == null ? "" : prefixStatic));
     }
 
-    /**
-     * Retrieve a player language.
-     */
-    public static Language getPlayerLanguage(@NotNull Player player) {
-        return getDefaultLanguage();
-    }
-
-    public static Language getPlayerLanguage(UUID p) {
-        return getDefaultLanguage();
-    }
-
-    /**
-     * Check if a message was set.
-     */
     public boolean exists(String path) {
         return getYml().get(path) != null;
     }
 
-    /**
-     * Get a string list in player's language.
-     */
     public static List<String> getList(@NotNull Player player, String path) {
-        return getDefaultLanguage().l(path);
+        return get().l(path);
     }
 
     @SuppressWarnings("unused")
@@ -191,25 +149,19 @@ public class Language extends ConfigManager {
         }
     }
 
-    /**
-     * Save a value to file if not exists.
-     */
     public static void saveIfNotExists(String path, Object data) {
-        for (Language l : getLanguages()) {
-            if (l.getYml().get(path) == null) {
-                l.set(path, data);
-            }
+        ChineseMessages l = get();
+        if (l.getYml().get(path) == null) {
+            l.set(path, data);
         }
+
     }
 
-    /**
-     * Get a color translated message.
-     */
     public String m(String path) {
         String message = getYml().getString(path);
         if (message == null) {
-            System.err.println("Missing message key " + path + " in language " + getIso());
-            message = "MISSING_LANG";
+            System.err.println("缺少中文消息：" + path);
+            message = "缺少中文消息";
         }
         if (null == serverIp) {
             BedWars api = Bukkit.getServicesManager().getRegistration(BedWars.class).getProvider();
@@ -225,14 +177,11 @@ public class Language extends ConfigManager {
         );
     }
 
-    /**
-     * Get a color translated list.
-     */
     public List<String> l(String path) {
         List<String> result = new ArrayList<>();
         List<String> lines = getYml().getStringList(path);
         if (lines == null) {
-            System.err.println("Missing message list key " + path + " in language " + getIso());
+            System.err.println("缺少中文消息列表：" + path);
             lines = Collections.emptyList();
         }
         for (String line : lines) {
@@ -241,67 +190,23 @@ public class Language extends ConfigManager {
         return result;
     }
 
-    /** @deprecated 已移除玩家语言映射，返回值仅为独立兼容快照。 */
-    @Deprecated
-    public static HashMap<UUID, Language> getLangByPlayer() {
-        // 兼容旧 API：返回独立空表，不再维护玩家语言偏好。
-        return new HashMap<>();
-    }
-
-    /**
-     * Check if a language exists.
-     */
-    public static boolean isLanguageExist(String iso) {
-        return isSimplifiedChineseIso(iso) && defaultLanguage != null;
-    }
-
-    /**
-     * Get language with given info.
-     *
-     * @return null if you could not find.
-     */
-    public static boolean isSimplifiedChineseIso(String iso) {
-        return iso != null && SIMPLIFIED_CHINESE_ISO.equalsIgnoreCase(iso.trim());
-    }
-
-    public static Language getLang(String iso) {
-        return getDefaultLanguage();
-    }
-
-    /**
-     * Get language iso code.
-     */
-    public String getIso() {
-        return iso;
-    }
-
-    /**
-     * Get loaded languages list.
-     */
-    public static List<Language> getLanguages() {
-        return defaultLanguage == null ? Collections.emptyList() : Collections.singletonList(defaultLanguage);
-    }
-
-    /**
-     * Save messages for unset stats items.
-     */
     public static void setupCustomStatsMessages() {
         BedWars api = Bukkit.getServer().getServicesManager().getRegistration(BedWars.class).getProvider();
-        for (Language l : getLanguages()) {
-            if (l == null) continue;
-            if (l.getYml() == null) continue;
-            /* save messages for stats gui items if custom items added */
-            if (api.getConfigs().getMainConfig().getYml().get(ConfigPath.GENERAL_CONFIGURATION_STATS_PATH) == null)
-                return;
-            for (String item : api.getConfigs().getMainConfig().getYml().getConfigurationSection(ConfigPath.GENERAL_CONFIGURATION_STATS_PATH).getKeys(false)) {
-                if (ConfigPath.GENERAL_CONFIGURATION_STATS_GUI_SIZE.contains(item)) continue;
-                if (l.getYml().getDefaults() == null || !l.getYml().getDefaults().contains(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name"))
-                    l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name", "未设置名称");
-                if (l.getYml().getDefaults() == null || !l.getYml().getDefaults().contains(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore"))
-                    l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore", Collections.singletonList("未设置说明"));
-            }
-            l.save();
+        ChineseMessages l = get();
+        if (l == null) return;
+        if (l.getYml() == null) return;
+        /* save messages for stats gui items if custom items added */
+        if (api.getConfigs().getMainConfig().getYml().get(ConfigPath.GENERAL_CONFIGURATION_STATS_PATH) == null)
+            return;
+        for (String item : api.getConfigs().getMainConfig().getYml().getConfigurationSection(ConfigPath.GENERAL_CONFIGURATION_STATS_PATH).getKeys(false)) {
+            if (ConfigPath.GENERAL_CONFIGURATION_STATS_GUI_SIZE.contains(item)) continue;
+            if (l.getYml().getDefaults() == null || !l.getYml().getDefaults().contains(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name"))
+                l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-name", "未设置名称");
+            if (l.getYml().getDefaults() == null || !l.getYml().getDefaults().contains(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore"))
+                l.getYml().addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + item + "-lore", Collections.singletonList("未设置说明"));
         }
+        l.save();
+
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -312,10 +217,7 @@ public class Language extends ConfigManager {
             yml.addDefault(Messages.PLAYER_STATS_GUI_PATH + "-" + path + "-lore", lore);
     }
 
-    /**
-     * Create missing name/ lore for items: multi arena lobby, waiting, spectating
-     */
-    public static void addDefaultMessagesCommandItems(Language language) {
+    public static void addDefaultMessagesCommandItems(ChineseMessages language) {
         if (language == null) return;
         YamlConfiguration yml = language.getYml();
         if (yml == null) return;
@@ -357,9 +259,6 @@ public class Language extends ConfigManager {
         language.save();
     }
 
-    /**
-     * Create messages paths for new shop categories
-     */
     @SuppressWarnings("DuplicateExpressions")
     public void setupUnSetCategories() {
         BedWars api = Bukkit.getServer().getServicesManager().getRegistration(BedWars.class).getProvider();
@@ -389,9 +288,6 @@ public class Language extends ConfigManager {
         }
     }
 
-    /**
-     * Add required messages for a shop category to the given yml
-     */
     public static void addCategoryMessages(@NotNull YamlConfiguration yml, String categoryName, String invName, String itemName, List<String> itemLore) {
         if (yml.getDefaults() == null || !yml.getDefaults().contains(Messages.SHOP_CATEGORY_INVENTORY_NAME.replace("%category%", categoryName)))
             yml.addDefault(Messages.SHOP_CATEGORY_INVENTORY_NAME.replace("%category%", categoryName), invName);
@@ -401,20 +297,11 @@ public class Language extends ConfigManager {
             yml.addDefault(Messages.SHOP_CATEGORY_ITEM_LORE.replace("%category%", categoryName), itemLore);
     }
 
-    /**
-     * Add required messages for a shop category to the given yml
-     */
     public static void addContentMessages(@NotNull YamlConfiguration yml, String contentName, String categoryName, String itemName, List<String> itemLore) {
         final String path1 = Messages.SHOP_CONTENT_TIER_ITEM_NAME.replace("%category%", categoryName).replace("%content%", contentName),
                 path2 = Messages.SHOP_CONTENT_TIER_ITEM_LORE.replace("%category%", categoryName).replace("%content%", contentName);
         if (yml.getDefaults() == null || !yml.getDefaults().contains(path1)) yml.addDefault(path1, itemName);
         if (yml.getDefaults() == null || !yml.getDefaults().contains(path2)) yml.addDefault(path2, itemLore);
-    }
-
-    /** 只接受完整语言文件名，拒绝迁移备份和临时文件。 */
-    public static String isoFromFileName(String fileName) {
-        if (fileName == null || !fileName.matches("messages_[A-Za-z0-9_-]+\\.yml")) return null;
-        return fileName.substring("messages_".length(), fileName.length() - 4);
     }
 
     private static boolean isGeneratedShopPlaceholder(Object value, String placeholder) {
@@ -442,18 +329,7 @@ public class Language extends ConfigManager {
         yml.set(oldLore, null);
     }
 
-    /**
-     * Change a player language and refresh
-     * scoreboard and custom join items.
-     */
-    /** @deprecated 玩家固定使用简体中文；外语代码返回 false。 */
-    @Deprecated
-    public static boolean setPlayerLanguage(UUID uuid, String iso) {
-        // 兼容旧 API；不保存偏好、不触发语言切换事件。
-        return iso == null || isSimplifiedChineseIso(iso);
-    }
-
-    public static String @NotNull [] getCountDownTitle(@NotNull Language playerLang, int second) {
+    public static String @NotNull [] getCountDownTitle(@NotNull ChineseMessages playerLang, int second) {
         String[] result = new String[2];
         result[0] = ChatColor.translateAlternateColorCodes('&', playerLang.getYml().get(Messages.ARENA_STATUS_START_COUNTDOWN_TITLE + "-" + second, playerLang.getString(Messages.ARENA_STATUS_START_COUNTDOWN_TITLE)).toString().replace("{second}", String.valueOf(second)));
         if (result[0].isEmpty()) {
@@ -466,20 +342,7 @@ public class Language extends ConfigManager {
         return result;
     }
 
-    /**
-     * Change server default language.
-     */
-    public static void setDefaultLanguage(Language defaultLanguage) {
-        if (defaultLanguage == null || !isSimplifiedChineseIso(defaultLanguage.getIso())) {
-            throw new IllegalArgumentException("仅支持简体中文 zh_cn");
-        }
-        Language.defaultLanguage = defaultLanguage;
-    }
-
-    /**
-     * Get server default language.
-     */
-    public static Language getDefaultLanguage() {
-        return defaultLanguage;
+    public static ChineseMessages get() {
+        return instance;
     }
 }

@@ -24,7 +24,7 @@ import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.shop.IContentTier;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigManager;
-import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.levels.Level;
 import com.andrei1058.bedwars.api.party.Party;
 import com.andrei1058.bedwars.api.server.ISetupSession;
@@ -126,7 +126,6 @@ public interface BedWars {
          */
         int getPlayerGamesPlayed(UUID p);
     }
-
 
     /**
      * Get afk system methods. It will only work if the game is started.
@@ -444,14 +443,7 @@ public interface BedWars {
      **/
     ServerType getServerType();
 
-    /**
-     * Get a player language iso code
-     */
-    @SuppressWarnings("unused")
-    String getLangIso(Player p);
-
-
-    /**
+/**
      * Get bedWars main command
      */
     ParentCommand getBedWarsCommand();
@@ -480,9 +472,9 @@ public interface BedWars {
     VersionSupport getVersionSupport();
 
     /**
-     * Get server default language.
+     * 获取唯一的简体中文消息配置。
      */
-    Language getDefaultLang();
+    ChineseMessages getMessages();
 
     /**
      * Get lobby world name.
@@ -496,18 +488,7 @@ public interface BedWars {
 
     boolean isAutoScale();
 
-    /**
-     * Get language by iso code.
-     */
-    @SuppressWarnings("unused")
-    Language getLanguageByIso(String isoCode);
-
-    /**
-     * Get a player language.
-     */
-    Language getPlayerLanguage(Player player);
-
-    /**
+/**
      * This is my standard location where to store addons configurations.
      * Make sure to create a folder in it with your addon name.
      */

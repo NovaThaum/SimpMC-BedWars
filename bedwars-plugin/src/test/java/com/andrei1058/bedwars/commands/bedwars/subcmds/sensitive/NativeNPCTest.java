@@ -11,6 +11,19 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 
 class NativeNPCTest {
+  private com.andrei1058.bedwars.configuration.MainConfig previousConfig;
+
+  @org.junit.jupiter.api.BeforeEach
+  void initializePluginConfiguration() {
+    previousConfig = com.andrei1058.bedwars.BedWars.config;
+    com.andrei1058.bedwars.BedWars.config = mock(com.andrei1058.bedwars.configuration.MainConfig.class);
+  }
+
+  @org.junit.jupiter.api.AfterEach
+  void restorePluginConfiguration() {
+    com.andrei1058.bedwars.BedWars.config = previousConfig;
+  }
+
   @Test
   void screenshotCreateSyntaxAndOldAddAliasPreserveSpacesAndNewlines() throws Exception {
     NativeJoinNpcs manager = mock(NativeJoinNpcs.class);

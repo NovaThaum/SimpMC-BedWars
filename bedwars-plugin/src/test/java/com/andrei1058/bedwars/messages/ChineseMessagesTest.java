@@ -24,7 +24,8 @@ class ChineseMessagesTest {
         when(BedWars.plugin.getDataFolder()).thenReturn(directory.toFile());
         when(BedWars.plugin.getLogger()).thenReturn(Logger.getAnonymousLogger());
         Path folder = Files.createDirectories(directory.resolve("Languages"));
-        Files.writeString(folder.resolve("messages_zh_cn.yml"), "custom: 自定义中文\ncmd-join-usage: 自定义加入提示\n");
+        Files.writeString(folder.resolve("messages_zh_cn.yml"), "custom: 自定义中文\ncmd-join-usage: 自定义加入提示\n"
+                + Messages.FORMATTING_ACTION_BAR_TRACKING + ": '&f正在追踪：{team} &f- 距离：{distance}m'\n");
         Files.writeString(folder.resolve("messages_en.yml"), "custom: English\n");
         Files.writeString(folder.resolve("messages_zh_cn.backup.yml"), "custom: 旧备份\n");
         var services = mock(org.bukkit.plugin.ServicesManager.class);
@@ -40,6 +41,8 @@ class ChineseMessagesTest {
             assertSame(messages, ChineseMessages.get());
             assertEquals("自定义中文", messages.getYml().getString("custom"));
             assertEquals("自定义加入提示", messages.getYml().getString("cmd-join-usage"));
+            assertEquals("&f正在追踪：{player} &f- 距离：{distance}m",
+                    messages.getYml().getString(Messages.FORMATTING_ACTION_BAR_TRACKING));
             assertTrue(messages.getYml().getString("match-history.not-found").contains("未找到"));
             messages.reload();
             assertEquals("自定义中文", messages.getYml().getString("custom"));

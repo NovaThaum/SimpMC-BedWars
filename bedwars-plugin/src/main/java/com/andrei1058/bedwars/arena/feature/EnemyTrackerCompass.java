@@ -15,6 +15,8 @@ import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.arena.Arena;
+import com.andrei1058.bedwars.api.messages.ChineseMessages;
+import com.andrei1058.bedwars.api.messages.Messages;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -23,7 +25,12 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public final class EnemyTrackerCompass implements Runnable {
 
@@ -31,8 +38,15 @@ public final class EnemyTrackerCompass implements Runnable {
     private static final int HOTBAR_SLOT = 8;
     private static final double IDLE_TARGET_RADIUS = 16.0;
     private static final double IDLE_SPIN_STEP = Math.PI / 5.0;
+    private static final Map<UUID, Player> trackedTargets = new HashMap<>();
 
     private double idleAngle;
+
+    public static Player getTrackedTarget(Player player) {
+        if (player == null) return null;
+        Player target = trackedTargets.get(player.getUniqueId());
+        return target != null && target.isOnline() ? target : null;
+    }
 
     public static void giveTo(Player player) {
         if (player == null) return;
@@ -75,45 +89,72 @@ public final class EnemyTrackerCompass implements Runnable {
             idleAngle -= Math.PI * 2.0;
         }
 
-        for (IArena arena : new ArrayList<>(Arena.getArenas())) {
-            updateArena(arena);
-        }
+        updateArenas(new ArrayList<>(Arena.getArenas()));
     }
 
-    private void updateArena(IArena arena) {
+    void updateArenas(List<IArena> arenas) {
+        Set<UUID> currentTrackers = new HashSet<>();
+        for (IArena arena : arenas) {
+            updateArena(arena, currentTrackers);
+        }
+        trackedTargets.keySet().removeIf(uuid -> !currentTrackers.contains(uuid));
+    }
+
+    void updateArena(IArena arena, Set<UUID> currentTrackers) {
         if (arena == null || arena.getStatus() != GameState.playing) return;
 
         List<Player> arenaPlayers = arena.getPlayers();
         if (arenaPlayers == null || arenaPlayers.isEmpty()) return;
-        List<Player> players = new ArrayList<>(arenaPlayers);
+        List<TrackedPlayer> activePlayers = new ArrayList<>(arenaPlayers.size());
+        for (Player player : arenaPlayers) {
+            if (!isActivePlayer(arena, player)) continue;
+            ITeam team = arena.getTeam(player);
+            if (team != null) activePlayers.add(new TrackedPlayer(player, team, player.getLocation()));
+        }
 
-        for (Player player : players) {
-            if (!isActivePlayer(arena, player) || !hasTrackingCompass(player)) continue;
+        for (TrackedPlayer trackedPlayer : activePlayers) {
+            Player player = trackedPlayer.player();
+            if (!hasTrackingCompass(player)) continue;
+            currentTrackers.add(player.getUniqueId());
 
-            ITeam playerTeam = arena.getTeam(player);
-            if (playerTeam == null) continue;
-
-            Player nearestEnemy = findNearestEnemy(arena, players, player, playerTeam);
+            TrackedPlayer nearestEnemy = findNearestEnemy(arena, activePlayers, trackedPlayer);
             if (nearestEnemy == null) {
+                trackedTargets.remove(player.getUniqueId());
                 player.setCompassTarget(createIdleTarget(player));
             } else {
-                player.setCompassTarget(nearestEnemy.getLocation());
+                trackedTargets.put(player.getUniqueId(), nearestEnemy.player());
+                player.setCompassTarget(nearestEnemy.location());
             }
         }
     }
 
-    private Player findNearestEnemy(IArena arena, List<Player> players, Player player, ITeam playerTeam) {
-        Player nearest = null;
+    /** 与指针共用当前敌人目标，避免距离提示仍追踪队友。 */
+    public static void showTrackingActionBar(IArena arena, Player player) {
+        Player target = getTrackedTarget(player);
+        if (arena == null || arena.getStatus() != GameState.playing || target == null
+                || !isActivePlayer(arena, player) || !isActivePlayer(arena, target)
+                || isInvisible(arena, target)) return;
+        ITeam team = arena.getTeam(target);
+        if (team == null || team == arena.getTeam(player)) return;
+        String color = team.getColor().chat().toString();
+        int distance = (int) player.getLocation().distance(target.getLocation());
+        BedWars.nms.playAction(player, ChineseMessages.getMsg(player, Messages.FORMATTING_ACTION_BAR_TRACKING)
+                .replace("{player}", color + target.getName())
+                .replace("{team}", color + team.getDisplayName())
+                .replace("{distance}", color + distance).replace('&', '§'));
+    }
+
+    private TrackedPlayer findNearestEnemy(IArena arena, List<TrackedPlayer> players,
+                                           TrackedPlayer trackedPlayer) {
+        TrackedPlayer nearest = null;
         double nearestDistance = Double.MAX_VALUE;
 
-        for (Player candidate : players) {
-            if (!isActivePlayer(arena, candidate) || candidate.getUniqueId().equals(player.getUniqueId())) continue;
-            if (isInvisible(arena, candidate)) continue;
+        for (TrackedPlayer candidate : players) {
+            if (candidate.player().equals(trackedPlayer.player())) continue;
+            if (isInvisible(arena, candidate.player())) continue;
+            if (candidate.team() == trackedPlayer.team()) continue;
 
-            ITeam candidateTeam = arena.getTeam(candidate);
-            if (candidateTeam == null || candidateTeam == playerTeam) continue;
-
-            double distance = player.getLocation().distanceSquared(candidate.getLocation());
+            double distance = trackedPlayer.location().distanceSquared(candidate.location());
             if (distance < nearestDistance) {
                 nearest = candidate;
                 nearestDistance = distance;
@@ -122,9 +163,10 @@ public final class EnemyTrackerCompass implements Runnable {
         return nearest;
     }
 
-    private boolean isActivePlayer(IArena arena, Player player) {
+    private static boolean isActivePlayer(IArena arena, Player player) {
         return player != null
                 && player.isOnline()
+                && arena.isPlayer(player)
                 && !player.isDead()
                 && !arena.isSpectator(player)
                 && !arena.isReSpawning(player)
@@ -132,7 +174,7 @@ public final class EnemyTrackerCompass implements Runnable {
                 && arena.getWorld().equals(player.getWorld());
     }
 
-    private boolean isInvisible(IArena arena, Player player) {
+    private static boolean isInvisible(IArena arena, Player player) {
         return player.hasPotionEffect(PotionEffectType.INVISIBILITY)
                 || (arena.getShowTime() != null && arena.getShowTime().containsKey(player));
     }
@@ -142,6 +184,9 @@ public final class EnemyTrackerCompass implements Runnable {
             if (isTrackingCompass(item)) return true;
         }
         return false;
+    }
+
+    private record TrackedPlayer(Player player, ITeam team, Location location) {
     }
 
     private Location createIdleTarget(Player player) {

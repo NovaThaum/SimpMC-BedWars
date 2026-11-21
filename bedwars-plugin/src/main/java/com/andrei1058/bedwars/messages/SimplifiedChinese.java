@@ -199,7 +199,9 @@ public class SimplifiedChinese extends ChineseMessages {
         yml.addDefault(Messages.FORMATTING_SCOREBOARD_TEAM_ALIVE, "&a&l✓");
         yml.addDefault(Messages.FORMATTING_SCOREBOARD_NEXEVENT_TIMER, "mm:ss");
         yml.addDefault(Messages.FORMATTING_SCOREBOARD_YOUR_TEAM, "&7 你");
-        yml.addDefault(Messages.FORMATTING_ACTION_BAR_TRACKING, "&f正在追踪：{team} &f- 距离：{distance}m");
+        addPolishedDefault(yml, Messages.FORMATTING_ACTION_BAR_TRACKING,
+                "&f正在追踪：{team} &f- 距离：{distance}m",
+                "&f正在追踪：{player} &f- 距离：{distance}m");
         yml.addDefault(Messages.FORMATTING_TEAM_WINNER_FORMAT, "      {TeamColor}{TeamName} &7- {members}");
         yml.addDefault(Messages.FORMATTING_SOLO_WINNER_FORMAT, "                 {TeamColor}{TeamName} &7- {members}");
         yml.addDefault(Messages.FORMATTING_GENERATOR_TIER1, "I");

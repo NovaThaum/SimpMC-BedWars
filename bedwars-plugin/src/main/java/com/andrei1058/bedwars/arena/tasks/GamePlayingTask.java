@@ -31,6 +31,7 @@ import com.andrei1058.bedwars.api.messages.ChineseMessages;
 import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.tasks.PlayingTask;
 import com.andrei1058.bedwars.arena.Arena;
+import com.andrei1058.bedwars.arena.feature.EnemyTrackerCompass;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -166,21 +167,9 @@ public class GamePlayingTask implements Runnable, PlayingTask {
                 }
                 break;
         }
-        int distance = 0;
         for (ITeam t : getArena().getTeams()) {
-            if (t.getSize() > 1) {
-                for (Player p : t.getMembers()) {
-                    for (Player p2 : t.getMembers()) {
-                        if (p2 == p) continue;
-                        if (distance == 0) {
-                            distance = (int) p.getLocation().distance(p2.getLocation());
-                        } else if ((int) p.getLocation().distance(p2.getLocation()) < distance) {
-                            distance = (int) p.getLocation().distance(p2.getLocation());
-                        }
-                    }
-                    nms.playAction(p, getMsg(p, Messages.FORMATTING_ACTION_BAR_TRACKING).replace("{team}", t.getColor().chat() + t.getDisplayName())
-                            .replace("{distance}", t.getColor().chat().toString() + distance).replace("&", "§"));
-                }
+            for (Player player : t.getMembers()) {
+                EnemyTrackerCompass.showTrackingActionBar(getArena(), player);
             }
 
             // spawn items

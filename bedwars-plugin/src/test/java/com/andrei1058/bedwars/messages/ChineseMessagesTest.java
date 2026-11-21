@@ -49,6 +49,23 @@ class ChineseMessagesTest {
         } finally { BedWars.plugin = previousPlugin; field.set(null, previousMessages); }
     }
 
+    @Test void polishesOnlyExactOldDefaultsAndPreservesCustomTextAndLists() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("old", "原默认"); yaml.set("custom", "管理员文本");
+        yaml.set("lore", List.of("原说明")); yaml.set("custom-lore", List.of("管理员说明"));
+        for (String key : List.of("missing", "old", "custom"))
+            SimplifiedChinese.addPolishedDefault(yaml, key, "原默认", "新默认");
+        SimplifiedChinese.addPolishedDefault(yaml, "lore", List.of("原说明"), List.of("新说明"));
+        SimplifiedChinese.addPolishedDefault(yaml, "custom-lore", List.of("原说明"), List.of("新说明"));
+        assertEquals("新默认", yaml.getString("missing"));
+        assertEquals("新默认", yaml.getString("old"));
+        assertEquals("管理员文本", yaml.getString("custom"));
+        assertEquals(List.of("新说明"), yaml.getStringList("lore"));
+        assertEquals(List.of("管理员说明"), yaml.getStringList("custom-lore"));
+        SimplifiedChinese.addPolishedDefault(yaml, "old", "原默认", "新默认");
+        assertEquals("新默认", yaml.getString("old"));
+    }
+
     @Test void retiredI18nClassesAndCompatibilityMethodsAreAbsent() {
         assertThrows(ClassNotFoundException.class, () -> Class.forName("com.andrei1058.bedwars.api.language.Language"));
         assertThrows(ClassNotFoundException.class, () -> Class.forName("com.andrei1058.bedwars.api.events.player.PlayerLangChangeEvent"));

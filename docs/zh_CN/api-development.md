@@ -6,7 +6,7 @@
 <dependency>
     <groupId>com.andrei1058.bedwars</groupId>
     <artifactId>bedwars-api</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <scope>provided</scope>
 </dependency>
 ```

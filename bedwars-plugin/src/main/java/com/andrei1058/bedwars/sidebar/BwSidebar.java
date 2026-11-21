@@ -129,6 +129,7 @@ public class BwSidebar implements ISidebar {
         LinkedList<SidebarLine> lines = new LinkedList<>();
 
         int teamCount = 0;
+        List<ITeam> visibleTeams = arena == null ? Collections.emptyList() : sidebarTeams(arena);
         ChineseMessages language = ChineseMessages.get();
         String genericTeamFormat = language.m(Messages.FORMATTING_SCOREBOARD_TEAM_GENERIC);
 
@@ -142,8 +143,8 @@ public class BwSidebar implements ISidebar {
             // generic team placeholder {team}
             if (null != arena) {
                 if (line.trim().equals("{team}")) {
-                    if (arena.getTeams().size() > teamCount) {
-                        ITeam team = arena.getTeams().get(teamCount++);
+                    if (visibleTeams.size() > teamCount) {
+                        ITeam team = visibleTeams.get(teamCount++);
                         String teamName = team.getDisplayName();
                         String teamLetter = String.valueOf(!teamName.isEmpty() ? teamName.charAt(0) : "");
 
@@ -170,6 +171,10 @@ public class BwSidebar implements ISidebar {
                         .replace("{group}", arena.getDisplayGroup(player));
 
                 for (ITeam currentTeam : arena.getTeams()) {
+                    if (!visibleTeams.contains(currentTeam) && referencesTeam(line, currentTeam)) {
+                        line = null;
+                        break;
+                    }
                     final ChatColor color = currentTeam.getColor().chat();
                     final String teamName = currentTeam.getDisplayName();
                     final String teamLetter = String.valueOf(!teamName.isEmpty() ? teamName.charAt(0) : "");
@@ -188,6 +193,7 @@ public class BwSidebar implements ISidebar {
                         }
                     }
                 }
+                if (line == null) continue;
                 if (arena.getWinner() != null) {
                     String winnerDisplayName = arena.getWinner().getDisplayName();
                     line = line
@@ -235,6 +241,17 @@ public class BwSidebar implements ISidebar {
             lines.add(sidebarLine);
         }
         return lines;
+    }
+
+    static List<ITeam> sidebarTeams(IArena arena) {
+        return arena.getStatus() == GameState.playing || arena.getStatus() == GameState.restarting
+                ? arena.getActiveTeamsAtGameStart() : arena.getTeams();
+    }
+
+    static boolean referencesTeam(String line, ITeam team) {
+        String prefix = "{Team" + team.getName();
+        return line.contains(prefix + "Color}") || line.contains(prefix + "Name}")
+                || line.contains(prefix + "Letter}") || line.contains(prefix + "Status}");
     }
 
     @Override

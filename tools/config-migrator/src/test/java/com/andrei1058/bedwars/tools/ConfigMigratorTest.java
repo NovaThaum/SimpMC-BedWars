@@ -334,4 +334,22 @@ class ConfigMigratorTest {
         java.util.Map<?,?> red = (java.util.Map<?,?>)team.get("Red");
         assertEquals("4,5,6,-135,12", red.get("Shop"));
     }
+    @Test void npcMigrationPreservesFractionalNegativeCoordinatesAndIsRepeatable() throws Exception {
+        Path source = Files.createDirectories(temp.resolve("precise-source/Arenas"));
+        Path target = Files.createDirectories(temp.resolve("precise-target/Arenas"));
+        String original = "Team:\n  Red:\n    Shop: '-123.987654321,64.0625,0.125,-179.75,12.5'\n    Upgrade: '0.000123456,-1.5,-999.875,90.25,-30.125'\n";
+        Files.writeString(source.resolve("new.yml"), original);
+        Files.writeString(source.resolve("existing.yml"), original);
+        Files.writeString(target.resolve("existing.yml"), "Team:\n  Red:\n    Shop: '1,2,3,0,0'\n    Upgrade: '4,5,6,0,0'\n");
+        for (int repeat = 0; repeat < 2; repeat++) {
+            ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
+            for (String file : java.util.List.of("new.yml", "existing.yml")) {
+                java.util.Map<?,?> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve(file)));
+                java.util.Map<?,?> red = (java.util.Map<?,?>)((java.util.Map<?,?>)result.get("Team")).get("Red");
+                assertEquals("-123.987654321,64.0625,0.125,-179.75,12.5", red.get("Shop"));
+                assertEquals("0.000123456,-1.5,-999.875,90.25,-30.125", red.get("Upgrade"));
+                assertEquals(original, Files.readString(source.resolve(file)));
+            }
+        }
+    }
 }

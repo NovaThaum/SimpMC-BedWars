@@ -28,6 +28,7 @@ import com.andrei1058.bedwars.api.configuration.ConfigPath;
 import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.tasks.RestartingTask;
 import com.andrei1058.bedwars.arena.Arena;
+import com.andrei1058.bedwars.arena.GameEndItems;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.configuration.Sounds;
 import com.andrei1058.bedwars.support.paper.TeleportManager;
@@ -55,6 +56,9 @@ public class GameRestartingTask implements Runnable, RestartingTask {
         task = Bukkit.getScheduler().runTaskTimer(BedWars.plugin, this, 0, 20L);
         Sounds.playSound("game-end", arena.getPlayers());
         Sounds.playSound("game-end", arena.getSpectators());
+        for (Player player : new ArrayList<>(arena.getPlayers())) {
+            GameEndItems.give(player);
+        }
 
         // teleport to alive players
         if (arena.getConfig().getGameOverridableBoolean(ConfigPath.GENERAL_GAME_END_TELEPORT_ELIMINATED)) {

@@ -45,6 +45,7 @@ public final class ConfigMigrator {
                 List<String> migrated = new ArrayList<>(), skipped = new ArrayList<>(), warnings = new ArrayList<>(), notes = new ArrayList<>();
                 Map<String,Object> source = map(yaml.load(Files.readString(modern)));
                 boolean arenaFile = relative.getNameCount() > 1 && "Arenas".equalsIgnoreCase(relative.getName(0).toString());
+                if (arenaFile) normalizeArenaCoordinates(source, "");
                 String arenaGroup = arenaFile ? readArenaGroup(source) : null;
                 if (arenaGroup != null) {
                     source.remove("groups"); source.remove("arena-group"); source.put("group", arenaGroup);
@@ -59,6 +60,7 @@ public final class ConfigMigrator {
                     migrated.addAll(leafPaths(target, ""));
                 } else if (Files.isRegularFile(legacy)) {
                     target = map(yaml.load(Files.readString(legacy)));
+                    if (arenaFile) normalizeArenaCoordinates(target, "");
                     Map<String,Object> transferableSource = new LinkedHashMap<>(source);
                     if (arenaGroup != null) transferableSource.remove("group");
                     boolean upgradesConfig = relative.getNameCount() == 1 && "upgrades2.yml".equalsIgnoreCase(relative.getFileName().toString());
@@ -207,7 +209,10 @@ public final class ConfigMigrator {
         for (var entry : source.entrySet()) {
             String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
             Object value = entry.getValue(), existing = target.get(entry.getKey());
-            if (value instanceof Map<?,?> sm) {
+            if (isFacingPath(path) && (value instanceof Number || value instanceof String)) {
+                target.put(entry.getKey(), normalizedFacing(isNpcFacingPath(path), value.toString()));
+                migrated.add(path + " (迁移四向朝向)");
+            } else if (value instanceof Map<?,?> sm) {
                 if (existing instanceof Map<?,?> tm) merge(map(sm), map(tm), path, migrated, skipped, warnings, notes, addMissingScalars);
                 else if (!target.containsKey(entry.getKey()) && addMissingScalars) {
                     Map<String,Object> added = new LinkedHashMap<>();
@@ -220,11 +225,11 @@ public final class ConfigMigrator {
                     else skipped.add(path + " (源和目标类型不兼容)");
                 } else {
                     if (addMissingScalars) {
-                        Object converted = convertPreservingNpcFacing(value, existing, path, warnings);
+                        Object converted = convert(value, path, warnings);
                         target.put(entry.getKey(), converted);
                         migrated.add(path + " (使用 1.21.11 值)");
                     } else {
-                        Object converted = convertPreservingNpcFacing(value, existing, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
+                        Object converted = convert(value, path, warnings); target.put(entry.getKey(), converted); migrated.add(path);
                     }
                 }
             } else if (addMissingScalars) {
@@ -233,15 +238,6 @@ public final class ConfigMigrator {
                     } else notes.add(path + " (目标版无对应配置项，使用目标版默认值)");
         }
     }
-    private static Object convertPreservingNpcFacing(Object value, Object existing, String path, List<String> warnings) {
-        if (path.matches("(?i)Team\\.[^.]+\\.(Shop|Upgrade)") && value instanceof String source && existing instanceof String target) {
-            String[] src = source.replace("[", "").replace("]", "").split(",", -1);
-            String[] dst = target.replace("[", "").replace("]", "").split(",", -1);
-            if (src.length == 3 && dst.length == 5) return source.replace("[", "").replace("]", "") + "," + dst[3].trim() + "," + dst[4].trim();
-        }
-        return convert(value, path, warnings);
-    }
-
     private static Object convert(Object value, String path, List<String> warnings) {
         if (path.startsWith("start-items-per-group.") && value instanceof List<?> list)
             return list.stream().map(item -> {
@@ -337,32 +333,63 @@ public final class ConfigMigrator {
     }
 
     private static void normalizeArenaCoordinates(Map<String,Object> values, String prefix) {
-        for (var entry : values.entrySet()) {
+        for (var entry : new ArrayList<>(values.entrySet())) {
             String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
             Object value = entry.getValue();
             if (value instanceof Map<?,?> nested) normalizeArenaCoordinates(map(nested), path);
             else if (path.matches("(?i)(spectator-loc|waiting\\.(Loc|Pos[^.]+)|generator\\.(Diamond|Emerald)|Team\\.[^.]+\\.(Spawn|Bed|Shop|Upgrade|Iron|Gold|Diamond|Emerald|kill-drops-loc))")) {
-                if (value instanceof String text) entry.setValue(arenaCoordinates(text, path));
-                else if (value instanceof List<?> list) entry.setValue(list.stream()
-                        .map(v -> v instanceof String text ? arenaCoordinates(text, path) : v).toList());
+                if (value instanceof String text) {
+                    String facingKey = null;
+                    if (path.equalsIgnoreCase("spectator-loc")) facingKey = "spectator-facing";
+                    else if (path.equalsIgnoreCase("waiting.Loc")) facingKey = "Facing";
+                    else if (path.matches("(?i)Team\\.[^.]+\\.(Spawn|Shop|Upgrade)")) facingKey = entry.getKey() + "-Facing";
+                    String[] parts = text.trim().replace("[", "").replace("]", "").split(",", -1);
+                    if (facingKey != null && parts.length == 5 && !values.containsKey(facingKey))
+                        values.put(facingKey, normalizedFacing(path.endsWith("Shop") || path.endsWith("Upgrade"), parts[3]));
+                    values.put(entry.getKey(), arenaCoordinates(text));
+                } else if (value instanceof List<?> list) values.put(entry.getKey(), list.stream()
+                        .map(v -> v instanceof String text ? arenaCoordinates(text) : v).toList());
+            } else if (isFacingPath(path)) {
+                values.put(entry.getKey(), normalizedFacing(isNpcFacingPath(path), String.valueOf(value)));
             }
         }
     }
 
-    private static String arenaCoordinates(String text, String path) {
+    private static boolean isFacingPath(String path) {
+        return path.matches("(?i)(waiting\\.Facing|spectator-facing|Team\\.[^.]+\\.(Spawn-Facing|Shop-Facing|Upgrade-Facing))");
+    }
+
+    private static boolean isNpcFacingPath(String path) {
+        return path.matches("(?i)Team\\.[^.]+\\.(Shop-Facing|Upgrade-Facing)");
+    }
+
+    private static Object normalizedFacing(boolean npc, String value) {
+        float yaw;
+        try { yaw = cardinalYaw(Double.parseDouble(value.replace("[", "").replace("]", "").split(",", -1)[0].trim())); }
+        catch (NumberFormatException ignored) { yaw = 0.0F; }
+        return npc ? yaw : yaw + ",0.0";
+    }
+
+    private static float cardinalYaw(double yaw) {
+        if (!Double.isFinite(yaw)) return 0.0F;
+        double wrapped = yaw % 360.0D;
+        if (wrapped < -180.0D) wrapped += 360.0D;
+        if (wrapped > 180.0D) wrapped -= 360.0D;
+        float rounded = (float) (Math.round(wrapped / 90.0D) * 90.0D);
+        return rounded == 0.0F ? 0.0F : rounded;
+    }
+
+    private static String arenaCoordinates(String text) {
         String clean = text.trim().replace("[", "").replace("]", "");
         String[] parts = clean.split(",", -1);
         if (parts.length != 3 && parts.length != 5) return text;
         try {
             for (int i = 0; i < 3; i++)
                 if (!Double.isFinite(Double.parseDouble(parts[i].trim()))) return text;
-            String xyz = parts[0].trim() + "," + parts[1].trim() + "," + parts[2].trim();
-            if (path.matches("(?i)Team\\.[^.]+\\.(Shop|Upgrade)")) {
-                if (parts.length == 3) return xyz + ",0.0,0.0";
-                if (!Float.isFinite(Float.parseFloat(parts[3].trim())) || !Float.isFinite(Float.parseFloat(parts[4].trim()))) return text;
-                return xyz + "," + parts[3].trim() + "," + parts[4].trim();
-            }
-            return xyz;
+            double x = Double.parseDouble(parts[0].trim());
+            double y = Double.parseDouble(parts[1].trim());
+            double z = Double.parseDouble(parts[2].trim());
+            return (Math.floor(x) + 0.5) + "," + Math.floor(y) + "," + (Math.floor(z) + 0.5);
         } catch (NumberFormatException ignored) { return text; }
     }
 

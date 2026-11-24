@@ -6,7 +6,7 @@
 <dependency>
     <groupId>com.andrei1058.bedwars</groupId>
     <artifactId>bedwars-api</artifactId>
-    <version>4.0.2</version>
+    <version>4.1.0</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -25,3 +25,9 @@
 自身和队友受击退但不把发射者记为攻击者；保留之前的敌人击杀归属。敌人使用原生爆炸伤害分类，保留防具/保护效果及伤害事件，取消火球原生接触和爆炸的重复伤害。1.8.8 使用对应 NMS 加速度与爆炸伤害入口，不依赖新版 Paper API。
 
 旧 `fireball` 节启动时先备份到 `config.yml.before-fixed-fireball.bak` 再移除。不存在手动配置入口，迁移器不会重新带入旧火球设置。
+
+### 竞技场位置与朝向（4.1.0）
+
+竞技场位置保存为居中的 `x,y,z`：X/Z 为方块坐标加 0.5，Y 为方块高度；大厅通用位置格式不变。`ConfigManager.savePlayerArenaLocation(locationPath, facingPath, location)` 同时写入位置与玩家 `yaw,0.0` 朝向；`saveNpcArenaLocation` 写入位置与 NPC 数值 yaw。两者使用 `snapYawToCardinal` 对水平角吸附四向，俯仰固定归零。
+
+玩家方向键为 `waiting.Facing`、`spectator-facing`、`Team.<队伍>.Spawn-Facing`；商店方向键为 `Team.<队伍>.Shop-Facing` 和 `Upgrade-Facing`。加载时独立方向字段优先于旧五段坐标内的方向；NPC 两者均不存在时朝向队伍出生点。插件会自动迁移旧坐标，管理员仍可编辑独立方向字段。

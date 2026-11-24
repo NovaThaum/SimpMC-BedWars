@@ -25,6 +25,7 @@ import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
+import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.server.SetupType;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.arena.SetupSession;
@@ -89,8 +90,11 @@ public class SetUpgrade extends SubCommand {
                 if (ss.getConfig().getYml().get("Team." + args[0] + ".Upgrade") != null) {
                     removeArmorStand("upgrade", ss.getConfig().getArenaLoc("Team." + args[0] + ".Upgrade"), null);
                 }
-                createArmorStand(teamm + " " + ChatColor.GOLD + "UPGRADE SET", p.getLocation(), null);
-                ss.getConfig().saveArenaLoc("Team." + args[0] + ".Upgrade", p.getLocation());
+                org.bukkit.Location centered = ConfigManager.toArenaBlockCenter(p.getLocation());
+                ss.getConfig().saveNpcArenaLocation("Team." + args[0] + ".Upgrade",
+                        "Team." + args[0] + "." + ConfigPath.ARENA_TEAM_UPGRADE_FACING, p.getLocation());
+                createArmorStand(teamm + " " + ChatColor.GOLD + "UPGRADE SET", centered,
+                        ss.getConfig().stringLocationArenaFormat(centered));
                 p.sendMessage(ss.getPrefix() + "Upgrade npc set for: " + teamm);
 
                 if (ss.getSetupType() == SetupType.ASSISTED) {

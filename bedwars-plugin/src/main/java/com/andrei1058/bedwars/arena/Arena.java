@@ -317,7 +317,9 @@ public class Arena implements IArena {
                 BedWars.plugin.getLogger().severe("A team with name: " + team + " was already loaded for arena: " + getArenaName());
                 continue;
             }
-            BedWarsTeam bwt = new BedWarsTeam(team, TeamColor.valueOf(yml.getString("Team." + team + ".Color").toUpperCase()), cm.getArenaLoc("Team." + team + ".Spawn"),
+            String teamRoot = "Team." + team + ".";
+            Location teamSpawn = cm.getArenaLoc(teamRoot + "Spawn");
+            BedWarsTeam bwt = new BedWarsTeam(team, TeamColor.valueOf(yml.getString(teamRoot + "Color").toUpperCase()), teamSpawn,
                     cm.getArenaLoc("Team." + team + ".Bed"), cm.getArenaLoc("Team." + team + ".Shop"), cm.getArenaLoc("Team." + team + ".Upgrade"), this);
             teams.add(bwt);
             bwt.spawnGenerators();
@@ -358,9 +360,9 @@ public class Arena implements IArena {
         Bukkit.getPluginManager().callEvent(new ArenaEnableEvent(this));
 
         // Re Spawn Session Location
-        respawnLocation = cm.getArenaLoc(ConfigPath.ARENA_SPEC_LOC);
+        respawnLocation = configuredPlayerLocation(ConfigPath.ARENA_SPEC_LOC, ConfigPath.ARENA_SPEC_FACING);
         if (respawnLocation == null) {
-            respawnLocation = cm.getArenaLoc("waiting.Loc");
+            respawnLocation = configuredPlayerLocation("waiting.Loc", ConfigPath.ARENA_WAITING_FACING);
         }
         if (respawnLocation == null) {
             respawnLocation = world.getSpawnLocation();
@@ -368,9 +370,9 @@ public class Arena implements IArena {
         //
 
         // Spectator location
-        spectatorLocation = cm.getArenaLoc(ConfigPath.ARENA_SPEC_LOC);
+        spectatorLocation = configuredPlayerLocation(ConfigPath.ARENA_SPEC_LOC, ConfigPath.ARENA_SPEC_FACING);
         if (spectatorLocation == null) {
-            spectatorLocation = cm.getArenaLoc("waiting.Loc");
+            spectatorLocation = configuredPlayerLocation("waiting.Loc", ConfigPath.ARENA_WAITING_FACING);
         }
         if (spectatorLocation == null) {
             spectatorLocation = world.getSpawnLocation();
@@ -378,7 +380,7 @@ public class Arena implements IArena {
         //
 
         // Waiting location
-        waitingLocation = cm.getArenaLoc("waiting.Loc");
+        waitingLocation = configuredPlayerLocation("waiting.Loc", ConfigPath.ARENA_WAITING_FACING);
         if (waitingLocation == null) {
             waitingLocation = world.getSpawnLocation();
         }
@@ -401,6 +403,10 @@ public class Arena implements IArena {
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File("spigot.yml"));
         renderDistance = yaml.get("world-settings." + getWorldName() + ".entity-tracking-range.players") == null ?
                 yaml.getInt("world-settings.default.entity-tracking-range.players") : yaml.getInt("world-settings." + getWorldName() + ".entity-tracking-range.players");
+    }
+
+    private Location configuredPlayerLocation(String locationPath, String facingPath) {
+        return PlayerFacing.apply(cm.getArenaLoc(locationPath), yml.getString(facingPath));
     }
 
     /**

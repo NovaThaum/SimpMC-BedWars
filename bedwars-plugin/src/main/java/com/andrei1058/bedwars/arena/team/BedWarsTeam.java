@@ -35,6 +35,8 @@ import com.andrei1058.bedwars.api.messages.Messages;
 import com.andrei1058.bedwars.api.region.Cuboid;
 import com.andrei1058.bedwars.api.upgrades.EnemyBaseEnterTrap;
 import com.andrei1058.bedwars.arena.Arena;
+import com.andrei1058.bedwars.arena.NpcFacing;
+import com.andrei1058.bedwars.arena.PlayerFacing;
 import com.andrei1058.bedwars.arena.OreGenerator;
 import com.andrei1058.bedwars.arena.feature.EnemyTrackerCompass;
 import com.andrei1058.bedwars.configuration.Sounds;
@@ -105,11 +107,17 @@ public class BedWarsTeam implements ITeam {
         if (arena == null) return;
         this.name = name;
         this.color = color;
-        this.spawn = spawn;
+        String teamRoot = "Team." + name + ".";
+        this.spawn = PlayerFacing.apply(spawn,
+                arena.getConfig().getYml().getString(teamRoot + ConfigPath.ARENA_TEAM_SPAWN_FACING));
         this.bed = bed;
         this.arena = arena;
-        this.shop = shop;
-        this.teamUpgrades = teamUpgrades;
+        Number shopFacing = arena.getConfig().getYml().isSet(teamRoot + ConfigPath.ARENA_TEAM_SHOP_FACING)
+                ? arena.getConfig().getYml().getDouble(teamRoot + ConfigPath.ARENA_TEAM_SHOP_FACING) : null;
+        Number upgradeFacing = arena.getConfig().getYml().isSet(teamRoot + ConfigPath.ARENA_TEAM_UPGRADE_FACING)
+                ? arena.getConfig().getYml().getDouble(teamRoot + ConfigPath.ARENA_TEAM_UPGRADE_FACING) : null;
+        this.shop = NpcFacing.apply(shop, shopFacing, this.spawn);
+        this.teamUpgrades = NpcFacing.apply(teamUpgrades, upgradeFacing, this.spawn);
         ChineseMessages.saveIfNotExists(ConfigPath.TEAM_NAME_PATH.replace("{arena}", getArena().getArenaName()).replace("{team}", getName()), name);
         arena.getRegionsList().add(new Cuboid(spawn, arena.getConfig().getInt(ConfigPath.ARENA_SPAWN_PROTECTION), true));
 
@@ -163,8 +171,8 @@ public class BedWarsTeam implements ITeam {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             nms.colorBed(this);
-            nms.spawnShop(getArena().getConfig().getArenaLoc("Team." + getName() + ".Upgrade"), (getArena().getMaxInTeam() > 1 ? Messages.NPC_NAME_TEAM_UPGRADES : Messages.NPC_NAME_SOLO_UPGRADES), getArena().getPlayers(), getArena());
-            nms.spawnShop(getArena().getConfig().getArenaLoc("Team." + getName() + ".Shop"), (getArena().getMaxInTeam() > 1 ? Messages.NPC_NAME_TEAM_SHOP : Messages.NPC_NAME_SOLO_SHOP), getArena().getPlayers(), getArena());
+            nms.spawnShop(teamUpgrades.clone(), (getArena().getMaxInTeam() > 1 ? Messages.NPC_NAME_TEAM_UPGRADES : Messages.NPC_NAME_SOLO_UPGRADES), getArena().getPlayers(), getArena());
+            nms.spawnShop(shop.clone(), (getArena().getMaxInTeam() > 1 ? Messages.NPC_NAME_TEAM_SHOP : Messages.NPC_NAME_SOLO_SHOP), getArena().getPlayers(), getArena());
         }, 20L);
 
         Cuboid c1 = new Cuboid(getArena().getConfig().getArenaLoc("Team." + getName() + ".Upgrade"), getArena().getConfig().getInt(ConfigPath.ARENA_UPGRADES_PROTECTION), true);

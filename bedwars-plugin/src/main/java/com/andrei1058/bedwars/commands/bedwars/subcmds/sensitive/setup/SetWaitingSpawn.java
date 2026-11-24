@@ -26,6 +26,7 @@ import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.api.server.SetupType;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.configuration.Permissions;
+import com.andrei1058.bedwars.api.configuration.ConfigPath;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -51,7 +52,7 @@ public class SetWaitingSpawn extends SubCommand {
             return true;
         }
         p.sendMessage("§6 ▪ §7Waiting spawn set for §e"+ss.getWorldName()+"§7!");
-        ss.getConfig().saveArenaLoc("waiting.Loc", p.getLocation());
+        ss.getConfig().savePlayerArenaLocation("waiting.Loc", ConfigPath.ARENA_WAITING_FACING, p.getLocation());
         if (ss.getSetupType() == SetupType.ASSISTED){
             Bukkit.dispatchCommand(s, BedWars.mainCmd+" autocreateteams");
         } else {

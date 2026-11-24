@@ -25,6 +25,7 @@ import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
+import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.api.server.SetupType;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.arena.SetupSession;
@@ -89,8 +90,10 @@ public class SetShop extends SubCommand {
                 if (ss.getConfig().getYml().get("Team." + args[0] + ".Shop") != null) {
                     removeArmorStand("shop", ss.getConfig().getArenaLoc("Team." + args[0] + ".Shop"), ss.getConfig().getString("Team." + args[0] + ".Shop"));
                 }
-                createArmorStand(teamm + " " + ChatColor.GOLD + "SHOP SET", p.getLocation(), ss.getConfig().stringLocationArenaFormat(p.getLocation()));
-                ss.getConfig().saveArenaLoc("Team." + args[0] + ".Shop", p.getLocation());
+                org.bukkit.Location centered = ConfigManager.toArenaBlockCenter(p.getLocation());
+                createArmorStand(teamm + " " + ChatColor.GOLD + "SHOP SET", centered, ss.getConfig().stringLocationArenaFormat(centered));
+                ss.getConfig().saveNpcArenaLocation("Team." + args[0] + ".Shop",
+                        "Team." + args[0] + "." + ConfigPath.ARENA_TEAM_SHOP_FACING, p.getLocation());
                 p.sendMessage(ss.getPrefix() + "Shop set for: " + teamm);
                 if (ss.getSetupType() == SetupType.ASSISTED) {
                     Bukkit.dispatchCommand(p, getParent().getName());

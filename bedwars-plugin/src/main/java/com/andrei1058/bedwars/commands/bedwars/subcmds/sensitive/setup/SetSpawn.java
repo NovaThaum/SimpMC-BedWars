@@ -24,6 +24,7 @@ import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.command.ParentCommand;
 import com.andrei1058.bedwars.api.command.SubCommand;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
+import com.andrei1058.bedwars.api.configuration.ConfigManager;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.configuration.Permissions;
@@ -83,10 +84,12 @@ public class SetSpawn extends SubCommand {
                 if (ss.getConfig().getYml().get("Team." + args[0] + ".Spawn") != null) {
                     removeArmorStand("spawn", ss.getConfig().getArenaLoc("Team." + args[0] + ".Spawn"), ss.getConfig().getString("Team." + args[0] + ".Spawn"));
                 }
-                ss.getConfig().saveArenaLoc("Team." + args[0] + ".Spawn", p.getLocation());
+                ss.getConfig().savePlayerArenaLocation("Team." + args[0] + ".Spawn",
+                        "Team." + args[0] + "." + ConfigPath.ARENA_TEAM_SPAWN_FACING, p.getLocation());
                 String teamm = ss.getTeamColor(args[0]) + args[0];
                 p.sendMessage(ChatColor.GOLD + " " + '▪' + " " + "Spawn set for: " + teamm);
-                com.andrei1058.bedwars.commands.Misc.createArmorStand(teamm + " " + ChatColor.GOLD + "SPAWN SET", p.getLocation(), ss.getConfig().stringLocationArenaFormat(p.getLocation()));
+                Location centeredSpawn = ConfigManager.toArenaBlockCenter(p.getLocation());
+                com.andrei1058.bedwars.commands.Misc.createArmorStand(teamm + " " + ChatColor.GOLD + "SPAWN SET", centeredSpawn, ss.getConfig().stringLocationArenaFormat(centeredSpawn));
                 int radius = ss.getConfig().getInt(ConfigPath.ARENA_ISLAND_RADIUS);
                 Location l = p.getLocation();
                 for (int x = -radius; x < radius; x++) {

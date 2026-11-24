@@ -85,7 +85,7 @@ public class ConfigManager {
      * Convert a location to an arena location syntax
      */
     public String stringLocationArenaFormat(Location loc) {
-        return loc.getX() + "," + loc.getY() + "," + loc.getZ();
+        return serializeArenaLocation(loc);
     }
 
     /**
@@ -110,9 +110,19 @@ public class ConfigManager {
      * Save a location for arena use
      */
     public void saveArenaLoc(String path, Location loc) {
-        String data = stringLocationArenaFormat(loc);
-        if (isArenaNpcLocationPath(path)) data += "," + loc.getYaw() + "," + loc.getPitch();
-        yml.set(path, data);
+        yml.set(path, stringLocationArenaFormat(loc));
+        save();
+    }
+
+    public void savePlayerArenaLocation(String locationPath, String facingPath, Location location) {
+        yml.set(locationPath, stringLocationArenaFormat(location));
+        yml.set(facingPath, snapYawToCardinal(location.getYaw()) + ",0.0");
+        save();
+    }
+
+    public void saveNpcArenaLocation(String locationPath, String facingPath, Location location) {
+        yml.set(locationPath, stringLocationArenaFormat(location));
+        yml.set(facingPath, snapYawToCardinal(location.getYaw()));
         save();
     }
 
@@ -134,11 +144,6 @@ public class ConfigManager {
     public Location getArenaLoc(String path) {
         String d = yml.getString(path);
         if (d == null) return null;
-        if (isArenaNpcLocationPath(path)) {
-            String[] data = normalizeArenaNpcLocationString(d).split(",");
-            return new Location(Bukkit.getWorld(name), Double.parseDouble(data[0]), Double.parseDouble(data[1]),
-                    Double.parseDouble(data[2]), Float.parseFloat(data[3]), Float.parseFloat(data[4]));
-        }
         return convertStringToArenaLocation(d);
     }
 
@@ -149,7 +154,18 @@ public class ConfigManager {
                 Double.parseDouble(data[1]), Double.parseDouble(data[2]));
     }
 
-    /** 保留原始坐标精度，不改变方块中心或高度。 */
+    public static Location toArenaBlockCenter(Location location) {
+        if (location == null) throw new IllegalArgumentException("竞技场坐标不能为空");
+        return new Location(location.getWorld(), location.getBlockX() + 0.5, location.getBlockY(),
+                location.getBlockZ() + 0.5);
+    }
+
+    public static String serializeArenaLocation(Location location) {
+        Location centered = toArenaBlockCenter(location);
+        return centered.getX() + "," + centered.getY() + "," + centered.getZ();
+    }
+
+    /** 旧坐标迁移时将 X/Z 移至方块中心并保留 Y 方块高度。 */
     public static String normalizeArenaLocationString(String value) {
         if (value == null) throw new IllegalArgumentException("竞技场坐标不能为空");
         String[] data = value.trim().replace("[", "").replace("]", "").split(",", -1);
@@ -160,24 +176,28 @@ public class ConfigManager {
             if (!Double.isFinite(Double.parseDouble(data[i])))
                 throw new IllegalArgumentException("竞技场坐标必须为有限数值: " + value);
         }
-        return data[0] + "," + data[1] + "," + data[2];
+        double x = Double.parseDouble(data[0]);
+        double y = Double.parseDouble(data[1]);
+        double z = Double.parseDouble(data[2]);
+        return (Math.floor(x) + 0.5) + "," + Math.floor(y) + "," + (Math.floor(z) + 0.5);
     }
 
-    /** 商店与升级 NPC 的朝向由竞技场配置控制，三段旧值兼容为零朝向。 */
+    /** 商店与升级 NPC 方向位于独立的配置键。 */
     public static boolean isArenaNpcLocationPath(String path) {
         return path.matches("(?i)Team\\.[^.]+\\.(Shop|Upgrade)");
     }
 
     public static String normalizeArenaNpcLocationString(String value) {
-        String xyz = normalizeArenaLocationString(value);
-        String[] data = value.trim().replace("[", "").replace("]", "").split(",", -1);
-        if (data.length == 3) return xyz + ",0.0,0.0";
-        for (int i = 3; i < 5; i++) {
-            data[i] = data[i].trim();
-            if (!Float.isFinite(Float.parseFloat(data[i])))
-                throw new IllegalArgumentException("NPC 朝向必须为有限数值: " + value);
-        }
-        return xyz + "," + data[3] + "," + data[4];
+        return normalizeArenaLocationString(value);
+    }
+
+    public static float snapYawToCardinal(double yaw) {
+        if (!Double.isFinite(yaw)) return 0.0F;
+        double wrapped = yaw % 360.0D;
+        if (wrapped < -180.0D) wrapped += 360.0D;
+        if (wrapped > 180.0D) wrapped -= 360.0D;
+        float snapped = (float) (Math.round(wrapped / 90.0D) * 90.0D);
+        return snapped == 0.0F ? 0.0F : snapped;
     }
 
     /** 仅匹配插件管理的位置键，避免改动管理员自定义文本。 */

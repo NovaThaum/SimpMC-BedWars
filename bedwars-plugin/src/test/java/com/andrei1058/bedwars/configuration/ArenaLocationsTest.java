@@ -28,14 +28,14 @@ class ArenaLocationsTest {
             List<Location> generators = config.getArenaLocations("Team.Red.Iron");
             assertEquals(2, generators.size());
             assertSame(world, generators.get(0).getWorld());
-            assertEquals(-2.25, generators.get(1).getX());
+            assertEquals(-2.5, generators.get(1).getX());
             assertEquals(0, generators.get(1).getYaw());
             assertEquals(0, generators.get(1).getPitch());
             config.saveArenaLoc("Team.Red.Spawn", new Location(world, 1.25, 64.75, -3.5, 90, 20));
             config.reload();
-            assertEquals("1.25,64.75,-3.5", config.getString("Team.Red.Spawn"));
-            assertEquals(64.75, config.getArenaLoc("Team.Red.Spawn").getY());
-            assertEquals("1.25,64.75,-3.5", config.stringLocationArenaFormat(new Location(world, 1.25, 64.75, -3.5, 180, 90)));
+            assertEquals("1.5,64.0,-3.5", config.getString("Team.Red.Spawn"));
+            assertEquals(64.0, config.getArenaLoc("Team.Red.Spawn").getY());
+            assertEquals("1.5,64.0,-3.5", config.stringLocationArenaFormat(new Location(world, 1.25, 64.75, -3.5, 180, 90)));
             when(world.getName()).thenReturn("lobby");
             config.saveConfigLoc("lobbyLoc", new Location(world, 1, 2, 3, 90, 20));
             assertEquals(90, config.getConfigLoc("lobbyLoc").getYaw());
@@ -51,10 +51,10 @@ class ArenaLocationsTest {
             yaml.set(key, List.of("1,2,3,90,10", "4,5,6"));
         yaml.set("custom", "1,2,3,90,10");
         ArenaConfig.migrateArenaLocations(yaml);
-        assertEquals("-1.25,64.5,2.75", yaml.getString("Team.Red.Spawn"));
-        assertEquals("-1.25,64.5,2.75", yaml.getString("waiting.Pos1"));
-        assertEquals(List.of("1,2,3", "4,5,6"), yaml.getStringList("Team.Red.Iron"));
-        assertEquals(List.of("1,2,3", "4,5,6"), yaml.getStringList("generator.Diamond"));
+        assertEquals("-1.5,64.0,2.5", yaml.getString("Team.Red.Spawn"));
+        assertEquals("-1.5,64.0,2.5", yaml.getString("waiting.Pos1"));
+        assertEquals(List.of("1.5,2.0,3.5", "4.5,5.0,6.5"), yaml.getStringList("Team.Red.Iron"));
+        assertEquals(List.of("1.5,2.0,3.5", "4.5,5.0,6.5"), yaml.getStringList("generator.Diamond"));
         assertEquals("1,2,3,90,10", yaml.getString("custom"));
         String once = yaml.saveToString();
         ArenaConfig.migrateArenaLocations(yaml);
@@ -65,24 +65,63 @@ class ArenaLocationsTest {
         for (String bad : List.of("1,2", "1,2,3,4", "NaN,2,3", "Infinity,2,3", "1,,3"))
             assertThrows(IllegalArgumentException.class, () -> ConfigManager.normalizeArenaLocationString(bad));
     }
-    @Test void shopAndUpgradeKeepConfiguredFacingWhileOtherPositionsRemainThreeValues() {
+    @Test void playerAndNpcFacingAreSavedSeparatelyFromCenteredCoordinates() {
         Plugin plugin = mock(Plugin.class); when(plugin.getLogger()).thenReturn(Logger.getAnonymousLogger());
         World world = mock(World.class);
         try (var bukkit = mockStatic(Bukkit.class)) {
             bukkit.when(() -> Bukkit.getWorld("arena")).thenReturn(world);
             ConfigManager config = new ConfigManager(plugin, "arena", temp.toString());
-            for (String path : List.of("Team.Red.Shop", "Team.Red.Upgrade")) {
-                config.saveArenaLoc(path, new Location(world, 1.25, 64.5, 2.75, -135, 12));
-                ArenaConfig.migrateArenaLocations(config.getYml()); config.save(); config.reload();
-                assertEquals(-135, config.getArenaLoc(path).getYaw()); assertEquals(12, config.getArenaLoc(path).getPitch());
-                assertEquals("1.25,64.5,2.75,-135.0,12.0", config.getString(path));
-            }
-            config.getYml().set("Team.Blue.Shop", "4,5,6");
+            config.saveNpcArenaLocation("Team.Red.Shop", "Team.Red.Shop-Facing",
+                    new Location(world, 1.25, 64.5, 2.75, -135, 12));
+            config.saveNpcArenaLocation("Team.Red.Upgrade", "Team.Red.Upgrade-Facing",
+                    new Location(world, 1.25, 64.5, 2.75, 46, 12));
+            config.savePlayerArenaLocation("Team.Red.Spawn", "Team.Red.Spawn-Facing",
+                    new Location(world, 1.25, 64.5, 2.75, 46, 12));
+            assertEquals("1.5,64.0,2.5", config.getString("Team.Red.Shop"));
+            assertEquals(-90.0, config.getDouble("Team.Red.Shop-Facing"));
+            assertEquals(90.0, config.getDouble("Team.Red.Upgrade-Facing"));
+            assertEquals("90.0,0.0", config.getString("Team.Red.Spawn-Facing"));
             ArenaConfig.migrateArenaLocations(config.getYml());
-            assertEquals("4,5,6,0.0,0.0", config.getString("Team.Blue.Shop"));
-            config.saveArenaLoc("Team.Red.Spawn", new Location(world, 1, 2, 3, 80, 12));
-            assertEquals("1.0,2.0,3.0", config.getString("Team.Red.Spawn"));
+            assertEquals("1.5,64.0,2.5", config.getString("Team.Red.Upgrade"));
         }
-        assertThrows(IllegalArgumentException.class, () -> ConfigManager.normalizeArenaNpcLocationString("1,2,3,NaN,0"));
+        assertThrows(IllegalArgumentException.class, () -> ConfigManager.normalizeArenaLocationString("NaN,2,3,0,0"));
+    }
+
+    @Test void migratesLegacyEmbeddedFacingAndUsesTeamSpawnForUnconfiguredNpcs() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("Team.Red.Spawn", "10,64,0,45,30");
+        yaml.set("Team.Red.Shop", "0,64,0,46,18");
+        yaml.set("Team.Red.Upgrade", "0,64,0");
+        yaml.set("waiting.Loc", "1,70,2,181,20");
+        yaml.set("spectator-loc", "2,70,3,-44,40");
+
+        ArenaConfig.migrateArenaLocations(yaml);
+
+        assertEquals("90.0,0.0", yaml.getString("Team.Red.Spawn-Facing"));
+        assertEquals(90.0, yaml.getDouble("Team.Red.Shop-Facing"));
+        assertEquals(-90.0, yaml.getDouble("Team.Red.Upgrade-Facing"));
+        assertEquals("-180.0,0.0", yaml.getString("waiting.Facing"));
+        assertEquals("0.0,0.0", yaml.getString("spectator-facing"));
+        assertEquals("0.5,64.0,0.5", yaml.getString("Team.Red.Shop"));
+
+        String once = yaml.saveToString();
+        ArenaConfig.migrateArenaLocations(yaml);
+        assertEquals(once, yaml.saveToString());
+    }
+
+    @Test void explicitModernFacingOverridesEmbeddedFacingAndDefaultsPlayersToZero() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("Team.Red.Spawn", "10,64,0,180,30");
+        yaml.set("Team.Red.Spawn-Facing", "-100,30");
+        yaml.set("Team.Red.Shop", "0,64,0,180,30");
+        yaml.set("Team.Red.Shop-Facing", 44);
+        yaml.set("waiting.Loc", "1,70,2");
+        ArenaConfig.migrateArenaLocations(yaml);
+        assertEquals("-90.0,0.0", yaml.getString("Team.Red.Spawn-Facing"));
+        assertEquals(0, yaml.getDouble("Team.Red.Shop-Facing"));
+        assertEquals("0.0,0.0", yaml.getString("waiting.Facing"));
+        String once = yaml.saveToString();
+        ArenaConfig.migrateArenaLocations(yaml);
+        assertEquals(once, yaml.saveToString());
     }
 }

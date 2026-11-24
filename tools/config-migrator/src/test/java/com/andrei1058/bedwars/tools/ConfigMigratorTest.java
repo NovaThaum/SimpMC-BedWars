@@ -36,15 +36,15 @@ class ConfigMigratorTest {
         String arena = "Team:\n  Red:\n    Spawn: '1.25,64.75,-3.5,90,20'\n    Iron:\n      - '1,2,3'\n      - '[4,5,6,180,30]'\n    Gold:\n      - '7,8,9'\ngenerator:\n  Diamond:\n    - '10,11,12,90,0'\ncustom: '1,2,3,90,20'\n";
         Files.writeString(source.resolve("new.yml"), arena);
         Files.writeString(source.resolve("existing.yml"), arena);
-        Files.writeString(target.resolve("existing.yml"), arena);
+        Files.writeString(target.resolve("existing.yml"), arena.replace("Shop-Facing: -90", "Shop-Facing: 180").replace("Upgrade-Facing: 90", "Upgrade-Facing: 0"));
         ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
         for (String name : new String[]{"new.yml", "existing.yml"}) {
             java.util.Map<?,?> result = yaml.load(Files.readString(target.resolve(name)));
             java.util.Map<?,?> red = (java.util.Map<?,?>)((java.util.Map<?,?>) result.get("Team")).get("Red");
-            assertEquals("1.25,64.75,-3.5", red.get("Spawn"));
-            assertEquals(java.util.List.of("1,2,3", "4,5,6"), red.get("Iron"));
-            assertEquals(java.util.List.of("10,11,12"), ((java.util.Map<?,?>)result.get("generator")).get("Diamond"));
+            assertEquals("1.5,64.0,-3.5", red.get("Spawn"));
+            assertEquals(java.util.List.of("1.5,2.0,3.5", "4.5,5.0,6.5"), red.get("Iron"));
+            assertEquals(java.util.List.of("10.5,11.0,12.5"), ((java.util.Map<?,?>)result.get("generator")).get("Diamond"));
             assertEquals("1,2,3,90,20", result.get("custom"));
         }
         String once = Files.readString(target.resolve("existing.yml"));
@@ -309,18 +309,21 @@ class ConfigMigratorTest {
         Path standalone = Path.of("src/main/java/com/andrei1058/bedwars/compat/LegacyMaterials.java");
         assertEquals(Files.readString(runtime), Files.readString(standalone));
     }
-    @Test void keepsConfiguredShopAndUpgradeFacingInNewAndExistingArenas() throws Exception {
+    @Test void migratesModernSeparateFacingIntoNewAndExistingArenas() throws Exception {
         Path source = Files.createDirectories(temp.resolve("npc-source/Arenas"));
         Path target = Files.createDirectories(temp.resolve("npc-target/Arenas"));
-        String arena = "Team:\n  Red:\n    Spawn: '1,2,3,90,10'\n    Shop: '4,5,6,-135,12'\n    Upgrade: '7,8,9,45,0'\n";
+        String arena = "Team:\n  Red:\n    Spawn: '1.5,2,3.5'\n    Spawn-Facing: '90.0,0.0'\n    Shop: '4.5,5,6.5'\n    Shop-Facing: -90\n    Upgrade: '7.5,8,9.5'\n    Upgrade-Facing: 90\n";
         Files.writeString(source.resolve("new.yml"), arena);
         Files.writeString(source.resolve("existing.yml"), arena);
-        Files.writeString(target.resolve("existing.yml"), arena);
+        Files.writeString(target.resolve("existing.yml"), arena.replace("Shop-Facing: -90", "Shop-Facing: 180").replace("Upgrade-Facing: 90", "Upgrade-Facing: 0"));
         ConfigMigrator.main(new String[]{source.getParent().toString(), target.getParent().toString()});
         for (String file : java.util.List.of("new.yml", "existing.yml")) {
             java.util.Map<?,?> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve(file)));
             java.util.Map<?,?> red = (java.util.Map<?,?>)((java.util.Map<?,?>)result.get("Team")).get("Red");
-            assertEquals("1,2,3", red.get("Spawn")); assertEquals("4,5,6,-135,12", red.get("Shop")); assertEquals("7,8,9,45,0", red.get("Upgrade"));
+            assertEquals("1.5,2.0,3.5", red.get("Spawn"));
+            assertEquals("90.0,0.0", red.get("Spawn-Facing"));
+            assertEquals("4.5,5.0,6.5", red.get("Shop")); assertEquals(-90.0, ((Number) red.get("Shop-Facing")).doubleValue());
+            assertEquals("7.5,8.0,9.5", red.get("Upgrade")); assertEquals(90.0, ((Number) red.get("Upgrade-Facing")).doubleValue());
         }
     }
     @Test void preservesTargetNpcFacingWhenModernSourceHasOnlyCoordinates() throws Exception {
@@ -332,9 +335,10 @@ class ConfigMigratorTest {
         java.util.Map<?,?> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve("arena.yml")));
         java.util.Map<?,?> team = (java.util.Map<?,?>)result.get("Team");
         java.util.Map<?,?> red = (java.util.Map<?,?>)team.get("Red");
-        assertEquals("4,5,6,-135,12", red.get("Shop"));
+        assertEquals("4.5,5.0,6.5", red.get("Shop"));
+        assertEquals(-90.0, ((Number) red.get("Shop-Facing")).doubleValue());
     }
-    @Test void npcMigrationPreservesFractionalNegativeCoordinatesAndIsRepeatable() throws Exception {
+    @Test void npcMigrationCentersNegativeCoordinatesAndIsRepeatable() throws Exception {
         Path source = Files.createDirectories(temp.resolve("precise-source/Arenas"));
         Path target = Files.createDirectories(temp.resolve("precise-target/Arenas"));
         String original = "Team:\n  Red:\n    Shop: '-123.987654321,64.0625,0.125,-179.75,12.5'\n    Upgrade: '0.000123456,-1.5,-999.875,90.25,-30.125'\n";
@@ -346,8 +350,10 @@ class ConfigMigratorTest {
             for (String file : java.util.List.of("new.yml", "existing.yml")) {
                 java.util.Map<?,?> result = new org.yaml.snakeyaml.Yaml().load(Files.readString(target.resolve(file)));
                 java.util.Map<?,?> red = (java.util.Map<?,?>)((java.util.Map<?,?>)result.get("Team")).get("Red");
-                assertEquals("-123.987654321,64.0625,0.125,-179.75,12.5", red.get("Shop"));
-                assertEquals("0.000123456,-1.5,-999.875,90.25,-30.125", red.get("Upgrade"));
+                assertEquals("-123.5,64.0,0.5", red.get("Shop"));
+                assertEquals("0.5,-2.0,-999.5", red.get("Upgrade"));
+                assertEquals(-180.0, ((Number) red.get("Shop-Facing")).doubleValue());
+                assertEquals(90.0, ((Number) red.get("Upgrade-Facing")).doubleValue());
                 assertEquals(original, Files.readString(source.resolve(file)));
             }
         }

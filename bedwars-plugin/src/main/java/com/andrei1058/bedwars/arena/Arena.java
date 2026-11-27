@@ -2324,34 +2324,21 @@ public class Arena implements IArena {
 
     public static List<IArena> getSorted(List<IArena> arenas) {
         List<IArena> sorted = new ArrayList<>(arenas);
-        sorted.sort(new Comparator<IArena>() {
-            @Override
-            public int compare(IArena o1, IArena o2) {
-                if (o1.getStatus() == GameState.starting && o2.getStatus() == GameState.starting) {
-                    return Integer.compare(o2.getPlayers().size(), o1.getPlayers().size());
-                } else if (o1.getStatus() == GameState.starting && o2.getStatus() != GameState.starting) {
-                    return -1;
-                } else if (o2.getStatus() == GameState.starting && o1.getStatus() != GameState.starting) {
-                    return 1;
-                } else if (o1.getStatus() == GameState.waiting && o2.getStatus() == GameState.waiting) {
-                    return Integer.compare(o2.getPlayers().size(), o1.getPlayers().size());
-                } else if (o1.getStatus() == GameState.waiting && o2.getStatus() != GameState.waiting) {
-                    return -1;
-                } else if (o2.getStatus() == GameState.waiting && o1.getStatus() != GameState.waiting) {
-                    return 1;
-                } else if (o1.getStatus() == GameState.playing && o2.getStatus() == GameState.playing) {
-                    return 0;
-                } else if (o1.getStatus() == GameState.playing && o2.getStatus() != GameState.playing) {
-                    return -1;
-                } else return 1;
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return obj instanceof IArena;
-            }
-        });
+        sorted.sort(Comparator
+                .comparingInt((IArena arena) -> arenaSortStatus(arena.getStatus()))
+                .thenComparingInt(arena -> arena.getStatus() == GameState.starting
+                                || arena.getStatus() == GameState.waiting
+                        ? -arena.getPlayers().size() : 0)
+                .thenComparing(IArena::getArenaName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(IArena::getArenaName));
         return sorted;
+    }
+
+    private static int arenaSortStatus(GameState status) {
+        if (status == GameState.starting) return 0;
+        if (status == GameState.waiting) return 1;
+        if (status == GameState.playing) return 2;
+        return 3;
     }
 
     /**

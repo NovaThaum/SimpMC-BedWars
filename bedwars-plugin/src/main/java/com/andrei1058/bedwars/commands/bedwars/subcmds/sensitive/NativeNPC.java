@@ -38,7 +38,7 @@ public final class NativeNPC extends SubCommand {
       return true;
     }
     try {
-      if (args.length >= 4
+      if (args.length >= 3
           && (args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("add"))) {
         if (!validGroups(args[2])) {
           p.sendMessage("§c竞技场分组不存在，请先在 arenaGroups 中配置分组。");
@@ -48,7 +48,7 @@ public final class NativeNPC extends SubCommand {
             p.getLocation(),
             args[1],
             args[2],
-            String.join(" ", Arrays.copyOfRange(args, 3, args.length)));
+            args.length == 3 ? "" : String.join(" ", Arrays.copyOfRange(args, 3, args.length)));
         p.sendMessage("§a已创建加入游戏 NPC，目标分组：§f" + args[2]);
         p.sendMessage("§7皮肤异步加载，玩家右键 NPC 即可加入该分组。");
       } else if (args.length == 1 && args[0].equalsIgnoreCase("remove")) {
@@ -57,8 +57,8 @@ public final class NativeNPC extends SubCommand {
                 ? "§a已删除你正在看向的内置 NPC。"
                 : "§c请看向 6 格内的内置 NPC；Citizens NPC 请用 /npc remove 删除。");
       } else {
-        p.sendMessage("§e/bw npc create <皮肤玩家名> <竞技场分组> <第一行>\\n<第二行>");
-        p.sendMessage("§7支持 & 颜色代码、{players} 分组人数，最多 6 行；add 为 create 的兼容别名。");
+        p.sendMessage("§e/bw npc create <皮肤玩家名> <竞技场分组> [悬浮文字]");
+        p.sendMessage("§7悬浮文字可省略；支持 & 颜色代码、{players} 分组人数，最多 6 行。add 为兼容别名。");
         p.sendMessage("§e/bw npc remove §7删除正在看向的内置 NPC。");
       }
     } catch (IllegalArgumentException e) {

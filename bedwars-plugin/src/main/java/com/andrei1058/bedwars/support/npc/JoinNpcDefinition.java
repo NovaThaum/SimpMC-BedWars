@@ -33,13 +33,13 @@ public record JoinNpcDefinition(
         || !Float.isFinite(yaw)
         || !Float.isFinite(pitch)
         || text == null
-        || text.isBlank()
-        || lines(text).size() > 6
-        || lines(text).stream().anyMatch(s -> s.length() > 128))
+        || (!text.isBlank()
+            && (lines(text).size() > 6 || lines(text).stream().anyMatch(s -> s.length() > 128))))
       throw new IllegalArgumentException("NPC 配置无效：皮肤名须为正版玩家名，悬浮文字最多 6 行、每行 128 字符。");
   }
 
   public static List<String> lines(String text) {
+    if (text == null || text.isBlank()) return List.of();
     return Arrays.asList(text.replace("\\n", "\n").split("\n", -1));
   }
 

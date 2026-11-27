@@ -59,6 +59,22 @@ class NativeNPCTest {
   }
 
   @Test
+  void createAllowsNoFloatingText() throws Exception {
+    NativeJoinNpcs manager = mock(NativeJoinNpcs.class);
+    Player p = mock(Player.class);
+    Location loc = new Location(null, 1, 64, 2);
+    when(p.getLocation()).thenReturn(loc);
+    try (var n = mockStatic(NativeJoinNpcs.class);
+        var groups = mockStatic(MainCommand.class)) {
+      n.when(NativeJoinNpcs::get).thenReturn(manager);
+      groups.when(() -> MainCommand.isArenaGroup("Solo")).thenReturn(true);
+      new NativeNPC(mock(ParentCommand.class))
+          .execute(new String[] {"create", "andrei1058", "Solo"}, p);
+      verify(manager).create(loc, "andrei1058", "Solo", "");
+    }
+  }
+
+  @Test
   void compositeGroupsMustAllExist() {
     try (var groups = mockStatic(MainCommand.class)) {
       groups.when(() -> MainCommand.isArenaGroup("Solo")).thenReturn(true);

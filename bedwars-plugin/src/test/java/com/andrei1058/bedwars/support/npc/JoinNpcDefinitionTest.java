@@ -27,6 +27,12 @@ class JoinNpcDefinitionTest {
   }
 
   @Test
+  void supportsNpcWithoutFloatingText() {
+    assertTrue(definition("Player_1", "").rendered(0).isEmpty());
+    assertTrue(JoinNpcDefinition.lines("   ").isEmpty());
+  }
+
+  @Test
   void rejectsUnsafeSkinNamesAndExcessiveText() {
     assertThrows(IllegalArgumentException.class, () -> definition("../name", "文字"));
     assertThrows(IllegalArgumentException.class, () -> definition("玩家", "文字"));

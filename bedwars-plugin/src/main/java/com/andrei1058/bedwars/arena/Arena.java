@@ -1167,7 +1167,7 @@ public class Arena implements IArena {
         if (getRestartingTask() != null) getRestartingTask().cancel();
         if (getStartingTask() != null) getStartingTask().cancel();
         if (getPlayingTask() != null) getPlayingTask().cancel();
-        plugin.getLogger().log(Level.WARNING, "Disabling arena: " + getArenaName());
+        plugin.getLogger().log(Level.INFO, "Disabling arena: " + getArenaName());
         for (Player inWorld : getWorld().getPlayers()) {
             inWorld.kickPlayer("You're not supposed to be here.");
         }
@@ -2324,21 +2324,47 @@ public class Arena implements IArena {
 
     public static List<IArena> getSorted(List<IArena> arenas) {
         List<IArena> sorted = new ArrayList<>(arenas);
-        sorted.sort(Comparator
-                .comparingInt((IArena arena) -> arenaSortStatus(arena.getStatus()))
-                .thenComparingInt(arena -> arena.getStatus() == GameState.starting
-                                || arena.getStatus() == GameState.waiting
-                        ? -arena.getPlayers().size() : 0)
-                .thenComparing(IArena::getArenaName, String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(IArena::getArenaName));
+        sorted.sort((first, second) -> compareArenaNamesNaturally(
+                first.getArenaName(), second.getArenaName()));
         return sorted;
     }
 
-    private static int arenaSortStatus(GameState status) {
-        if (status == GameState.starting) return 0;
-        if (status == GameState.waiting) return 1;
-        if (status == GameState.playing) return 2;
-        return 3;
+    private static int compareArenaNamesNaturally(String first, String second) {
+        int firstIndex = 0;
+        int secondIndex = 0;
+        while (firstIndex < first.length() && secondIndex < second.length()) {
+            char firstChar = first.charAt(firstIndex);
+            char secondChar = second.charAt(secondIndex);
+            if (Character.isDigit(firstChar) && Character.isDigit(secondChar)) {
+                int firstEnd = firstIndex;
+                int secondEnd = secondIndex;
+                while (firstEnd < first.length() && Character.isDigit(first.charAt(firstEnd))) firstEnd++;
+                while (secondEnd < second.length() && Character.isDigit(second.charAt(secondEnd))) secondEnd++;
+                int firstSignificant = firstIndex;
+                int secondSignificant = secondIndex;
+                while (firstSignificant < firstEnd - 1 && first.charAt(firstSignificant) == '0') firstSignificant++;
+                while (secondSignificant < secondEnd - 1 && second.charAt(secondSignificant) == '0') secondSignificant++;
+                int firstDigits = firstEnd - firstSignificant;
+                int secondDigits = secondEnd - secondSignificant;
+                if (firstDigits != secondDigits) return Integer.compare(firstDigits, secondDigits);
+                int numberCompare = first.regionMatches(firstSignificant, second, secondSignificant,
+                        firstDigits) ? 0 : first.substring(firstSignificant, firstEnd)
+                        .compareTo(second.substring(secondSignificant, secondEnd));
+                if (numberCompare != 0) return numberCompare;
+                int zeroPaddingCompare = Integer.compare(firstEnd - firstIndex, secondEnd - secondIndex);
+                if (zeroPaddingCompare != 0) return zeroPaddingCompare;
+                firstIndex = firstEnd;
+                secondIndex = secondEnd;
+                continue;
+            }
+            int charCompare = Character.compare(Character.toLowerCase(firstChar),
+                    Character.toLowerCase(secondChar));
+            if (charCompare != 0) return charCompare;
+            firstIndex++;
+            secondIndex++;
+        }
+        int lengthCompare = Integer.compare(first.length() - firstIndex, second.length() - secondIndex);
+        return lengthCompare != 0 ? lengthCompare : first.compareTo(second);
     }
 
     /**

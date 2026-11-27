@@ -555,7 +555,8 @@ public class BreakPlace implements Listener {
         if (a != null) {
             if (a.getStatus() == GameState.playing) {
                 boolean fireball = e.getEntity() instanceof Fireball;
-                e.blockList().removeIf((b) -> shouldProtectFireballBlock(fireball, b.getType())
+                e.blockList().removeIf((b) -> shouldProtectExplosionBlock(fireball, b.getType(),
+                                a.isBlockPlaced(b), a.isTeamBed(b.getLocation()))
                         || blastProtection.isProtected(a, e.getLocation(), b, 0.3));
                 return;
             }
@@ -686,10 +687,14 @@ public class BreakPlace implements Listener {
         removeBuildSession(event.getPlayer());
     }
 
-    static boolean shouldProtectFireballBlock(boolean fireball, Material material) {
-        if (!fireball || material == null) return false;
-        return material == Material.ENDER_STONE
-                || material == Material.HARD_CLAY
+    static boolean shouldProtectExplosionBlock(boolean fireball, Material material,
+                                               boolean placedBlock, boolean teamBed) {
+        return fireball && (teamBed || isFireballBlastProofMaterial(material) || !placedBlock);
+    }
+
+    static boolean isFireballBlastProofMaterial(Material material) {
+        if (material == null) return false;
+        return material == Material.ENDER_STONE || material == Material.HARD_CLAY
                 || material == Material.STAINED_CLAY;
     }
 }

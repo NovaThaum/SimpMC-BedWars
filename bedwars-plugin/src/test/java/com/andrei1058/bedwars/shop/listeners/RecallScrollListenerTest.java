@@ -32,7 +32,7 @@ class RecallScrollListenerTest {
         inventory=mock(PlayerInventory.class); contents=new ItemStack[36]; scroll=new ItemStack(Material.PAPER,2); contents[4]=scroll;
         when(player.getInventory()).thenReturn(inventory); when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(player.isOnline()).thenReturn(true); when(player.getWorld()).thenReturn(world);
-        spawn=new Location(world,.5,64,.5); when(player.getLocation()).thenReturn(spawn);
+        spawn=new Location(world,.5,64,.5); when(player.getLocation()).thenReturn(spawn.clone().add(20,0,0));
         when(arena.getWorld()).thenReturn(world); when(arena.getStatus()).thenReturn(GameState.playing);
         when(arena.isPlayer(player)).thenReturn(true); when(arena.getTeam(player)).thenReturn(team); when(team.getSpawn()).thenReturn(spawn);
         arenas.when(() -> Arena.getArenaByPlayer(player)).thenReturn(arena);
@@ -65,6 +65,16 @@ class RecallScrollListenerTest {
         verify(player).setFallDistance(0); verify(task).cancel();
         verify(BedWars.nms).playAction(player,"§a已返回队伍出生点。");
     }
+    @Test void useNearOwnSpawnBypassesRecallTrigger() {
+        when(player.getLocation()).thenReturn(spawn.clone().add(8,0,0));
+        PlayerInteractEvent event=mock(PlayerInteractEvent.class); when(event.getAction()).thenReturn(Action.RIGHT_CLICK_AIR);
+        when(event.getItem()).thenReturn(scroll); when(event.getPlayer()).thenReturn(player); listener.onUse(event);
+        verify(event,never()).setCancelled(true);
+        verify(BedWars.nms,never()).playAction(eq(player),anyString());
+        bukkit.verify(Bukkit::getScheduler, never());
+        assertTrue(RecallScrollListener.isNearTeamSpawn(spawn.clone().add(8,0,0), spawn));
+        assertFalse(RecallScrollListener.isNearTeamSpawn(spawn.clone().add(8.1,0,0), spawn));
+    }
     @Test void cancelledAndExceptionalTeleportsRefundAndNeverAnnounceSuccess() throws Exception {
         use(); ticks(5); assertEquals(2,contents[4].getAmount());
         verify(BedWars.nms,never()).playAction(player,"§a已返回队伍出生点。");
@@ -85,12 +95,13 @@ class RecallScrollListenerTest {
     }
     @Test void rotationKeepsChannelButMovementCancelsAndParticlesOnlyReachNearbySameArena() throws Exception {
         Player nearby=mock(Player.class), distant=mock(Player.class);
+        Location source=spawn.clone().add(20,0,0);
         when(nearby.getWorld()).thenReturn(world); when(distant.getWorld()).thenReturn(world);
-        when(nearby.getLocation()).thenReturn(spawn.clone().add(3,0,0)); when(distant.getLocation()).thenReturn(spawn.clone().add(25,0,0));
+        when(nearby.getLocation()).thenReturn(source.clone().add(3,0,0)); when(distant.getLocation()).thenReturn(source.clone().add(25,0,0));
         when(arena.getPlayers()).thenReturn(new LinkedList<>(List.of(player,nearby,distant)));
         use(); verify(BedWars.nms).playRecallEffect(eq(nearby),any()); verify(BedWars.nms,never()).playRecallEffect(eq(distant),any());
-        listener.onMove(new PlayerMoveEvent(player,spawn, new Location(world,.5,64,.5,90,0))); ticks(1);
-        listener.onMove(new PlayerMoveEvent(player,spawn,spawn.clone().add(.01,0,0))); ticks(5);
+        listener.onMove(new PlayerMoveEvent(player,source, new Location(world,20.5,64,.5,90,0))); ticks(1);
+        listener.onMove(new PlayerMoveEvent(player,source,source.clone().add(.01,0,0))); ticks(5);
         verify(player,never()).teleport(any(Location.class),any(PlayerTeleportEvent.TeleportCause.class)); assertEquals(2,contents[4].getAmount());
     }
     @Test void languageOverridesSurviveInstallation() {

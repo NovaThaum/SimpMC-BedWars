@@ -179,6 +179,7 @@ public class Arena implements IArena {
 
     private boolean allowMapBreak = false;
     private @Nullable ITeam winner;
+    private boolean debugStart;
 
     /**
      * Load an arena.
@@ -1179,6 +1180,7 @@ public class Arena implements IArena {
      * Restart the arena.
      */
     public void restart() {
+        debugStart = false;
         if (getRestartingTask() != null) getRestartingTask().cancel();
         if (getStartingTask() != null) getStartingTask().cancel();
         if (getPlayingTask() != null) getPlayingTask().cancel();
@@ -1343,6 +1345,14 @@ public class Arena implements IArena {
         for (ITeam team : teams) {
             teamSizesAtGameStart.put(team.getName(), team.getMembers().size());
         }
+    }
+
+    public void setDebugStart(boolean debugStart) {
+        this.debugStart = debugStart;
+    }
+
+    public boolean isDebugStart() {
+        return debugStart;
     }
 
     @Override

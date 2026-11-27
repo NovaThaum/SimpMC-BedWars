@@ -36,11 +36,12 @@ public final class RecallScrollListener implements Listener {
     public void onUse(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (!matches(event.getItem())) return;
-        event.setCancelled(true);
         Player player = event.getPlayer();
-        if (channels.containsKey(player.getUniqueId())) { show(player, RecallMessages.Key.ALREADY_CHANNELING); return; }
         IArena arena = Arena.getArenaByPlayer(player);
         ITeam team = validTeam(player, arena);
+        if (team != null && isNearTeamSpawn(player.getLocation(), team.getSpawn())) return;
+        event.setCancelled(true);
+        if (channels.containsKey(player.getUniqueId())) { show(player, RecallMessages.Key.ALREADY_CHANNELING); return; }
         if (team == null) { show(player, RecallMessages.Key.UNAVAILABLE); return; }
         Channel channel = new Channel(player, arena, team);
         channels.put(player.getUniqueId(), channel);
@@ -104,8 +105,10 @@ public final class RecallScrollListener implements Listener {
         return -1;
     }
     private void announce(Channel channel) {
-        BedWars.nms.playAction(channel.player, RecallMessages.text(channel.player, RecallMessages.Key.COUNTDOWN)
-                .replace("{time}", String.valueOf(channel.seconds)));
+        String message = RecallMessages.text(channel.player, RecallMessages.Key.COUNTDOWN)
+                .replace("{time}", String.valueOf(channel.seconds));
+        BedWars.nms.playAction(channel.player, message);
+        channel.player.sendMessage(message);
         Location source = channel.player.getLocation();
         java.util.Set<Player> viewers = new java.util.HashSet<>(channel.arena.getPlayers());
         viewers.addAll(channel.arena.getSpectators());
@@ -123,6 +126,10 @@ public final class RecallScrollListener implements Listener {
     private static boolean matches(ItemStack item) {
         return item != null && item.getType() != Material.AIR && BedWars.nms != null
                 && BedWars.nms.isCustomBedWarsItem(item) && ITEM_DATA.equalsIgnoreCase(BedWars.nms.getCustomData(item));
+    }
+    static boolean isNearTeamSpawn(Location location, Location spawn) {
+        return location != null && spawn != null && location.getWorld() != null
+                && location.getWorld().equals(spawn.getWorld()) && location.distanceSquared(spawn) <= 64.0D;
     }
     private static ITeam validTeam(Player player, IArena arena) {
         if (arena == null || !player.isOnline() || player.isDead() || Arena.getArenaByPlayer(player) != arena

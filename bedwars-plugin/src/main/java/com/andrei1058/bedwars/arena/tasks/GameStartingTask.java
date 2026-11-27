@@ -50,7 +50,10 @@ public class GameStartingTask implements Runnable, StartingTask {
 
     private int countdown;
     private boolean debugStart;
-    public void enableDebugStart() { debugStart = true; }
+    public void enableDebugStart() {
+        debugStart = true;
+        if (arena instanceof Arena concrete) concrete.setDebugStart(true);
+    }
     public boolean isDebugStart() { return debugStart; }
     private final IArena arena;
     private final BukkitTask task;
@@ -131,7 +134,7 @@ public class GameStartingTask implements Runnable, StartingTask {
             for (ITeam team : getArena().getTeams()) {
                 nms.colorBed(team);
                 if (team.getMembers().isEmpty()) {
-                    team.setBedDestroyed(true);
+                    if (!debugStart) team.setBedDestroyed(true);
                 }
             }
 
@@ -161,7 +164,8 @@ public class GameStartingTask implements Runnable, StartingTask {
 
             //Spawn shopkeepers
             for (ITeam bwt : getArena().getTeams()) {
-                bwt.spawnNPCs();
+                if (bwt instanceof BedWarsTeam concrete) concrete.spawnNPCs(debugStart);
+                else bwt.spawnNPCs();
             }
             return;
         }

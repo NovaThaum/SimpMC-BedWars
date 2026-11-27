@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 public final class RecallMessages {
     private RecallMessages() { }
     public enum Key {
-        COUNTDOWN("recall-scroll.countdown", "&b回城倒计时：&f{time}&b 秒，移动或受伤会取消。"),
+        COUNTDOWN("recall-scroll.countdown", "&7回城倒计时：&f{time}&7 秒，移动或受伤会取消。"),
         ALREADY_CHANNELING("recall-scroll.already-channeling", "&e回城卷轴正在引导中。"),
         UNAVAILABLE("recall-scroll.unavailable", "&c当前无法使用回城卷轴。"),
         CANCELLED("recall-scroll.cancelled", "&c回城引导已取消。"),
@@ -17,7 +17,13 @@ public final class RecallMessages {
         Key(String path, String fallback) { this.path = path; this.fallback = fallback; }
     }
     public static void install(ChineseMessages language) {
-        for (Key key : Key.values()) language.getYml().addDefault(key.path, key.fallback);
+        for (Key key : Key.values()) {
+            language.getYml().addDefault(key.path, key.fallback);
+            if (key == Key.COUNTDOWN && "&b回城倒计时：&f{time}&b 秒，移动或受伤会取消。"
+                    .equals(language.getYml().getString(key.path))) {
+                language.getYml().set(key.path, key.fallback);
+            }
+        }
         language.save();
     }
     public static String text(Player player, Key key) {

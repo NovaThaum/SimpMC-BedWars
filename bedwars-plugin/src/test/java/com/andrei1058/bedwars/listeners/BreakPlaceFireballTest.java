@@ -9,16 +9,18 @@ import static org.junit.Assert.assertTrue;
 public class BreakPlaceFireballTest {
 
     @Test
-    public void protectsEndStoneAndLegacyTerracottaFromFireballs() {
-        assertTrue(BreakPlace.shouldProtectFireballBlock(true, Material.ENDER_STONE));
-        assertTrue(BreakPlace.shouldProtectFireballBlock(true, Material.HARD_CLAY));
-        assertTrue(BreakPlace.shouldProtectFireballBlock(true, Material.STAINED_CLAY));
+    public void fireballsProtectMapStructureBedsAndDefensiveMaterials() {
+        assertTrue(BreakPlace.shouldProtectExplosionBlock(true, Material.WOOL, false, false));
+        assertTrue(BreakPlace.shouldProtectExplosionBlock(true, Material.WOOL, true, true));
+        assertTrue(BreakPlace.shouldProtectExplosionBlock(true, Material.ENDER_STONE, true, false));
+        assertTrue(BreakPlace.shouldProtectExplosionBlock(true, Material.HARD_CLAY, true, false));
+        assertTrue(BreakPlace.shouldProtectExplosionBlock(true, Material.STAINED_CLAY, true, false));
     }
 
     @Test
     public void leavesOtherExplosionsAndBreakableBlocksAlone() {
-        assertFalse(BreakPlace.shouldProtectFireballBlock(false, Material.ENDER_STONE));
-        assertFalse(BreakPlace.shouldProtectFireballBlock(true, Material.WOOL));
-        assertFalse(BreakPlace.shouldProtectFireballBlock(true, null));
+        assertFalse(BreakPlace.shouldProtectExplosionBlock(true, Material.WOOL, true, false));
+        assertFalse(BreakPlace.shouldProtectExplosionBlock(false, Material.ENDER_STONE, false, false));
+        assertFalse(BreakPlace.shouldProtectExplosionBlock(true, null, true, false));
     }
 }

@@ -67,6 +67,13 @@ class SidebarTeamsTest {
         assertTrue(BwSidebar.referencesTeam("{TeamRedName}", team("Red")));
     }
 
+    @Test void debugMatchesKeepEveryConfiguredTeamVisible() {
+        List<ITeam> all = List.of(team("Red"), team("Blue"), team("Green"));
+        List<ITeam> active = List.of(all.get(0));
+        assertEquals(all, BwSidebar.selectSidebarTeams(true, true, all, active));
+        assertEquals(active, BwSidebar.selectSidebarTeams(false, true, all, active));
+    }
+
     private static ITeam team(String name) {
         ITeam team = mock(ITeam.class, RETURNS_DEEP_STUBS);
         when(team.getName()).thenReturn(name);

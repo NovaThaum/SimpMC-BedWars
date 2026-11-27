@@ -362,7 +362,11 @@ public class ShopManager extends ConfigManager {
             adCategoryContentTier(ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "recall-scroll", 32, "tier1",
                     "PAPER", 0, 1, true, 3, "diamond", false, false);
             addBuyItem(ConfigPath.SHOP_PATH_CATEGORY_UTILITY, "recall-scroll", "tier1", "scroll", "PAPER",
-                    0, 1, "", "", "&b回城卷轴", false);
+                    0, 1, "", "", "&7回城卷轴", false);
+            String recallScrollName = ConfigPath.SHOP_PATH_CATEGORY_UTILITY + ConfigPath.SHOP_CATEGORY_CONTENT_PATH
+                    + ".recall-scroll." + ConfigPath.SHOP_CATEGORY_CONTENT_CONTENT_TIERS + ".tier1."
+                    + ConfigPath.SHOP_CONTENT_BUY_ITEMS_PATH + ".scroll.name";
+            if ("&b回城卷轴".equals(getYml().getString(recallScrollName))) getYml().set(recallScrollName, "&7回城卷轴");
             getYml().addDefault(ConfigPath.SHOP_PATH_CATEGORY_UTILITY + ConfigPath.SHOP_CATEGORY_CONTENT_PATH
                     + ".recall-scroll." + ConfigPath.SHOP_CATEGORY_CONTENT_CONTENT_TIERS + ".tier1."
                     + ConfigPath.SHOP_CONTENT_BUY_ITEMS_PATH + ".scroll.custom-data",

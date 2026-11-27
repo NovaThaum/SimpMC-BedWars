@@ -244,8 +244,14 @@ public class BwSidebar implements ISidebar {
     }
 
     static List<ITeam> sidebarTeams(IArena arena) {
-        return arena.getStatus() == GameState.playing || arena.getStatus() == GameState.restarting
-                ? arena.getActiveTeamsAtGameStart() : arena.getTeams();
+        boolean debugStart = arena instanceof Arena concrete && concrete.isDebugStart();
+        boolean activeGame = arena.getStatus() == GameState.playing || arena.getStatus() == GameState.restarting;
+        return selectSidebarTeams(debugStart, activeGame, arena.getTeams(), arena.getActiveTeamsAtGameStart());
+    }
+
+    static List<ITeam> selectSidebarTeams(boolean debugStart, boolean activeGame,
+                                          List<ITeam> allTeams, List<ITeam> activeTeams) {
+        return debugStart || !activeGame ? allTeams : activeTeams;
     }
 
     static boolean referencesTeam(String line, ITeam team) {

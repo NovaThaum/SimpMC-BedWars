@@ -324,7 +324,7 @@ public class BwTabList {
             }
             PlayerTab t = handle.playerTabCreate(
                     currentTabId, player, prefix, suffix, PlayerTab.PushingRule.NEVER,
-                    this.sidebar.getPlaceholders(player), getPlayerListColor(currentTeam)
+                    this.sidebar.getPlaceholders(player), ChatColor.WHITE
             );
             deployedPerPlayerTabList.put(player.getUniqueId(), t);
             return;
@@ -342,7 +342,7 @@ public class BwTabList {
         PlayerTab teamTab = handle.playerTabCreate(
                 getPlayerTabIdentifierAliveInTeam(team, playerTabId),
                 player, prefix, suffix, PlayerTab.PushingRule.PUSH_OTHER_TEAMS,
-                this.sidebar.getPlaceholders(player), getPlayerListColor(team)
+                this.sidebar.getPlaceholders(player), ChatColor.WHITE
         );
         deployedPerPlayerTabList.put(player.getUniqueId(), teamTab);
         if (player.hasPotionEffect(PotionEffectType.INVISIBILITY)) {
@@ -502,13 +502,9 @@ public class BwTabList {
         PlayerTab tab = handle.playerTabCreate(
                 "color-" + player.getUniqueId(), player,
                 new SidebarLine(), new SidebarLine(), PlayerTab.PushingRule.NEVER,
-                this.sidebar.getPlaceholders(player), getPlayerListColor(team)
+                this.sidebar.getPlaceholders(player), ChatColor.WHITE
         );
         deployedPerPlayerTabList.put(player.getUniqueId(), tab);
-    }
-
-    private static ChatColor getPlayerListColor(@Nullable ITeam team) {
-        return team == null ? ChatColor.WHITE : team.getColor().chat();
     }
 
     /**

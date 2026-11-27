@@ -166,7 +166,12 @@ public class BedWarsTeam implements ITeam {
      * Spawn shopkeepers for target team (if enabled).
      */
     public void spawnNPCs() {
-        if (getMembers().isEmpty() && getArena().getConfig().getBoolean(ConfigPath.ARENA_DISABLE_NPCS_FOR_EMPTY_TEAMS))
+        spawnNPCs(false);
+    }
+
+    public void spawnNPCs(boolean includeEmptyTeams) {
+        if (!includeEmptyTeams && getMembers().isEmpty()
+                && getArena().getConfig().getBoolean(ConfigPath.ARENA_DISABLE_NPCS_FOR_EMPTY_TEAMS))
             return;
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {

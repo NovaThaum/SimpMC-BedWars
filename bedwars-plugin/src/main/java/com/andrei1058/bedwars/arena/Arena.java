@@ -1680,6 +1680,10 @@ public class Arena implements IArena {
             playingTask = new GamePlayingTask(this);
         } else if (status == GameState.restarting) {
             restartingTask = new GameRestartingTask(this);
+            // The status refresh above ran before the countdown task existed,
+            // so render once more with its real initial value for {time}.
+            players.forEach(c -> SidebarService.getInstance().giveSidebar(c, this, false));
+            spectators.forEach(c -> SidebarService.getInstance().giveSidebar(c, this, false));
         }
     }
 

@@ -760,6 +760,12 @@ public class v1_8_R3 extends VersionSupport {
     }
 
     @Override
+    public void explodeFireball(Fireball fireball, float radius, boolean fire) {
+        EntityFireball handle = ((CraftFireball) fireball).getHandle();
+        handle.world.createExplosion(handle, handle.locX, handle.locY, handle.locZ, radius, fire, true);
+    }
+
+    @Override
     public Fireball setFireballDirection(Fireball fireball, Vector vector) {
         EntityFireball fb = ((CraftFireball) fireball).getHandle();
         fb.dirX = vector.getX() * 0.1D;

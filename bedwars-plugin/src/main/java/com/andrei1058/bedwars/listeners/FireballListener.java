@@ -1,6 +1,7 @@
 package com.andrei1058.bedwars.listeners;
 
 import com.andrei1058.bedwars.api.arena.IArena;
+import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.LastHit;
@@ -48,17 +49,17 @@ public class FireballListener implements Listener {
         this.damageEnemy = FireballSettings.ENEMY_DAMAGE;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void fireballExplode(EntityExplodeEvent e) {
-        if (!(e.getEntity() instanceof Fireball fireball)) return;
         if (e.isCancelled()) return;
+        if (!(e.getEntity() instanceof Fireball fireball)) return;
         Location location = e.getLocation();
 
         ProjectileSource projectileSource = fireball.getShooter();
         if (!(projectileSource instanceof Player source)) return;
 
         IArena arena = Arena.getArenaByPlayer(source);
-        if (arena == null || !arena.isPlayer(source)) return;
+        if (arena == null || arena.getStatus() != GameState.playing || !arena.isPlayer(source)) return;
         ITeam sourceTeam = arena.getTeam(source);
 
         World world = location.getWorld();
@@ -111,17 +112,22 @@ public class FireballListener implements Listener {
         e.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void fireballPrime(ExplosionPrimeEvent e) {
+        if (e.isCancelled()) return;
         if (!(e.getEntity() instanceof Fireball fireball)) return;
         ProjectileSource shooter = fireball.getShooter();
         if (!(shooter instanceof Player player)) return;
 
         IArena arena = Arena.getArenaByPlayer(player);
-        if (arena == null || !arena.isPlayer(player)) return;
+        if (arena == null || arena.getStatus() != GameState.playing || !arena.isPlayer(player)) return;
 
         e.setFire(fireballMakeFire);
         e.setRadius((float) fireballExplosionSize);
+        // 1.8.8 原生火球在 mobGriefing=false 时不会发出 EntityExplodeEvent。
+        // 只替换本次爆炸，保留火球来源和所有爆炸事件保护，不更改世界规则。
+        e.setCancelled(true);
+        nms.explodeFireball(fireball, e.getRadius(), e.getFire());
     }
 
     static Vector calculateKnockback(Vector explosion, Vector player, double horizontal, double vertical) {

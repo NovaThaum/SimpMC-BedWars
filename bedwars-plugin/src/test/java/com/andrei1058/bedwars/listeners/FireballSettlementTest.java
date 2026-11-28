@@ -28,6 +28,7 @@ class FireballSettlementTest {
         when(world.getNearbyEntities(any(), anyDouble(), anyDouble(), anyDouble()))
                 .thenReturn(List.of(shooter, teammate, enemy, spectator, outsider));
         IArena arena = mock(IArena.class); ITeam team = mock(ITeam.class);
+        when(arena.getStatus()).thenReturn(com.andrei1058.bedwars.api.arena.GameState.playing);
         when(arena.getTeam(shooter)).thenReturn(team); when(arena.getTeam(teammate)).thenReturn(team);
         for (Player p : List.of(shooter, teammate, enemy)) when(arena.isPlayer(p)).thenReturn(true);
         FireballListener listener = new FireballListener();
@@ -37,7 +38,15 @@ class FireballSettlementTest {
                 var custom = new EntityDamageByEntityEvent(fireball, enemy, EntityDamageEvent.DamageCause.ENTITY_EXPLOSION, 3.5D);
                 listener.fireballDirectHit(custom); assertFalse(custom.isCancelled()); return null;
             }).when(BedWars.nms).damageFireball(enemy, fireball, 3.5D, true);
-            listener.fireballExplode(new EntityExplodeEvent(fireball, explosion, new ArrayList<>(), 0F));
+            // 模拟 1.8.8 的引爆入口：mobGriefing 关闭时，只有替换爆炸才触发此事件。
+            doAnswer(call -> {
+                listener.fireballExplode(new EntityExplodeEvent(fireball, explosion, new ArrayList<>(), 0F));
+                return null;
+            }).when(BedWars.nms).explodeFireball(fireball, 3.25F, false);
+            var prime = new ExplosionPrimeEvent(fireball, 9F, true);
+            listener.fireballPrime(prime);
+            assertTrue(prime.isCancelled(), "原生爆炸必须取消，避免重复结算");
+            verify(BedWars.nms).explodeFireball(fireball, 3.25F, false);
             verify(BedWars.nms).damageFireball(shooter, fireball, 2D, false);
             verify(BedWars.nms).damageFireball(enemy, fireball, 3.5D, true);
             verify(BedWars.nms, never()).damageFireball(eq(teammate), any(), anyDouble(), anyBoolean());
@@ -49,7 +58,7 @@ class FireballSettlementTest {
                 var nativeDamage = new EntityDamageByEntityEvent(fireball, enemy, cause, 20D);
                 listener.fireballDirectHit(nativeDamage); assertTrue(nativeDamage.isCancelled());
             }
-            var prime = new ExplosionPrimeEvent(fireball, 9F, true); listener.fireballPrime(prime);
+
             assertEquals(3.25F, prime.getRadius()); assertFalse(prime.getFire());
         } finally {
             LastHit hit = LastHit.getLastHit(enemy); if (hit != null) hit.remove(); BedWars.nms = previous;

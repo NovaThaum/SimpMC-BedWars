@@ -547,10 +547,8 @@ public class BreakPlace implements Listener {
         return false;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlow(@NotNull EntityExplodeEvent e) {
-        if (e.isCancelled()) return;
-
         IArena a = Arena.getArenaByIdentifier(e.getLocation().getWorld().getName());
         if (a != null) {
             if (a.getStatus() == GameState.playing) {

@@ -153,9 +153,12 @@ class FireballListenerTest {
 
     @Test
     void appliesCustomExplosionAfterNativeExplosionProcessing() throws NoSuchMethodException {
-        assertEquals(EntityExplodeEvent.class,
-                FireballListener.class.getDeclaredMethod("fireballExplode", EntityExplodeEvent.class)
-                        .getParameterTypes()[0]);
+        EventHandler handler = FireballListener.class
+                .getDeclaredMethod("fireballExplode", EntityExplodeEvent.class)
+                .getAnnotation(EventHandler.class);
+
+        assertEquals(EventPriority.HIGHEST, handler.priority());
+        assertTrue(handler.ignoreCancelled());
     }
 
 }

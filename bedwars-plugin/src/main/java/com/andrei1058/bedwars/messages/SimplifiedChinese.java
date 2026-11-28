@@ -140,6 +140,7 @@ public class SimplifiedChinese extends ChineseMessages {
         yml.addDefault(Messages.ARENA_JOIN_VIP_KICK, "{prefix}&c抱歉，由于有一位赞助者加入该游戏，因此你被移出了该游戏。\n&a请考虑赞助以支持我们！ &7&o(点击查看)");
         yml.addDefault(Messages.ARENA_START_COUNTDOWN_STOPPED_INSUFF_PLAYERS_CHAT, "{prefix}&c玩家不足！ 倒计时取消！");
         yml.addDefault(Messages.ARENA_RESTART_PLAYER_KICK, "{prefix}&e当前游戏正在重启。");
+        yml.addDefault(Messages.ARENA_RESTART_COUNTDOWN, "{prefix}&e竞技场将在 &6{time}&e 秒后重置并返回大厅！");
         yml.addDefault(Messages.ARENA_STATUS_PLAYING_NAME, "&c游戏中");
         yml.addDefault(Messages.ARENA_STATUS_RESTARTING_NAME, "&4重启中");
         yml.addDefault(Messages.ARENA_STATUS_WAITING_NAME, "&3等待中 &c{full}");

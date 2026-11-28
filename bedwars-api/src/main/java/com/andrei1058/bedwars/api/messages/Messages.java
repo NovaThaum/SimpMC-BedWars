@@ -122,6 +122,7 @@ public class Messages {
     public static String ARENA_STATUS_START_PLAYER_TITLE = "arena-start-title";
     public static String ARENA_STATUS_START_PLAYER_TUTORIAL = "arena-start-tutorial";
     public static String ARENA_STATUS_START_COUNTDOWN_CHAT = "arena-start-countdown";
+    public static String ARENA_RESTART_COUNTDOWN = "arena-restart-countdown";
     public static String ARENA_STATUS_START_COUNTDOWN_TITLE = "arena-start-countdown-title";
     public static String ARENA_STATUS_START_COUNTDOWN_SUB_TITLE = "arena-start-countdown-subtitle";
     public static String ARENA_STATUS_START_COUNTDOWN_CANCELLED_TITLE = "arena-countdown-stopped-subtitle";

@@ -457,6 +457,11 @@ public abstract class VersionSupport {
 
     public abstract void damageFireball(Player target, Fireball fireball, double damage, boolean attributed);
 
+    /** 保留火球爆炸来源，在关闭 mobGriefing 的竞技场中生成受事件保护的爆炸。 */
+    public void explodeFireball(Fireball fireball, float radius, boolean fire) {
+        throw new UnsupportedOperationException("当前版本适配器不支持受控火球爆炸");
+    }
+
     public abstract Fireball setFireballDirection(Fireball fireball, Vector vector);
 
     public abstract void playRedStoneDot(Player player);

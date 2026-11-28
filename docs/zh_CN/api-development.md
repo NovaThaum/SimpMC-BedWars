@@ -6,7 +6,7 @@
 <dependency>
     <groupId>com.andrei1058.bedwars</groupId>
     <artifactId>bedwars-api</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.4</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -31,3 +31,5 @@
 竞技场位置保存为居中的 `x,y,z`：X/Z 为方块坐标加 0.5，Y 为方块高度；大厅通用位置格式不变。`ConfigManager.savePlayerArenaLocation(locationPath, facingPath, location)` 同时写入位置与玩家 `yaw,0.0` 朝向；`saveNpcArenaLocation` 写入位置与 NPC 数值 yaw。两者使用 `snapYawToCardinal` 对水平角吸附四向，俯仰固定归零。
 
 玩家方向键为 `waiting.Facing`、`spectator-facing`、`Team.<队伍>.Spawn-Facing`；商店方向键为 `Team.<队伍>.Shop-Facing` 和 `Upgrade-Facing`。加载时独立方向字段优先于旧五段坐标内的方向；NPC 两者均不存在时朝向队伍出生点。插件会自动迁移旧坐标，管理员仍可编辑独立方向字段。
+
+4.1.4 起，1.8.8 对局火球通过版本适配器的 `explodeFireball` 生成保留火球来源的爆炸，覆盖旧版 `mobGriefing=false` 不触发方块爆炸事件的问题；原生爆炸被取消，所有方块仍经过竞技场爆炸保护。世界规则保持不变。

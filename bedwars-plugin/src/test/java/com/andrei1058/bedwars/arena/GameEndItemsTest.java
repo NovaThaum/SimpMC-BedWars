@@ -55,9 +55,14 @@ class GameEndItemsTest {
             bukkit.when(Bukkit::getScheduler).thenReturn(mock(BukkitScheduler.class));
             Arena arena = mock(Arena.class, RETURNS_DEEP_STUBS);
             Player winner = mock(Player.class), teammate = mock(Player.class), spectator = mock(Player.class);
+            when(winner.getUniqueId()).thenReturn(java.util.UUID.randomUUID());
             when(arena.getPlayers()).thenReturn(List.of(winner, teammate));
             when(arena.getSpectators()).thenReturn(List.of(spectator));
+            when(arena.getWorld().getEntities()).thenReturn(List.of());
             new GameRestartingTask(arena);
+            new com.andrei1058.bedwars.listeners.GameEndListener().cleanInventoriesAndDroppedItems(
+                    new com.andrei1058.bedwars.api.events.gameplay.GameEndEvent(arena, List.of(), List.of(), null, List.of(winner.getUniqueId())));
+            verify(winner, never()).getInventory();
             items.verify(() -> GameEndItems.give(winner));
             items.verify(() -> GameEndItems.give(teammate));
             items.verify(() -> GameEndItems.give(spectator), never());
